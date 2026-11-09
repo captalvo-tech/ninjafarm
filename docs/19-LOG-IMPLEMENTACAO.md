@@ -542,4 +542,27 @@
     - `npm run check:roadmap`: 26 features e 32 eventos históricos validados com 0 erros.
     - `npm run test`: **90/90 testes unitários aprovados em 14 suítes**.
     - `npm run typecheck`: 0 erros.
-    - Commits realizados: `a2f8bee`, `b277189`, `310d6b6`, `1f87b36`, `5f14c18`.
+    - Commits realizados: `a2f8bee`, `b277189`, `310d6b6`, `1f87b36`, `5f14c18`, `0a591ef`.
+
+### 2026-11-09 — Publicação em Produção das Correções Críticas e da Fauna Calibrada (pinut.shop)
+
+- **Status:** Publicado, configurado e verificado online em `https://pinut.shop/`.
+- **Backup Preventivo:**
+    - Arquivo: `/home/u415074840/domains/_backups_todos_sites/pinut.shop/backup_pre_critical_fixes_20261109_160229.tar.gz` (11 MB).
+- **Componentes Publicados em `public_html/`:**
+    1. **Frontend do Jogo, Studio 3D e /admin:**
+        - `index.html`, `studio.html`, `admin.html`, `.htaccess` e `test-results.json`.
+        - Novos bundles compilados em `assets/` (`admin-DNqEoame.js`, `main-DjKj9lWR.js`, `studio-D4iapOMg.js`, `water-AnTVMtJS.js`, `visual-config-TxbYZBCw.js`, `asset-loader-w70dogPq.js`).
+    2. **Backend e Governança:**
+        - `api/admin.php`, `api/auth.php`, `api/save.php`, `api/ai.php`, `api/report.php`.
+        - `api/data/admin_alerts.json` com o catálogo de 6 vulnerabilidades resolvidas.
+        - `project/roadmap/features.json` e `project/roadmap/history.jsonl` sincronizados.
+        - `scripts/provision-admin.php` instalado fora do webroot em `/home/u415074840/domains/pinut.shop/scripts/`.
+- **Verificações Online Realizadas (Smoke Tests):**
+    - `https://pinut.shop/` $\rightarrow$ HTTP 200 OK (Jogo com proporções naturais da fauna 3D).
+    - `https://pinut.shop/admin` $\rightarrow$ HTTP 200 OK (Painel com observabilidade real e sem indicadores simulados).
+    - `https://pinut.shop/studio` $\rightarrow$ HTTP 200 OK (Ninja Farm Studio 3D com presets atualizados).
+    - `https://pinut.shop/test-results.json` $\rightarrow$ HTTP 200 OK (**90/90 testes unitários aprovados**).
+    - `POST /api/admin.php?action=setup_initial_admin` $\rightarrow$ Rejeitado com mensagem de restrição estrita a CLI.
+    - `POST /api/auth.php?action=login&dev_mock=1` $\rightarrow$ Rejeitado com exigência mandatória de token Google.
+    - `GET /api/ai.php?action=get_key_status` $\rightarrow$ HTTP 401 Exigência mandatória de sessão autenticada.
