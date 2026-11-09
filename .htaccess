@@ -1,5 +1,9 @@
-DirectoryIndex default.php index.php index.html
+DirectoryIndex index.html index.php
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    # Friendly routes
+    RewriteRule ^studio/?$ studio.html [L,QSA]
+    RewriteRule ^admin/?$ admin.html [L,QSA]
 </IfModule>
