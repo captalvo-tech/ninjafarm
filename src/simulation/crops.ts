@@ -107,6 +107,85 @@ export class CropSystem {
         }
     }
 
+    /**
+     * Reconciliação AFK Determinística: simula o crescimento das culturas durante ausência offline.
+     * Consome água do inventário proporcionalmente à demanda das culturas ativas.
+     */
+    simulateOfflineSeconds(elapsedSeconds: number): { maturedCount: number } {
+        if (elapsedSeconds <= 0) return { maturedCount: 0 };
+
+        // Limita o catchup a no máximo 7 dias contínuos para evitar loops de processamento
+        const maxSimSeconds = Math.min(elapsedSeconds, 7 * 86400);
+        const stepSize = 5; // Resolução de 5 segundos para precisão no consumo hídrico
+        let remaining = maxSimSeconds;
+        let maturedCount = 0;
+
+        while (remaining > 0) {
+            const dt = Math.min(stepSize, remaining);
+            remaining -= dt;
+
+            // Coleta culturas em crescimento
+            const activeCrops: { state: CropState; def: CropDefinition }[] = [];
+            let totalWaterNeeded = 0;
+
+            for (const state of this.crops.values()) {
+                if (state.stage === 'planted' || state.stage === 'growing') {
+                    const def = CROP_DEFINITIONS[state.cropType];
+                    if (def) {
+                        activeCrops.push({ state, def });
+                        totalWaterNeeded += def.waterPerSecond * dt;
+                    }
+                }
+            }
+
+            if (activeCrops.length === 0) {
+                // Nenhuma cultura em crescimento
+                break;
+            }
+
+            // Verifica disponibilidade hídrica
+            const currentWater = this.inventory.get('water');
+            let waterSuppliedRatio = 1.0;
+
+            if (totalWaterNeeded > 0) {
+                if (currentWater <= 0) {
+                    waterSuppliedRatio = 0.0;
+                } else if (currentWater < totalWaterNeeded) {
+                    waterSuppliedRatio = currentWater / totalWaterNeeded;
+                    this.inventory.consume('water', currentWater);
+                } else {
+                    this.inventory.consume('water', totalWaterNeeded);
+                    waterSuppliedRatio = 1.0;
+                }
+            }
+
+            // Se não há água disponível, o crescimento cessa
+            if (waterSuppliedRatio <= 0.05) {
+                for (const { state } of activeCrops) {
+                    state.waterSupplied = false;
+                }
+                break;
+            }
+
+            // Avança o progresso biológico de cada cultura
+            for (const { state, def } of activeCrops) {
+                state.waterSupplied = true;
+                const growthDelta = (dt / def.growthTimeSeconds) * waterSuppliedRatio;
+                state.growthProgress = Math.min(1.0, state.growthProgress + growthDelta);
+
+                if (state.growthProgress >= 1.0) {
+                    state.stage = 'ready';
+                    maturedCount++;
+                    domainEvents.emit('crop.ready', state);
+                } else if (state.growthProgress >= 0.25) {
+                    state.stage = 'growing';
+                }
+            }
+        }
+
+        return { maturedCount };
+    }
+
     harvest(buildingInstanceId: string): { success: boolean; harvestedAmount: number; cropType?: CropType } {
         const crop = this.crops.get(buildingInstanceId);
         if (!crop || crop.stage !== 'ready') {

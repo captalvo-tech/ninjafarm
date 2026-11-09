@@ -17,6 +17,7 @@ export interface FarmAIContext {
     queuedTasksCount: number;
     activeTaskTitle?: string;
     ninjaRankTitle?: string;
+    recentEvents?: { timestamp: number; title: string; description: string }[];
 }
 
 export class GeminiService {

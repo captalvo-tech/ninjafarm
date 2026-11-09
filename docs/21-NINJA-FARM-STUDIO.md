@@ -46,3 +46,4 @@ npm run dev
 npm run build
 ```
 Os arquivos otimizados são gerados em `dist/index.html` e `dist/studio.html`.
+

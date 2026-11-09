@@ -77,7 +77,7 @@ export interface CropState {
     lastUpdated: number;
 }
 
-export type AnimalType = 'chicken' | 'fish';
+export type AnimalType = 'chicken' | 'cow' | 'fox' | 'fish';
 export type AnimalState = 'idle' | 'walking' | 'eating' | 'swimming';
 
 export interface AnimalData {
@@ -167,6 +167,7 @@ export interface FarmEventEntry {
     title: string;
     description: string;
     entityId?: string;
+    details?: Record<string, unknown>;
 }
 
 export interface FarmSaveState {

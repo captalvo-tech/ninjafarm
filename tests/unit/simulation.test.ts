@@ -181,5 +181,76 @@ describe('Sistemas de Simulação e Recursos', () => {
             expect(grid.getCell(pt.x, pt.y)?.walkable).toBe(true);
         }
     });
+
+    it('CropSystem deve suportar reconciliação AFK offline com consumo hídrico determinístico', () => {
+        const inv = new InventorySystem({ food: 0, water: 50 });
+        const grid = new FarmGrid();
+        const clock = new SimulationClock(0.5);
+        const energy = new EnergySystem(grid, inv, clock);
+        const water = new WaterSystem(grid, inv, energy);
+        const crops = new CropSystem(inv, water);
+
+        // Planta cenoura (25s para maturar)
+        crops.plantCrop('field_veg', 'vegetable');
+        expect(crops.getCrop('field_veg')?.stage).toBe('planted');
+
+        // Simula ausência offline de 30 segundos com água suficiente
+        const res = crops.simulateOfflineSeconds(30);
+        expect(res.maturedCount).toBe(1);
+        expect(crops.getCrop('field_veg')?.stage).toBe('ready');
+        // Água deve ter sido consumida proporcionalmente (0.5 * 25s = 12.5 litros)
+        expect(inv.get('water')).toBeLessThan(50);
+        expect(inv.get('water')).toBeGreaterThanOrEqual(35);
+
+        // Teste de interrupção por falta de água: com zero água, cultura não madura
+        const invDry = new InventorySystem({ food: 0, water: 0 });
+        const cropsDry = new CropSystem(invDry, water);
+        cropsDry.plantCrop('field_dry', 'vegetable');
+        const resDry = cropsDry.simulateOfflineSeconds(60);
+        expect(resDry.maturedCount).toBe(0);
+        expect(cropsDry.getCrop('field_dry')?.stage).not.toBe('ready');
+    });
+
+    it('FaunaManager deve simular ciclo de galinhas, fome, ovos e persistência', async () => {
+        const grid = new FarmGrid();
+        const { FaunaManager } = await import('../../src/rendering/fauna');
+        const fauna = new FaunaManager(grid);
+
+        // Deve conter galinhas no rebanho inicial
+        const animals = fauna.getAnimals();
+        const chickens = animals.filter(a => a.type === 'chicken');
+        expect(chickens.length).toBeGreaterThanOrEqual(1);
+
+        const chicken = chickens[0];
+        expect(chicken.id).toBeDefined();
+
+        // Alimentar galinha deve zerar a fome
+        chicken.hunger = 80;
+        expect(fauna.feedAnimal(chicken.id)).toBe(true);
+        expect(chicken.hunger).toBe(0);
+
+        // Simula ausência offline: fome aumenta e ovos são produzidos
+        chicken.hunger = 10;
+        const offlineRes = fauna.simulateOfflineSeconds(7200); // 2 horas offline
+        expect(offlineRes.eggsProduced).toBeGreaterThan(0);
+        expect(chicken.readyToCollect).toBe(true);
+
+        // Coleta de ovos
+        const collectRes = fauna.collectEggs(chicken.id);
+        expect(collectRes.success).toBe(true);
+        expect(collectRes.amount).toBeGreaterThan(0);
+        expect(chicken.readyToCollect).toBe(false);
+
+        // Serialização e carregamento fiel
+        const serialized = fauna.serialize();
+        expect(serialized.length).toBe(animals.length);
+        expect(serialized.some(a => a.type === 'chicken')).toBe(true);
+
+        // Carrega em nova instância
+        const newFauna = new FaunaManager(grid);
+        newFauna.load(serialized);
+        const loadedChicken = newFauna.getAnimals().find(a => a.id === chicken.id);
+        expect(loadedChicken?.hunger).toBe(chicken.hunger);
+    });
 });
 

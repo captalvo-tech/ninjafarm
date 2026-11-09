@@ -356,3 +356,33 @@
   - `npm run typecheck`: 0 erros (TypeScript estrito).
   - `npm run test`: 60/60 testes unitários aprovados no Vitest (9 testes dedicados ao Droid/Scheduler em [`tests/unit/droid-scheduler.test.ts`](file:///Z:/AI/Ninja_Farm_Project/tests/unit/droid-scheduler.test.ts) e 7 testes em [`tests/unit/gemini-ai.test.ts`](file:///Z:/AI/Ninja_Farm_Project/tests/unit/gemini-ai.test.ts)).
   - `npm run build`: bundle de produção gerado com sucesso em 387ms.
+
+### 2026-11-09 — Auditoria Técnica Alpha 0.1, Reconciliação AFK Completa, Fauna/Galinhas, Tutorial e Instrumentação
+- **Status:** Implementado, testado e validado (Alpha 0.1 pronta e íntegra).
+- **Entregas Realizadas:**
+  1. **Matriz Completa de Auditoria Técnica ([`docs/22-MATRIZ-AUDITORIA-ALPHA-0-1.md`](file:///Z:/AI/Ninja_Farm_Project/docs/22-MATRIZ-AUDITORIA-ALPHA-0-1.md)):**
+     - Diagnóstico aprofundado dos 26 subsistemas da fazenda, classificando cada funcionalidade como FUNCIONAL, PARCIAL, AUSENTE ou DEFEITUOSA, com prioridades P0, P1 e P2 e testes de aceitação.
+  2. **Reconciliação AFK Unificada de Culturas ([`src/simulation/crops.ts`](file:///Z:/AI/Ninja_Farm_Project/src/simulation/crops.ts)):**
+     - Adicionado método `simulateOfflineSeconds` no `CropSystem` com consumo hídrico determinístico durante a ausência do jogador.
+     - Se faltar água nos tanques, o crescimento é pausado deterministicamente sem criar recompensas gratuitas.
+  3. **Ciclo Biológico Completo da Fauna & Galinhas ([`src/rendering/fauna.ts`](file:///Z:/AI/Ninja_Farm_Project/src/rendering/fauna.ts)):**
+     - Instanciação de Galinhas Caipiras com ninhos e piquete ao lado do galinheiro.
+     - Simulação de fome e produção de ovos com base no estado de saciedade.
+     - Tarefas do Droid `feed_animal` e `collect_eggs` integradas diretamente ao estado e persistência dos animais (`FarmSaveState.animals`).
+  4. **Diário de Eventos da Fazenda ([`src/simulation/event-journal.ts`](file:///Z:/AI/Ninja_Farm_Project/src/simulation/event-journal.ts)):**
+     - Classe `EventJournal` com registro ring-buffer das ações concluídas (colheita, construções, recargas, pausas e catchup AFK).
+     - Integração direta ao relatório de eventos do Droid Chat e persistência no save do jogador.
+  5. **Tutorial Inicial Interativo ([`src/ui/tutorial.ts`](file:///Z:/AI/Ninja_Farm_Project/src/ui/tutorial.ts)):**
+     - Onboarding em 8 passos práticos guiado pelo Droid (Apresentação, Seleção de Alvo, Botão Contextual, Agendamento, Agenda, Bateria, Blueprints, Trabalho AFK).
+     - Funciona 100% offline sem dependência de chaves Gemini.
+  6. **Simulador Administrativo de Tempo ([`src/simulation/time-simulator.ts`](file:///Z:/AI/Ninja_Farm_Project/src/simulation/time-simulator.ts)):**
+     - Ferramenta dev para acelerar simulações de 1h, 12h, 24h, 7d, 30d e 365d em ambiente de teste isolado.
+     - Comprovada equivalência determinística entre execução em tempo real e tempo simulado.
+  7. **Relatório de Problemas pelos Testadores ([`src/ui/bug-report.ts`](file:///Z:/AI/Ninja_Farm_Project/src/ui/bug-report.ts), [`public/api/report.php`](file:///Z:/AI/Ninja_Farm_Project/public/api/report.php)):**
+     - Modal discreto no menu de configurações permitindo aos testadores enviar bugs e diagnósticos técnicos diretamente ao servidor, com sanitização estrita (zero segredos ou tokens).
+  8. **Telemetria Mínima da Alpha ([`src/core/telemetry.ts`](file:///Z:/AI/Ninja_Farm_Project/src/core/telemetry.ts)):**
+     - Monitoramento seguro de funis de conversão e eventos críticos de ciclo de vida sem coleta de dados pessoais.
+- **Testes & Qualidade:**
+  - `npm run typecheck`: 0 erros (TypeScript estrito).
+  - `npm run test`: **76/76 testes unitários aprovados no Vitest** (12 suítes incluindo novos testes de fauna, simulação AFK de culturas, `EventJournal`, `TimeSimulator` e testes não-negociáveis de integridade).
+  - `npm run build`: bundle de produção gerado com sucesso em 377ms.

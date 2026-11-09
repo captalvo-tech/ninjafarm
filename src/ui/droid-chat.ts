@@ -397,9 +397,8 @@ export class DroidChatModal {
         });
 
         this.container.querySelector('#btn-rep-events')?.addEventListener('click', () => {
-            const rep = this.geminiService.generateEventsReport([
-                { timestamp: Date.now() - 60000, title: 'Operação Normal', description: 'O Droid está monitorando os canteiros e a rede solar.' }
-            ]);
+            const ctx = this.callbacks.getContext();
+            const rep = this.geminiService.generateEventsReport(ctx.recentEvents || []);
             this.appendMessage('droid', rep);
         });
 

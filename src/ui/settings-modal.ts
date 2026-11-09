@@ -11,6 +11,8 @@ export interface SettingsModalCallbacks {
     onLogout: () => void;
     onResetProgress: (freshSave: FarmSaveState) => void;
     onGeminiConfigChange?: (config: { mode: 'smart' | 'limited'; hasKey: boolean }) => void;
+    onOpenBugReport?: () => void;
+    onRestartTutorial?: () => void;
 }
 
 export class SettingsModal {
@@ -299,7 +301,20 @@ export class SettingsModal {
                     <div id="gemini-test-result" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
                 </div>
 
-                <!-- 3. Seção Progresso -->
+                <!-- 3. Seção Suporte & Diagnóstico -->
+                <div class="settings-section">
+                    <div class="settings-section-title">🛠️ Suporte & Aprendizado</div>
+                    <div style="display:flex;gap:10px;margin-top:8px;">
+                        <button class="settings-btn-secondary" id="settings-tutorial-btn" style="flex:1;">
+                            📖 Rever Tutorial
+                        </button>
+                        <button class="settings-btn-secondary" id="settings-bugreport-btn" style="flex:1;color:#f87171;border-color:rgba(239,68,68,0.4);">
+                            🐛 Reportar Bug
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4. Seção Progresso -->
                 <div class="settings-section">
                     <div class="settings-section-title" style="color:#EF4444;">⚠️ Gerenciamento de Progresso</div>
                     <p style="font-size:12px;color:#9CA3AF;margin:0 0 12px 0;">
@@ -332,6 +347,16 @@ export class SettingsModal {
                 this.callbacks.onGeminiConfigChange?.({ mode: 'smart', hasKey: true });
                 setTimeout(() => this.render(), 1200);
             }
+        });
+
+        this.overlay.querySelector('#settings-tutorial-btn')?.addEventListener('click', () => {
+            this.close();
+            this.callbacks.onRestartTutorial?.();
+        });
+
+        this.overlay.querySelector('#settings-bugreport-btn')?.addEventListener('click', () => {
+            this.close();
+            this.callbacks.onOpenBugReport?.();
         });
 
         this.overlay.querySelector('#disconnect-gemini-key-btn')?.addEventListener('click', () => {

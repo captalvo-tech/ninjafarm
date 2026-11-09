@@ -60,6 +60,10 @@ import { TaskScheduler } from './simulation/task-scheduler';
 import { SchedulerUI } from './ui/scheduler-ui';
 import { GeminiService } from './ai/gemini-service';
 import { DroidChatModal } from './ui/droid-chat';
+import { EventJournal } from './simulation/event-journal';
+import { InteractiveTutorial } from './ui/tutorial';
+import { BugReportModal } from './ui/bug-report';
+import { telemetry } from './core/telemetry';
 import type { FarmTask, ResourceType } from './core/types';
 
 // ==========================================
@@ -116,11 +120,20 @@ const authManager = new AuthManager({
 const cloudSave = new CloudSaveManager(() => authManager.getSessionToken());
 await cloudSave.init();
 
+// Diário de Eventos da Fazenda e do Droid (Fase C & Auditoria Alpha 0.1)
+const eventJournal = new EventJournal(100);
+
 function applySaveState(saved: FarmSaveState): void {
     inventory.load(saved.resources);
     clock.setTimeOfDay(saved.dayTime);
     if (saved.crops && saved.crops.length > 0) {
         cropSystem.load(saved.crops);
+    }
+    if (typeof fauna !== 'undefined' && saved.animals && saved.animals.length > 0) {
+        fauna.load(saved.animals);
+    }
+    if (saved.eventsLog && saved.eventsLog.length > 0) {
+        eventJournal.load(saved.eventsLog);
     }
     if (typeof droid !== 'undefined' && saved.droid) {
         droid.load(saved.droid);
@@ -128,16 +141,41 @@ function applySaveState(saved: FarmSaveState): void {
     if (typeof taskScheduler !== 'undefined' && saved.scheduler) {
         taskScheduler.load(saved.scheduler);
 
-        // Reconciliação Determinística AFK Offline (Fase D)
+        // Reconciliação Determinística AFK Offline (Fase D & Auditoria Alpha 0.1)
         const nowSec = Math.floor(Date.now() / 1000);
         const lastSec = Math.floor(saved.savedAt / 1000);
         const elapsedSec = Math.max(0, nowSec - lastSec);
 
-        if (elapsedSec > 10 && typeof droid !== 'undefined') {
-            const completed = taskScheduler.simulateOfflineSeconds(elapsedSec, droid, 1.2);
-            if (completed > 0) {
-                hud.showToast(`🌙 Modo AFK: O Droid concluiu ${completed} tarefas enquanto você esteve ausente!`);
-                vfx.showFloatingText(`🤖 ${completed} Tarefas Concluídas AFK!`, undefined, undefined, '#34D399');
+        if (elapsedSec > 10) {
+            const notifs: string[] = [];
+
+            if (typeof droid !== 'undefined') {
+                const completed = taskScheduler.simulateOfflineSeconds(elapsedSec, droid, 1.2);
+                if (completed > 0) {
+                    notifs.push(`${completed} tarefas concluídas`);
+                }
+            }
+
+            const cropRes = cropSystem.simulateOfflineSeconds(elapsedSec);
+            if (cropRes.maturedCount > 0) {
+                notifs.push(`${cropRes.maturedCount} colheitas prontas`);
+            }
+
+            if (typeof fauna !== 'undefined') {
+                const faunaRes = fauna.simulateOfflineSeconds(elapsedSec);
+                if (faunaRes.eggsProduced > 0) {
+                    notifs.push(`${faunaRes.eggsProduced} ovos produzidos`);
+                }
+            }
+
+            if (notifs.length > 0) {
+                eventJournal.recordEvent({
+                    type: 'afk_catchup',
+                    title: 'Retorno AFK',
+                    description: notifs.join(', ')
+                });
+                hud.showToast(`🌙 Retorno AFK (${Math.round(elapsedSec / 60)}m): ${notifs.join(', ')}!`);
+                vfx.showFloatingText('🌙 Progresso AFK Sincronizado!', undefined, undefined, '#34D399');
             }
         }
     }
@@ -326,6 +364,7 @@ function selectTarget(target: SelectedTarget): void {
     triggerHaptic('light');
 
     updateSelectedAction();
+    tutorial.triggerActionHook('target_selected');
 }
 
 function updateSelectedAction(): void {
@@ -398,6 +437,7 @@ function executeDirectContextAction(action: ContextAction): void {
         });
 
         taskScheduler.enqueueTask(task);
+        tutorial.triggerActionHook('task_scheduled');
         sound.playClick();
         triggerHaptic('light');
         hud.showToast(`📋 Tarefa agendada para o Droid: ${action.title}`);
@@ -746,15 +786,25 @@ function handleCompletedTask(task: FarmTask): void {
             objectives.recordBuildingPlaced(b.type);
         }
     } else if (task.type === 'feed_animal') {
+        fauna.feedAnimal(task.targetId);
         progression.addXP(12);
-        vfx.showFloatingText('🌾 Animal Alimentado', undefined, undefined, '#10B981');
+        vfx.showFloatingText('🌾 Animal Alimentado (+12 XP)', undefined, undefined, '#10B981');
     } else if (task.type === 'collect_eggs') {
+        const eggsRes = fauna.collectEggs(task.targetId);
+        const count = eggsRes.amount || 2;
+        inventory.add('food', count * 5);
         progression.addXP(15);
-        vfx.showFloatingText('🥚 Ovos Coletados (+15 XP)', undefined, undefined, '#F59E0B');
+        vfx.showFloatingText(`🥚 +${count} Ovos Coletados (+15 XP)`, undefined, undefined, '#F59E0B');
     }
 
     hud.updateResources(inventory.getAll());
     hud.showToast(`✅ Droid concluiu: ${task.title}`);
+
+    eventJournal.recordEvent({
+        type: task.category === 'agriculture' ? 'crop_harvested' : task.category === 'animals' ? 'animal_fed' : 'building_completed',
+        title: task.title,
+        description: `Concluído com sucesso pelo Droid.`
+    });
 }
 
 const taskScheduler = new TaskScheduler(grid, navigation, inventory, {
@@ -765,8 +815,13 @@ const taskScheduler = new TaskScheduler(grid, navigation, inventory, {
     onTaskStarted: () => {
         schedulerUI.render();
     },
-    onTaskBlocked: (_task, reason) => {
+    onTaskBlocked: (task, reason) => {
         hud.showToast(`⚠️ Droid pausou tarefa: ${reason}`);
+        eventJournal.recordEvent({
+            type: 'task_blocked',
+            title: `Pausado: ${task.title}`,
+            description: reason
+        });
         schedulerUI.render();
     },
     onTaskCancelled: () => {
@@ -792,7 +847,8 @@ const droidChat = new DroidChatModal(geminiService, {
         buildingsCount: grid.getAllBuildings().length,
         queuedTasksCount: taskScheduler.getTasks().length,
         activeTaskTitle: taskScheduler.getActiveTask()?.title,
-        ninjaRankTitle: progression.getCurrentRank().title
+        ninjaRankTitle: progression.getCurrentRank().title,
+        recentEvents: eventJournal.getRecentEvents(8)
     }),
     onOpenSettings: () => settingsModal.open()
 });
@@ -1068,7 +1124,7 @@ const hud = new FarmHUD({
             resources: inventory.serialize(),
             buildings: grid.getAllBuildings(),
             crops: cropSystem.serialize(),
-            animals: [],
+            animals: fauna.serialize(),
             dayTime: clock.getTimeOfDay(),
             elapsedGameDays: clock.getTotalDays(),
             ninjaPosition: {
@@ -1077,7 +1133,8 @@ const hud = new FarmHUD({
                 z: ninja.entity.getPosition().z
             },
             droid: droid.serialize(),
-            scheduler: taskScheduler.serialize()
+            scheduler: taskScheduler.serialize(),
+            eventsLog: eventJournal.serialize()
         };
 
         const result = await cloudSave.save(state);
@@ -1103,6 +1160,9 @@ const hud = new FarmHUD({
     },
     onOpenScheduler: () => {
         schedulerUI.toggle();
+        if (schedulerUI.isOpen()) {
+            tutorial.triggerActionHook('agenda_opened');
+        }
     },
     onOpenDroidChat: () => {
         droidChat.toggle();
@@ -1110,12 +1170,31 @@ const hud = new FarmHUD({
 });
 
 // Modais de Autenticação Google Obrigatória e Configurações da Conta
+const tutorial = new InteractiveTutorial(() => {
+    telemetry.track('tutorial_started');
+});
+
+const bugReportModal = new BugReportModal(() => ({
+    version: 'Alpha 0.1.0',
+    screen: cameraCtrl.getMode(),
+    activeTask: taskScheduler.getActiveTask()?.title,
+    recentErrors: []
+}), (repId) => {
+    hud.showToast(`Relatório enviado! ID: ${repId}`);
+    sound.playHarvest();
+});
+
 const loginModal = new LoginModal(authManager, {
     onLoginSuccess: async (user) => {
         hud.showToast(`Autenticado como ${user.name}!`);
+        telemetry.track('login_completed');
         const serverSave = await cloudSave.load();
         if (serverSave) {
             applySaveState(serverSave);
+        }
+        telemetry.track('farm_loaded');
+        if (!tutorial.isCompleted()) {
+            setTimeout(() => tutorial.start(), 1500);
         }
     }
 });
@@ -1131,6 +1210,12 @@ const settingsModal = new SettingsModal(authManager, cloudSave, {
     },
     onGeminiConfigChange: (cfg) => {
         hud.showToast(`Modo IA: ${cfg.mode === 'smart' ? 'Inteligente' : 'Limitado'}`);
+    },
+    onOpenBugReport: () => {
+        bugReportModal.open();
+    },
+    onRestartTutorial: () => {
+        tutorial.start(true);
     }
 });
 
@@ -1139,9 +1224,14 @@ const isAuthed = await authManager.checkSession();
 if (!isAuthed) {
     loginModal.show();
 } else {
+    telemetry.track('login_completed');
     const initialCloudSave = await cloudSave.load();
     if (initialCloudSave) {
         applySaveState(initialCloudSave);
+    }
+    telemetry.track('farm_loaded');
+    if (!tutorial.isCompleted()) {
+        setTimeout(() => tutorial.start(), 1500);
     }
 }
 
@@ -1823,7 +1913,7 @@ app.on('update', () => {
             resources: inventory.serialize(),
             buildings: grid.getAllBuildings(),
             crops: cropSystem.serialize(),
-            animals: [],
+            animals: fauna.serialize(),
             dayTime: clock.getTimeOfDay(),
             elapsedGameDays: clock.getTotalDays(),
             ninjaPosition: {

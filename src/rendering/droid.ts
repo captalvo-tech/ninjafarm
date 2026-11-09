@@ -237,7 +237,7 @@ export class FarmDroid {
     }
 
     private updateBatteryVisuals(): void {
-        if (!this.hasActiveApp() || !this.batteryFillBar) return;
+        if (!this.hasActiveApp() || !this.batteryFillBar || !this.batteryFillMat) return;
 
         const ratio = Math.max(0, Math.min(1.0, this.battery / this.maxBattery));
         this.batteryFillBar.setLocalScale(0.76 * ratio, 0.06, 0.09);
