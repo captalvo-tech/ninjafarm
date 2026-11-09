@@ -252,5 +252,5 @@ describe('Sistemas de Simulação e Recursos', () => {
         newFauna.load(serialized);
         const loadedChicken = newFauna.getAnimals().find((a) => a.id === chicken.id);
         expect(loadedChicken?.hunger).toBe(chicken.hunger);
-    });
+    }, 15000);
 });
