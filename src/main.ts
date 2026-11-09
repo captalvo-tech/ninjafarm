@@ -55,6 +55,12 @@ import { ActionResolver, type ResolverContext } from './gameplay/actions/action-
 import { ActionExecutor } from './gameplay/actions/action-executor';
 import type { ContextAction, SelectedTarget, SoilStatus } from './gameplay/actions/action-types';
 import { ContextActionUI } from './ui/context-action';
+import { FarmDroid } from './rendering/droid';
+import { TaskScheduler } from './simulation/task-scheduler';
+import { SchedulerUI } from './ui/scheduler-ui';
+import { GeminiService } from './ai/gemini-service';
+import { DroidChatModal } from './ui/droid-chat';
+import type { FarmTask, ResourceType } from './core/types';
 
 // ==========================================
 // 1. BOOTSTRAP GRAPHICS DEVICE & PLAYCANVAS
@@ -116,7 +122,29 @@ function applySaveState(saved: FarmSaveState): void {
     if (saved.crops && saved.crops.length > 0) {
         cropSystem.load(saved.crops);
     }
+    if (typeof droid !== 'undefined' && saved.droid) {
+        droid.load(saved.droid);
+    }
+    if (typeof taskScheduler !== 'undefined' && saved.scheduler) {
+        taskScheduler.load(saved.scheduler);
+
+        // Reconciliação Determinística AFK Offline (Fase D)
+        const nowSec = Math.floor(Date.now() / 1000);
+        const lastSec = Math.floor(saved.savedAt / 1000);
+        const elapsedSec = Math.max(0, nowSec - lastSec);
+
+        if (elapsedSec > 10 && typeof droid !== 'undefined') {
+            const completed = taskScheduler.simulateOfflineSeconds(elapsedSec, droid, 1.2);
+            if (completed > 0) {
+                hud.showToast(`🌙 Modo AFK: O Droid concluiu ${completed} tarefas enquanto você esteve ausente!`);
+                vfx.showFloatingText(`🤖 ${completed} Tarefas Concluídas AFK!`, undefined, undefined, '#34D399');
+            }
+        }
+    }
     hud.updateResources(inventory.getAll());
+    if (typeof schedulerUI !== 'undefined' && schedulerUI.isOpen()) {
+        schedulerUI.render();
+    }
 }
 
 const objectives = new ObjectiveManager();
@@ -203,6 +231,10 @@ const ninja = new NinjaCharacter(materials, assetLoader, visualConfig.character)
 app.root.addChild(ninja.entity);
 const ninjaWorldPos = grid.gridToWorld(20, 16);
 ninja.entity.setPosition(ninjaWorldPos.x, ninjaWorldPos.y, ninjaWorldPos.z);
+
+// Droid Operacional Único da Fazenda (Fases B e C)
+const droid = new FarmDroid(grid, materials, assetLoader);
+app.root.addChild(droid.entity);
 
 // Sincronização em tempo real com o Ninja Farm Studio (sem reiniciar o jogo)
 onVisualConfigChange((updatedConfig) => {
@@ -336,6 +368,44 @@ function deselectTarget(): void {
 }
 
 function executeDirectContextAction(action: ContextAction): void {
+    if (action.actionId === 'inspect_droid') {
+        droidChat.open();
+        sound.playClick();
+        triggerHaptic('light');
+        return;
+    }
+
+    const physicalLaborActions = ['prepare_soil', 'plant_crop', 'water_crop', 'harvest_crop', 'recover_soil', 'feed_animal', 'collect_eggs'];
+    if (physicalLaborActions.includes(action.actionId)) {
+        const targetPos = grid.gridToWorld(action.target.gridX, action.target.gridY);
+        const reqRes = action.actionId === 'water_crop' ? { water: 1 } : action.actionId === 'feed_animal' ? { food: 1 } : undefined;
+        const prodRes = action.actionId === 'harvest_crop' ? { food: 25 } : action.actionId === 'collect_eggs' ? { food: 10 } : undefined;
+        const dur = action.actionId === 'harvest_crop' ? 15 : action.actionId === 'plant_crop' ? 8 : action.actionId === 'water_crop' ? 10 : 12;
+
+        const task = TaskScheduler.createStandardTask({
+            category: action.target.type === 'plot' ? 'agriculture' : action.target.type === 'animal' ? 'animals' : 'general',
+            type: action.actionId,
+            title: action.title,
+            targetId: action.target.id,
+            targetPosition: { x: targetPos.x, y: 0, z: targetPos.z },
+            totalDurationSeconds: dur,
+            energyCostTotal: 3,
+            requiredResources: reqRes,
+            producedResources: prodRes,
+            customData: {
+                cropType: currentSelectedCrop
+            }
+        });
+
+        taskScheduler.enqueueTask(task);
+        sound.playClick();
+        triggerHaptic('light');
+        hud.showToast(`📋 Tarefa agendada para o Droid: ${action.title}`);
+        vfx.showFloatingText(`📋 Agendado: ${action.title}`, undefined, undefined, '#34D399');
+        schedulerUI.render();
+        return;
+    }
+
     const nPos = ninja.entity.getPosition();
     const ninjaCoords = grid.worldToGrid(nPos.x, nPos.z);
     const context = getResolverContext();
@@ -504,6 +574,21 @@ function findNearestSelectableTarget(ninjaX: number, ninjaZ: number, maxDist: nu
         };
     }
 
+    // 5. Unidade Droid Operacional
+    const dPos = droid.entity.getPosition();
+    const droidDist = Math.hypot(dPos.x - ninjaX, dPos.z - ninjaZ);
+    if (droidDist < 3.2 && droidDist < minDist) {
+        minDist = droidDist;
+        nearest = {
+            id: 'farm_droid_unit',
+            type: 'droid',
+            name: 'Droid Shinobi',
+            gridX: Math.floor(dPos.x),
+            gridY: Math.floor(dPos.z),
+            worldPosition: { x: dPos.x, y: 0, z: dPos.z }
+        };
+    }
+
     return nearest;
 }
 
@@ -519,8 +604,11 @@ const contextUI = new ContextActionUI({
 // Map de entidades 3D no mundo
 const buildingEntities = new Map<string, Entity>();
 
-function spawnBuilding3D(instanceId: string, type: BuildingType, gridX: number, gridY: number, orientation: BuildingOrientation): Entity {
+function spawnBuilding3D(instanceId: string, type: BuildingType, gridX: number, gridY: number, orientation: BuildingOrientation, isBlueprint: boolean = false): Entity {
     const entity = modelFactory.createBuildingEntity(type);
+    if (isBlueprint) {
+        modelFactory.applyGhostMaterial(entity, true);
+    }
     const pos = grid.gridToWorld(gridX, gridY);
     const def = BUILDING_CATALOG[type];
     const rotated = grid.getRotatedFootprint(def.footprint, orientation);
@@ -534,11 +622,13 @@ function spawnBuilding3D(instanceId: string, type: BuildingType, gridX: number, 
     app.root.addChild(entity);
     buildingEntities.set(instanceId, entity);
 
-    // Conecta lanternas da Sede, Postes de Luz, Portal Torii e Fogueiras ao gestor celestial
-    if (type === 'hq' || type === 'lamp_post' || type === 'torii_gate') {
-        celestial.registerLantern(entity, false);
-    } else if (type === 'bonfire') {
-        celestial.registerBonfire(entity);
+    if (!isBlueprint) {
+        // Conecta lanternas da Sede, Postes de Luz, Portal Torii e Fogueiras ao gestor celestial
+        if (type === 'hq' || type === 'lamp_post' || type === 'torii_gate') {
+            celestial.registerLantern(entity, false);
+        } else if (type === 'bonfire') {
+            celestial.registerBonfire(entity);
+        }
     }
 
     return entity;
@@ -578,6 +668,134 @@ for (let i = 0; i < initialBuildings.length; i++) {
         cropSystem.plantCrop(instanceId, i % 2 === 0 ? 'rice' : 'vegetable');
     }
 }
+
+// ==========================================
+// 3.1. DROID OPERACIONAL ÚNICO & AGENDADOR AFK
+// ==========================================
+function handleCompletedTask(task: FarmTask): void {
+    sound.playHarvest();
+
+    // Adiciona recursos gerados ao inventário
+    if (task.producedResources) {
+        for (const [res, amt] of Object.entries(task.producedResources)) {
+            if (amt && amt > 0) {
+                inventory.add(res as ResourceType, amt);
+            }
+        }
+    }
+
+    // Processamento de transições físicas de cada tipo de tarefa
+    if (task.type === 'prepare_soil' || task.type === 'recover_soil') {
+        const b = grid.getBuilding(task.targetId);
+        if (b) {
+            b.customData = b.customData || {};
+            b.customData.soilStatus = 'tilled';
+        }
+        progression.addXP(10);
+        vfx.showFloatingText('+10 XP Solo Preparado', undefined, undefined, '#10B981');
+    } else if (task.type === 'plant_crop') {
+        const cropType = (task.customData?.cropType as CropType) || 'rice';
+        cropSystem.plantCrop(task.targetId, cropType);
+        const b = grid.getBuilding(task.targetId);
+        if (b) {
+            b.customData = b.customData || {};
+            b.customData.soilStatus = 'planted';
+        }
+        progression.addXP(15);
+        objectives.recordCropPlanted(cropType);
+        vfx.showFloatingText(`+15 XP Semeado (${cropType})`, undefined, undefined, '#10B981');
+    } else if (task.type === 'water_crop') {
+        const crop = cropSystem.getCrop(task.targetId);
+        if (crop) crop.waterSupplied = true;
+        const b = grid.getBuilding(task.targetId);
+        if (b) {
+            b.customData = b.customData || {};
+            b.customData.soilStatus = 'growing';
+        }
+        progression.addXP(8);
+        vfx.showFloatingText('💧 Canteiro Irrigado', undefined, undefined, '#60A5FA');
+    } else if (task.type === 'harvest_crop') {
+        const harvestRes = cropSystem.harvest(task.targetId);
+        const b = grid.getBuilding(task.targetId);
+        if (b) {
+            b.customData = b.customData || {};
+            b.customData.soilStatus = 'raw';
+        }
+        const xp = harvestRes.cropType === 'lotus' ? 45 : 25;
+        progression.addXP(xp);
+        vfx.showFloatingText(`+${xp} XP Colheita`, undefined, undefined, '#FBBF24');
+    } else if (task.type === 'construct_building') {
+        const b = grid.getBuilding(task.targetId);
+        if (b) {
+            b.isBlueprint = false;
+            const existing = buildingEntities.get(b.instanceId);
+            if (existing) {
+                existing.destroy();
+                buildingEntities.delete(b.instanceId);
+            }
+            spawnBuilding3D(b.instanceId, b.type, b.gridX, b.gridY, b.orientation, false);
+
+            if (b.type === 'crop_field') {
+                cropSystem.plantCrop(b.instanceId, 'rice');
+                objectives.recordCropPlanted('rice');
+            }
+
+            progression.addXP(40);
+            sound.playBuild();
+            vfx.showFloatingText(`+40 XP 🏯 ${BUILDING_CATALOG[b.type].name}`, undefined, undefined, '#FBBF24');
+            objectives.recordBuildingPlaced(b.type);
+        }
+    } else if (task.type === 'feed_animal') {
+        progression.addXP(12);
+        vfx.showFloatingText('🌾 Animal Alimentado', undefined, undefined, '#10B981');
+    } else if (task.type === 'collect_eggs') {
+        progression.addXP(15);
+        vfx.showFloatingText('🥚 Ovos Coletados (+15 XP)', undefined, undefined, '#F59E0B');
+    }
+
+    hud.updateResources(inventory.getAll());
+    hud.showToast(`✅ Droid concluiu: ${task.title}`);
+}
+
+const taskScheduler = new TaskScheduler(grid, navigation, inventory, {
+    onTaskCompleted: (task) => {
+        handleCompletedTask(task);
+        schedulerUI.render();
+    },
+    onTaskStarted: () => {
+        schedulerUI.render();
+    },
+    onTaskBlocked: (_task, reason) => {
+        hud.showToast(`⚠️ Droid pausou tarefa: ${reason}`);
+        schedulerUI.render();
+    },
+    onTaskCancelled: () => {
+        schedulerUI.render();
+    }
+});
+
+const schedulerUI = new SchedulerUI(taskScheduler, droid);
+
+// ==========================================
+// 3.2. SERVIÇO GEMINI AI & CHAT DO DROID (FASES E e F)
+// ==========================================
+const geminiService = new GeminiService();
+const droidChat = new DroidChatModal(geminiService, {
+    getContext: () => ({
+        resources: inventory.getAll(),
+        solarGenerationRate: energySystem.getMetrics().productionRate,
+        farmStoredEnergy: inventory.get('energy'),
+        farmStoredWater: inventory.get('water'),
+        droidBattery: droid.getBattery(),
+        droidState: droid.getState(),
+        crops: cropSystem.getAllCrops(),
+        buildingsCount: grid.getAllBuildings().length,
+        queuedTasksCount: taskScheduler.getTasks().length,
+        activeTaskTitle: taskScheduler.getActiveTask()?.title,
+        ninjaRankTitle: progression.getCurrentRank().title
+    }),
+    onOpenSettings: () => settingsModal.open()
+});
 
 // ==========================================
 // 4. NINJA JUTSU SKILLS & ACTIONS
@@ -732,11 +950,6 @@ function commitPlacement(): void {
     if (!activePlacementType || !isGhostPlacementValid) return;
 
     const def = BUILDING_CATALOG[activePlacementType];
-    if (!inventory.consumeBatch(def.cost)) {
-        hud.showToast('Recursos insuficientes!');
-        return;
-    }
-
     const instanceId = 'bld_' + Math.random().toString(36).substring(2, 9);
     const success = grid.placeBuilding({
         instanceId,
@@ -745,23 +958,38 @@ function commitPlacement(): void {
         gridY: currentGhostGridY,
         orientation: currentGhostOrientation,
         createdAt: Date.now(),
-        health: def.maxHealth
+        health: def.maxHealth,
+        isBlueprint: true
     });
 
     if (success) {
         sound.playBuild();
-        spawnBuilding3D(instanceId, activePlacementType, currentGhostGridX, currentGhostGridY, currentGhostOrientation);
+        // Spawna holograma / blueprint translúcido
+        spawnBuilding3D(instanceId, activePlacementType, currentGhostGridX, currentGhostGridY, currentGhostOrientation, true);
 
-        if (activePlacementType === 'crop_field') {
-            cropSystem.plantCrop(instanceId, 'rice');
-            objectives.recordCropPlanted('rice');
-        }
+        // Enfileira a tarefa de construção física para o Droid
+        const pos = grid.gridToWorld(currentGhostGridX, currentGhostGridY);
+        const task = TaskScheduler.createStandardTask({
+            category: 'construction',
+            type: 'construct_building',
+            title: `Construir ${def.name}`,
+            targetId: instanceId,
+            targetPosition: { x: pos.x, y: 0, z: pos.z },
+            totalDurationSeconds: Math.max(30, Math.round(def.maxHealth / 5)),
+            energyCostTotal: 15,
+            requiredResources: { ...def.cost },
+            customData: {
+                buildingType: activePlacementType,
+                gridX: currentGhostGridX,
+                gridY: currentGhostGridY,
+                orientation: currentGhostOrientation
+            }
+        });
 
-        progression.addXP(40);
-        vfx.showFloatingText(`+40 XP 🏯 ${def.name}`, undefined, undefined, '#FBBF24');
-        objectives.recordBuildingPlaced(activePlacementType);
-        hud.showToast(`Construído: ${def.name}`);
-        hud.updateResources(inventory.getAll());
+        taskScheduler.enqueueTask(task);
+        hud.showToast(`📐 Blueprint planejado! Agendado na fila do Droid.`);
+        vfx.showFloatingText(`📐 Blueprint: ${def.name}`, undefined, undefined, '#60A5FA');
+        schedulerUI.render();
     }
 }
 
@@ -781,11 +1009,23 @@ function handleDemolishAt(gridX: number, gridY: number): void {
     }
 
     const def = BUILDING_CATALOG[b.type];
-    // Reembolso de 60% dos materiais
-    for (const [k, v] of Object.entries(def.cost)) {
-        if (v && v > 0) {
-            inventory.add(k as any, Math.floor(v * 0.6));
+
+    if (b.isBlueprint) {
+        // Cancela tarefa no agendador
+        const queued = taskScheduler.getTasks().find(t => t.targetId === b.instanceId);
+        if (queued) {
+            taskScheduler.cancelTask(queued.id);
+            schedulerUI.render();
         }
+        hud.showToast(`Blueprint de ${def.name} cancelado.`);
+    } else {
+        // Reembolso de 60% dos materiais
+        for (const [k, v] of Object.entries(def.cost)) {
+            if (v && v > 0) {
+                inventory.add(k as any, Math.floor(v * 0.6));
+            }
+        }
+        hud.showToast(`Demolido: ${def.name} (+60% de reembolso)`);
     }
 
     // Remove do mundo 3D
@@ -835,7 +1075,9 @@ const hud = new FarmHUD({
                 x: ninja.entity.getPosition().x,
                 y: ninja.entity.getPosition().y,
                 z: ninja.entity.getPosition().z
-            }
+            },
+            droid: droid.serialize(),
+            scheduler: taskScheduler.serialize()
         };
 
         const result = await cloudSave.save(state);
@@ -858,6 +1100,12 @@ const hud = new FarmHUD({
     },
     onOpenSettings: () => {
         settingsModal.open();
+    },
+    onOpenScheduler: () => {
+        schedulerUI.toggle();
+    },
+    onOpenDroidChat: () => {
+        droidChat.toggle();
     }
 });
 
@@ -949,6 +1197,14 @@ function cancelCurrentAction(): void {
     }
     if (hud.isCodexOpen()) {
         hud.closeCodex();
+        actionCancelled = true;
+    }
+    if (schedulerUI.isOpen()) {
+        schedulerUI.close();
+        actionCancelled = true;
+    }
+    if (droidChat.isOpen()) {
+        droidChat.close();
         actionCancelled = true;
     }
 
@@ -1348,6 +1604,13 @@ app.on('update', () => {
     vfx.update(dt);
     // shadowClone desativado reversivelmente (Tarefa 8)
     sound.updateAmbientMusic(dt, clock.isNight());
+
+    // 3.1. Droid Operacional & Agendador AFK de Tarefas
+    droid.update(dt);
+    taskScheduler.tick(dt, droid, inventory.get('energy'));
+    if (schedulerUI.isOpen()) {
+        schedulerUI.render();
+    }
 
     // 4. Atualização da iluminação solar e atmosfera
     const sunlightFactor = clock.getSunlightFactor();

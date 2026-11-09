@@ -12,6 +12,7 @@ export type SelectableTargetType =
     | 'merchant'       // Mercador itinerante
     | 'dummy'          // Boneco de treino
     | 'bonfire'        // Fogueira
+    | 'droid'          // Droid operacional único
     | 'terrain';       // Terreno livre
 
 export type SoilStatus =
@@ -62,6 +63,7 @@ export type ContextActionId =
     | 'repair_building'  // Reparar estrutura danificada
     | 'refill_water'     // Abastecer cisterna / tanque
     | 'train_dummy'      // Treinar arremesso de shuriken no alvo
+    | 'inspect_droid'    // Inspecionar e gerenciar tarefas do Droid
     | 'idle_ok';         // Funcionando normalmente (ação desabilitada)
 
 export interface ContextAction {

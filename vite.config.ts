@@ -129,6 +129,39 @@ export default defineConfig({
                         return;
                     }
 
+                    if (url.startsWith('/api/ai.php')) {
+                        res.setHeader('Content-Type', 'application/json');
+                        if (url.includes('action=test')) {
+                            res.end(JSON.stringify({ success: true, message: 'Conexão dev com Gemini OK!' }));
+                            return;
+                        }
+                        if (req.method === 'POST') {
+                            let body = '';
+                            req.on('data', (chunk: any) => { body += chunk; });
+                            req.on('end', () => {
+                                try {
+                                    const parsed = JSON.parse(body);
+                                    const q = (parsed.question || '').toLowerCase();
+                                    let reply = 'Mestre Shinobi, analisei a propriedade. A bateria do Droid está estável e o agendador está monitorando os canteiros.';
+                                    if (q.includes('energia') || q.includes('bateria')) {
+                                        reply = '⚡ Diagnóstico Energético: A rede solar opera conforme o ciclo diurno. Mantenha os painéis limpos e baterias recarregadas.';
+                                    } else if (q.includes('plantar') || q.includes('arroz') || q.includes('cultura')) {
+                                        reply = '🌾 Diagnóstico Agrícola: Recomendo arar o solo antes de semear. O arroz tradicional oferece excelente retorno de alimento.';
+                                    } else if (q.includes('fazer') || q.includes('próximo')) {
+                                        reply = '💡 Sugestão Shinobi: Verifique se há canteiros sedentos e agende a irrigação ou planeje um novo blueprint na grade!';
+                                    }
+                                    res.end(JSON.stringify({ success: true, reply }));
+                                } catch (e) {
+                                    res.statusCode = 400;
+                                    res.end(JSON.stringify({ success: false, error: 'JSON inválido' }));
+                                }
+                            });
+                            return;
+                        }
+                        res.end(JSON.stringify({ success: true, mode: 'limited' }));
+                        return;
+                    }
+
                     next();
                 });
             }

@@ -13,6 +13,8 @@ export interface HUDCallbacks {
     onSaveGame: () => void;
     onLoadGame: () => void;
     onOpenSettings?: () => void;
+    onOpenScheduler?: () => void;
+    onOpenDroidChat?: () => void;
     onDemolishMode?: (active: boolean) => void;
     onVirtualMove?: (x: number, y: number) => void;
 }
@@ -714,6 +716,8 @@ export class FarmHUD {
                     <button class="hud-btn" id="btn-mode-build">${t('hud.mode.build')}</button>
                     <button class="hud-btn" id="btn-mode-overview">${t('hud.mode.overview')}</button>
                     <button class="hud-btn" id="btn-hud-save" title="Salvar">💾</button>
+                    <button class="hud-btn" id="btn-hud-scheduler" title="${t('scheduler.title')}">📋 ${t('scheduler.btn')}</button>
+                    <button class="hud-btn" id="btn-hud-droid" title="Comunicação com o Droid">🤖 Droid</button>
                     <button class="hud-btn" id="btn-hud-settings" title="Configurações da Propriedade e Droid">⚙️</button>
                 </div>
             </div>
@@ -982,6 +986,20 @@ export class FarmHUD {
             sound.playClick();
             triggerHaptic('light');
             this.callbacks.onOpenSettings?.();
+        });
+
+        const btnScheduler = document.getElementById('btn-hud-scheduler');
+        btnScheduler?.addEventListener('click', () => {
+            sound.playClick();
+            triggerHaptic('light');
+            this.callbacks.onOpenScheduler?.();
+        });
+
+        const btnDroid = document.getElementById('btn-hud-droid');
+        btnDroid?.addEventListener('click', () => {
+            sound.playClick();
+            triggerHaptic('light');
+            this.callbacks.onOpenDroidChat?.();
         });
 
         // Modal do Codex / Almanaque Shinobi

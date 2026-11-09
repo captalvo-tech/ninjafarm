@@ -40,6 +40,8 @@ export class ActionResolver {
                 return this.resolveDummyAction(target);
             case 'bonfire':
                 return this.resolveBonfireAction(target, context);
+            case 'droid':
+                return this.resolveDroidAction(target);
             default:
                 return this.createIdleAction(target, 'Terreno livre', 'Nenhuma intervenção necessária.');
         }
@@ -372,6 +374,21 @@ export class ActionResolver {
             blockedReason: canRest ? undefined : 'Você já repousou recentemente.',
             durationSeconds: 1.5,
             animState: 'interact',
+            interactionDistance: 3.5,
+            priority: ACTION_PRIORITIES.REST_OR_TRADE,
+            target
+        };
+    }
+
+    private static resolveDroidAction(target: SelectedTarget): ContextAction {
+        return {
+            actionId: 'inspect_droid',
+            title: 'Agenda do Droid',
+            subtitle: 'Visualizar status, bateria e fila de tarefas operacionais',
+            icon: '📋',
+            enabled: true,
+            durationSeconds: 0,
+            animState: 'idle',
             interactionDistance: 3.5,
             priority: ACTION_PRIORITIES.REST_OR_TRADE,
             target

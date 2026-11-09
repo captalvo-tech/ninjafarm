@@ -57,6 +57,9 @@ export interface PlacedBuilding {
     orientation: BuildingOrientation;
     createdAt: number;
     health: number;
+    isBlueprint?: boolean;
+    blueprintProgress?: number;
+    blueprintDuration?: number;
     customData?: Record<string, unknown>;
 }
 
@@ -136,10 +139,12 @@ export interface FarmTask {
     energyCostTotal: number;
     requiredResources?: Partial<ResourceInventory>;
     consumedResources?: Partial<ResourceInventory>;
+    producedResources?: Partial<ResourceInventory>;
     createdAt: number;
     startedAt?: number;
     completedAt?: number;
     blockedReason?: string;
+    customData?: Record<string, unknown>;
 }
 
 export interface TaskSchedulerSaveState {

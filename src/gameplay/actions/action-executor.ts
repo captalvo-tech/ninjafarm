@@ -345,6 +345,14 @@ export class ActionExecutor {
                 };
             }
 
+            case 'inspect_droid': {
+                return {
+                    success: true,
+                    actionId: 'inspect_droid',
+                    message: 'Status e agenda da unidade Droid abertos.'
+                };
+            }
+
             case 'repair_building': {
                 this.inventory.consume('wood', 2);
                 this.inventory.consume('metal', 1);

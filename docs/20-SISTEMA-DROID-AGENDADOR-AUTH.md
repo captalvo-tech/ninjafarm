@@ -125,3 +125,41 @@ A tela de Configurações fornece:
    - Teste de conexão em tempo real.
    - Campo para inserção/substituição de chave pessoal da API Gemini.
    - Opção para desconectar chave pessoal e retornar ao modo padrão ou limitado.
+
+---
+
+## 6. Sistema de Blueprints & Interface do Agendador (Scheduler UI)
+
+O Ninja Farm implementa o padrão arquitetural de **Construção por Blueprints**:
+1. Ao selecionar uma estrutura no catálogo de construções, o jogo projeta um modelo translúcido (holograma) na grade 64×36 com status `isBlueprint: true`.
+2. A colocação não deduz recursos instantaneamente nem cria a estrutura acabada por teletransporte. Ela enfileira uma tarefa do tipo `construct_building` com os recursos exigidos no `TaskScheduler`.
+3. O Droid se desloca até o blueprint, consome os materiais requeridos do inventário e executa a montagem física com animação e consumo de bateria.
+4. Ao concluir, o blueprint se transforma na edificação sólida 3D, ativando suas funções (produção de energia, bombeamento de água, iluminação, etc.) e concedendo EXP de arquiteto ao Ninja.
+5. A interface deslizante [`SchedulerUI`](file:///Z:/AI/Ninja_Farm_Project/src/ui/scheduler-ui.ts) (`📋 Agenda`) permite ao jogador:
+   - Monitorar a bateria e estado do Droid em tempo real.
+   - Acompanhar a tarefa ativa com barra de progresso percentual e tempo restante.
+   - Reordenar a prioridade das tarefas (subir/descer na fila).
+   - Cancelar tarefas agendadas (liberando a grade e reembolsando materiais não consumidos).
+
+---
+
+## 7. Gemini AI Read-Only & Modo Duplo (Inteligente vs. Limitado)
+
+O Droid opera como assistente conversacional estritamente de consulta:
+- **Restrição Estrita de Leitura (Read-Only):** A IA do Droid possui ferramentas apenas para ler o estado da fazenda (`getInventory`, `getTasks`, `getEnergyMetrics`, `getCrops`, `getProgress`, `getEventsHistory`). O modelo **NÃO possui ferramentas para alterar o jogo, comprar itens, enfileirar tarefas ou modificar dados**.
+- **Modo Inteligente:** Quando configurada uma chave da API Gemini (Google AI Studio), o jogador pode fazer perguntas livres em linguagem natural sobre o estado da base e receber orientações estratégicas da Unidade Droid.
+- **Modo Limitado / Robótico:** Quando sem chave configurada ou cota esgotada, a interface desabilita o campo de texto livre e disponibiliza 4 relatórios estruturados determinísticos gerados localmente pelo código, sem qualquer chamada ou custo de IA:
+  1. *Relatório de Produção:* Inventário detalhado e saúde dos canteiros.
+  2. *Status de Energia e Bateria:* Geração solar diurna, carga das baterias e status do Droid.
+  3. *O que devo fazer agora? (Sugestões Shinobi):* Diagnóstico algorítmico de gargalos (falta d'água, colheitas maduras, solo vazio, etc.).
+  4. *Diário de Eventos:* Histórico recente de conquistas e atividades da propriedade.
+
+---
+
+## 8. Penalidade de Segurança de 30 Segundos
+
+Para prevenir abuso de cotas e ataques de negação de serviço na API do Gemini:
+- Qualquer erro retornado pelo provedor de IA (cota 429, chave inválida 400, falha de rede 500) ativa uma penalidade de **30 segundos** de bloqueio tanto no servidor PHP quanto no cliente frontend.
+- O campo de texto é desabilitado e um banner vermelho exibe a contagem regressiva em tempo real.
+- Durante a penalidade, o jogador continua podendo utilizar normalmente os relatórios do Modo Limitado.
+

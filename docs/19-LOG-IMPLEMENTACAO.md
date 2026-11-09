@@ -322,3 +322,37 @@
   - `npm run typecheck`: 0 erros (TypeScript estrito).
   - `npm run test`: 44/44 testes unitários aprovados no Vitest (6 novos testes automatizados em [`tests/unit/auth-persistence.test.ts`](file:///Z:/AI/Ninja_Farm_Project/tests/unit/auth-persistence.test.ts) cobrindo sessão, saves na nuvem, conflito de versão e reinicialização de progresso).
   - `npm run build`: bundle de produção gerado com sucesso em 381ms.
+
+### 2026-11-09 — Fases B, C, D, E, F e G: Droid Único, Agendador AFK, Blueprints, Gemini Read-Only e Balanceamento
+- **Status:** Implementado, testado e validado (Fases B, C, D, E, F e G concluídas).
+- **Novas Funcionalidades Entregues:**
+  1. **Entidade do Droid Operacional Único ([`src/rendering/droid.ts`](file:///Z:/AI/Ninja_Farm_Project/src/rendering/droid.ts)):**
+     - Exatamente um Droid por propriedade, com modelo humanoide ou chassi robótico com visor óptico ciano e reator de energia solar.
+     - Barra de bateria flutuante em 3D sobre o chassi com cores dinâmicas (verde > amarelo > vermelho).
+     - Máquina de estados: `idle` (ocioso), `walking` (em trânsito), `working` (trabalhando), `recharging` (recarregando), `paused` (pausado), `depleted` (sem bateria).
+     - Consumo calibrado de bateria e retorno autônomo para a estação solar quando bateria < 15%.
+  2. **Agendador Central de Tarefas ([`src/simulation/task-scheduler.ts`](file:///Z:/AI/Ninja_Farm_Project/src/simulation/task-scheduler.ts)):**
+     - Fila sequencial de tarefas físicas com ordenação dinâmica por prioridade.
+     - Suporte a tarefas: construção, preparo de solo, plantio, rega, colheita, alimentação e coleta animal.
+     - Verificação de recursos prévia (marca `WAITING_RESOURCES` se faltarem materiais, passando para a próxima tarefa viável).
+     - Pausa, retomada, cancelamento e reordenação com integridade de estado.
+  3. **Sistema de Blueprints e Interface do Agendador ([`src/ui/scheduler-ui.ts`](file:///Z:/AI/Ninja_Farm_Project/src/ui/scheduler-ui.ts)):**
+     - Posicionamento de construções gera blueprint translúcido/holográfico na grade e cria tarefa de construção na agenda do Droid.
+     - Ao concluir a construção física, o blueprint se transforma na estrutura acabada com iluminação e funções ativas.
+     - Interface deslizante da agenda (`📋 Agenda`) com monitor de bateria, tarefa ativa em andamento com barra de progresso, e botões de subir/descer prioridade e cancelar tarefas.
+  4. **Simulação Determinística AFK Offline (Fase D):**
+     - Reconciliação baseada no tempo transcorrido ($\Delta t$), simulando ciclos de trabalho, consumo de bateria, recarga solar e conclusão real de tarefas em modo offline.
+  5. **Gemini AI Read-Only & Modo Duplo ([`src/ai/gemini-service.ts`](file:///Z:/AI/Ninja_Farm_Project/src/ai/gemini-service.ts), [`public/api/ai.php`](file:///Z:/AI/Ninja_Farm_Project/public/api/ai.php)):**
+     - O Droid é estritamente de consulta: responde dúvidas, analisa a saúde da base e dá orientações estratégicas ao Ninja sem poderes de execução direta.
+     - Modo Inteligente: dúvidas em linguagem natural via Gemini 2.0 Flash.
+     - Modo Limitado / Robótico: 4 relatórios pré-programados sem chamadas de IA (Produção, Energia e Bateria, Próximos Passos, Diário de Eventos).
+     - Penalidade obrigatória de 30 segundos no servidor e cliente após qualquer erro em pergunta livre.
+  6. **Interface de Diálogo do Droid ([`src/ui/droid-chat.ts`](file:///Z:/AI/Ninja_Farm_Project/src/ui/droid-chat.ts)):**
+     - Acessível diretamente pelo botão `🤖 Droid` no HUD ou clicando na unidade Droid no cenário.
+     - Histórico de conversa, contador visual do bloqueio de 30 segundos e atalhos rápidos para relatórios diagnósticos.
+  7. **Balanceamento e Polimento (Fase G):**
+     - Tempos calibrados para jogabilidade ativa e AFK (atividades agrícolas rápidas de 8 a 15 segundos; construções de 30 a 300 segundos).
+- **Testes & Qualidade:**
+  - `npm run typecheck`: 0 erros (TypeScript estrito).
+  - `npm run test`: 60/60 testes unitários aprovados no Vitest (9 testes dedicados ao Droid/Scheduler em [`tests/unit/droid-scheduler.test.ts`](file:///Z:/AI/Ninja_Farm_Project/tests/unit/droid-scheduler.test.ts) e 7 testes em [`tests/unit/gemini-ai.test.ts`](file:///Z:/AI/Ninja_Farm_Project/tests/unit/gemini-ai.test.ts)).
+  - `npm run build`: bundle de produção gerado com sucesso em 387ms.
