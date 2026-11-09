@@ -262,3 +262,37 @@
   - `npm run build`: bundle de produção otimizado `dist/assets/index-B2NA42bO.js` (1.33 MB).
   - Deploy completo via SCP em `hostinger-prod:domains/pinut.shop/public_html/` com permissões `755`.
   - Smoke tests HTTP 200 confirmados em `https://pinut.shop/assets/index-B2NA42bO.js`, `https://pinut.shop/` e `https://pinut.shop/index.html`.
+
+### 2026-11-09 — IP 100% Autoral, Ninja Humano & Marco A: Núcleo Contextual
+- **Status:** Implementado, testado e validado em navegador.
+- **Inovações de Arquitetura e Game Design:**
+  1. **Originalidade e Eliminação de IP Protegido:**
+     - Remoção completa de referências a Naruto (*Genin, Chunin, Jonin, Kage, Suiton, Kage Bunshin, Chakra*).
+     - Remoção de clones mágicos (`src/gameplay/shadow-clone.ts` removido do repositório) e habilidades sobrenaturais.
+     - O ninja é estritamente humano, utilizando ferramentas manuais (shuriken de treino, salto com bomba de fumaça, enxada, balde, sementes) e maquinário agroecológico autossustentável plausível.
+     - Patamares de graduação agro-shinobi 100% autorais: *Field Novice, Skilled Cultivator, Master Harvester, Estate Warden, Grand Agronomist*.
+  2. **Marco A — Núcleo Contextual (Regra do Botão Único de Ação):**
+     - O jogador **NÃO** precisa alternar manualmente ferramentas para arar, plantar, irrigar ou colher.
+     - **Seleção não é execução:** clicar (desktop) ou tocar (mobile) seleciona o objeto no mundo 3D com destaque visual em anel holográfico esmeralda (`vfx.setSelectionHighlight`).
+     - **Action Resolver ([`src/gameplay/actions/action-resolver.ts`](file:///Z:/AI/Ninja_Farm_Project/src/gameplay/actions/action-resolver.ts)):** Módulo puro determinístico que avalia o objeto selecionado, suas necessidades e recursos:
+       - Terra cultivável bruta -> `Preparar solo`
+       - Solo preparado -> `Plantar` (com verificação amigável de sementes)
+       - Planta crescendo sem água -> `Regar` (com verificação de reserva hídrica)
+       - Plantação madura -> `Colher`
+       - Solo exaurido após 3 colheitas -> `Recuperar solo`
+       - Galinha faminta -> `Alimentar`
+       - Ninho com ovos -> `Coletar ovos`
+       - Instalação danificada -> `Reparar`
+       - Fogueira -> `Descansar`
+       - Boneco de treino -> `Treinar arremesso`
+       - Mercador itinerante -> `Negociar`
+     - **Action Executor ([`src/gameplay/actions/action-executor.ts`](file:///Z:/AI/Ninja_Farm_Project/src/gameplay/actions/action-executor.ts)):** Execução atômica com prevenção de concorrência e duplo-clique acidental (debounce de 300ms). Se o personagem estiver afastado do alvo, aciona o pathfinding A* (`NavigationSystem`) e faz o ninja caminhar até o ponto antes de concluir a ação.
+     - **Universal Context Action UI ([`src/ui/context-action.ts`](file:///Z:/AI/Ninja_Farm_Project/src/ui/context-action.ts)):** Card compacto com identificação e badge de status do alvo + Botão de ação ergonômico no centro inferior com ícone, rótulo, custo e atalho de teclado `[Espaço / E]` no desktop e touch no mobile.
+  3. **Ciclo de Solo e Enriquecimento Agrícola:**
+     - Estados de terra modelados com fidelidade visual (`raw` -> `tilled` -> `planted` -> `growing`/`thirsty` -> `ready` -> `exhausted`).
+     - Novo material PBR de solo exaurido (`exhaustedSoil`) e feedback tátil/sonoro na transição entre etapas.
+- **Testes & Qualidade:**
+  - `npm run typecheck`: 0 erros (TypeScript estrito).
+  - `npm run test`: 38/38 testes unitários aprovados no Vitest (10 testes cobrindo todos os cenários obrigatórios de ação contextual).
+  - `npm run build`: bundle otimizado gerado com sucesso em 365ms (`dist/index.html` e `dist/studio.html`).
+  - Verificação real com Playwright no navegador headless capturando visual desktop e mobile.

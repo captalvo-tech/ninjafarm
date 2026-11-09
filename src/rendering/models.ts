@@ -469,10 +469,16 @@ export class BuildingModelFactory {
         return root;
     }
 
-    updateCropSoil(bedEntity: Entity, isWatered: boolean): void {
+    updateCropSoil(bedEntity: Entity, isWatered: boolean, soilStatus?: string): void {
         const soilEntity = bedEntity.findByName('bed_soil') as Entity;
         if (soilEntity && soilEntity.render) {
-            soilEntity.render.material = isWatered ? this.materials.wetSoil : this.materials.soil;
+            if (isWatered) {
+                soilEntity.render.material = this.materials.wetSoil;
+            } else if (soilStatus === 'exhausted') {
+                soilEntity.render.material = this.materials.exhaustedSoil;
+            } else {
+                soilEntity.render.material = this.materials.soil;
+            }
         }
     }
 

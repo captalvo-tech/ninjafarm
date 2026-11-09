@@ -22,6 +22,7 @@ export interface FarmMaterials {
     lotusPink: StandardMaterial;
     lotusPad: StandardMaterial;
     wetSoil: StandardMaterial;
+    exhaustedSoil: StandardMaterial;
 }
 
 export function createFarmMaterials(): FarmMaterials {
@@ -183,6 +184,13 @@ export function createFarmMaterials(): FarmMaterials {
     wetSoil.metalness = 0.15;
     wetSoil.update();
 
+    // Solo exaurido (seco e acinzentado)
+    const exhaustedSoil = new StandardMaterial();
+    exhaustedSoil.diffuse = new Color(0.46, 0.42, 0.37);
+    exhaustedSoil.gloss = 0.05;
+    exhaustedSoil.useMetalness = false;
+    exhaustedSoil.update();
+
     return {
         grass,
         soil,
@@ -204,7 +212,8 @@ export function createFarmMaterials(): FarmMaterials {
         carrotGreens,
         lotusPink,
         lotusPad,
-        wetSoil
+        wetSoil,
+        exhaustedSoil
     };
 }
 

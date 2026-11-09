@@ -47,6 +47,11 @@ import { WeatherSystem } from './rendering/weather';
 import { NinjaProgressionSystem } from './gameplay/progression';
 import { getVisualConfig, onVisualConfigChange } from './core/visual-config';
 import type { BuildingOrientation, BuildingType, CropType, FarmSaveState } from './core/types';
+import { NavigationSystem, type PathNode } from './simulation/navigation';
+import { ActionResolver, type ResolverContext } from './gameplay/actions/action-resolver';
+import { ActionExecutor } from './gameplay/actions/action-executor';
+import type { ContextAction, SelectedTarget, SoilStatus } from './gameplay/actions/action-types';
+import { ContextActionUI } from './ui/context-action';
 
 // ==========================================
 // 1. BOOTSTRAP GRAPHICS DEVICE & PLAYCANVAS
@@ -238,6 +243,257 @@ const merchantMgr = new ShinobiMerchantManager(inventory, () => {
     objectives.recordProgress('trade_merchant');
 });
 
+// ==========================================
+// 4.1. SISTEMA CONTEXTUAL UNIFICADO (MARCO A)
+// ==========================================
+const navigation = new NavigationSystem(grid);
+const actionExecutor = new ActionExecutor(grid, cropSystem, inventory, navigation);
+
+let selectedWorldTarget: SelectedTarget | null = null;
+let ninjaWaypoints: PathNode[] = [];
+let pendingActionOnArrival: ContextAction | null = null;
+
+function getResolverContext(): ResolverContext {
+    const nPos = ninja.entity.getPosition();
+    return {
+        inventory: inventory.getAll(),
+        seedInventory: { rice: 5, vegetable: 5, lotus: 5 },
+        selectedCropPreference: currentSelectedCrop,
+        ninjaPosition: { x: nPos.x, y: nPos.y, z: nPos.z },
+        canFish: true,
+        canRest: true
+    };
+}
+
+function selectTarget(target: SelectedTarget): void {
+    selectedWorldTarget = target;
+    vfx.setSelectionHighlight(target.worldPosition, target.type === 'plot' ? 3.8 : 2.2);
+    sound.playClick();
+    triggerHaptic('light');
+
+    updateSelectedAction();
+}
+
+function updateSelectedAction(): void {
+    if (!selectedWorldTarget) {
+        contextUI.hide();
+        return;
+    }
+
+    // Se for canteiro, sincroniza estado mais recente da cultura e solo
+    if (selectedWorldTarget.type === 'plot') {
+        const b = grid.getBuilding(selectedWorldTarget.id);
+        const crop = cropSystem.getCrop(selectedWorldTarget.id);
+        if (crop) {
+            selectedWorldTarget.growthProgress = crop.growthProgress;
+            selectedWorldTarget.waterSupplied = crop.waterSupplied;
+            selectedWorldTarget.cropType = crop.cropType;
+            if (crop.stage === 'ready') {
+                selectedWorldTarget.soilStatus = 'ready';
+            } else if (crop.stage === 'growing' || crop.stage === 'planted') {
+                selectedWorldTarget.soilStatus = crop.waterSupplied ? (crop.stage === 'growing' ? 'growing' : 'planted') : 'thirsty';
+            }
+        } else if (b?.customData?.soilStatus) {
+            selectedWorldTarget.soilStatus = b.customData.soilStatus as SoilStatus;
+        }
+    }
+
+    const context = getResolverContext();
+    const action = ActionResolver.resolve(selectedWorldTarget, context);
+    contextUI.showAction(action);
+
+    // Sincroniza botão principal touch mobile
+    joystick.setActionState(action.icon, action.title);
+}
+
+function deselectTarget(): void {
+    selectedWorldTarget = null;
+    vfx.setSelectionHighlight(null);
+    contextUI.hide();
+    joystick.setActionState('💨', 'Esquiva');
+}
+
+function executeDirectContextAction(action: ContextAction): void {
+    const nPos = ninja.entity.getPosition();
+    const ninjaCoords = grid.worldToGrid(nPos.x, nPos.z);
+    const context = getResolverContext();
+
+    const res = actionExecutor.execute(action.target, context, { x: ninjaCoords.gridX, y: ninjaCoords.gridY });
+
+    if (res.requiresMovement && res.path && res.path.length > 0) {
+        ninjaWaypoints = [...res.path];
+        pendingActionOnArrival = action;
+        tapMoveTarget = null;
+        if (res.message) {
+            hud.showToast(res.message);
+        }
+        return;
+    }
+
+    if (!res.success) {
+        if (res.errorReason) {
+            hud.showToast(res.errorReason);
+            vfx.showFloatingText(`⚠️ ${res.errorReason}`, undefined, undefined, '#EF4444');
+            sound.playClick();
+            triggerHaptic('heavy');
+        }
+        return;
+    }
+
+    // Feedback audiovisual dinâmico por tipo de ação
+    if (res.actionId === 'harvest_crop') {
+        sound.playHarvest();
+        const combo = registerHarvestCombo();
+        if (combo.bonusXp > 0) {
+            progression.addXP(combo.bonusXp);
+            setTimeout(() => {
+                vfx.showFloatingText(combo.message, undefined, undefined, '#FBBF24');
+            }, 200);
+            if (combo.combo > 1) {
+                objectives.recordProgress('harvest_combo');
+            }
+        }
+        triggerHaptic('harvest');
+        objectives.recordProgress('harvest');
+        objectives.recordCropHarvested(action.target.cropType || 'rice');
+    } else if (res.actionId === 'plant_crop') {
+        sound.playBuild();
+        triggerHaptic('light');
+        objectives.recordCropPlanted(action.target.cropType || currentSelectedCrop);
+    } else if (res.actionId === 'prepare_soil' || res.actionId === 'recover_soil') {
+        sound.playBuild();
+        triggerHaptic('light');
+    } else if (res.actionId === 'water_crop') {
+        sound.playWaterSplash();
+        triggerHaptic('light');
+    } else if (res.actionId === 'catch_fish') {
+        sound.playWaterSplash();
+        triggerHaptic('success');
+        objectives.recordProgress('fish');
+        objectives.recordProgress('fish_koi');
+    } else if (res.actionId === 'rest_bonfire') {
+        triggerHaptic('light');
+        objectives.recordProgress('bonfire');
+    } else if (res.actionId === 'pet_animal' || res.actionId === 'feed_animal' || res.actionId === 'collect_eggs') {
+        sound.playAnimalPet();
+        triggerHaptic('light');
+        objectives.recordProgress('pet');
+        objectives.recordProgress('feed_animals');
+    } else if (res.actionId === 'train_dummy') {
+        throwShuriken();
+        triggerHaptic('medium');
+    } else if (res.actionId === 'trade_merchant') {
+        merchantMgr.open();
+    }
+
+    if (res.xpReward) {
+        progression.addXP(res.xpReward);
+    }
+
+    if (res.message) {
+        hud.showToast(res.message);
+        vfx.showFloatingText(res.message, undefined, undefined, '#34D399');
+    }
+
+    hud.updateResources(inventory.getAll());
+    updateSelectedAction();
+}
+
+function findNearestSelectableTarget(ninjaX: number, ninjaZ: number, maxDist: number): SelectedTarget | null {
+    let nearest: SelectedTarget | null = null;
+    let minDist = maxDist;
+
+    // 1. Canteiros
+    for (const b of grid.getAllBuildings()) {
+        if (b.type === 'crop_field') {
+            const bWorld = grid.gridToWorld(b.gridX, b.gridY);
+            const dist = Math.hypot(bWorld.x - ninjaX, bWorld.z - ninjaZ);
+            if (dist < minDist) {
+                minDist = dist;
+                const crop = cropSystem.getCrop(b.instanceId);
+                let soilStatus: SoilStatus = (b.customData?.soilStatus as SoilStatus) || 'raw';
+                if (crop) {
+                    if (crop.stage === 'ready') soilStatus = 'ready';
+                    else if (crop.stage === 'growing') soilStatus = crop.waterSupplied ? 'growing' : 'thirsty';
+                    else if (crop.stage === 'planted') soilStatus = crop.waterSupplied ? 'planted' : 'thirsty';
+                    else if (crop.stage === 'harvested' || crop.stage === 'empty') soilStatus = 'tilled';
+                }
+                nearest = {
+                    id: b.instanceId,
+                    type: 'plot',
+                    name: 'Canteiro Agrícola',
+                    gridX: b.gridX,
+                    gridY: b.gridY,
+                    worldPosition: bWorld,
+                    soilStatus,
+                    cropType: crop?.cropType || currentSelectedCrop,
+                    cropInstanceId: crop?.instanceId,
+                    growthProgress: crop?.growthProgress ?? 0,
+                    waterSupplied: crop?.waterSupplied ?? true
+                };
+            }
+        }
+    }
+
+    // 2. Animais da fauna
+    for (const anim of fauna.getAnimals()) {
+        const dist = Math.hypot(anim.position.x - ninjaX, anim.position.z - ninjaZ);
+        if (dist < minDist) {
+            minDist = dist;
+            nearest = {
+                id: anim.id || `anim_${anim.type}`,
+                type: 'animal',
+                animalType: anim.type,
+                name: anim.type === 'chicken' ? 'Galinha Caipira' : anim.type === 'cow' ? 'Vaca Leiteira' : 'Raposa Guardiã',
+                hunger: anim.hunger ?? 20,
+                readyToCollect: anim.readyToCollect ?? false,
+                gridX: Math.floor(anim.position.x),
+                gridY: Math.floor(anim.position.z),
+                worldPosition: { x: anim.position.x, y: anim.position.y, z: anim.position.z }
+            };
+        }
+    }
+
+    // 3. Mercador Itinerante
+    const mDist = Math.hypot(merchantPos.x - ninjaX, merchantPos.z - ninjaZ);
+    if (mDist < minDist) {
+        minDist = mDist;
+        nearest = {
+            id: 'wandering_merchant',
+            type: 'merchant',
+            name: 'Mercador Itinerante',
+            gridX: 20,
+            gridY: 26,
+            worldPosition: { x: merchantPos.x, y: 0, z: merchantPos.z }
+        };
+    }
+
+    // 4. Boneco de Treino
+    const dDist = Math.hypot(dummyPos.x - ninjaX, dummyPos.z - ninjaZ);
+    if (dDist < minDist) {
+        minDist = dDist;
+        nearest = {
+            id: 'training_dummy',
+            type: 'dummy',
+            name: 'Boneco de Treino',
+            gridX: 20,
+            gridY: 10,
+            worldPosition: { x: dummyPos.x, y: 0, z: dummyPos.z }
+        };
+    }
+
+    return nearest;
+}
+
+const contextUI = new ContextActionUI({
+    onExecute: (action) => {
+        executeDirectContextAction(action);
+    },
+    onDeselect: () => {
+        deselectTarget();
+    }
+});
+
 // Map de entidades 3D no mundo
 const buildingEntities = new Map<string, Entity>();
 
@@ -370,58 +626,24 @@ function registerHarvestCombo(): { combo: number; bonusXp: number; message: stri
 }
 
 function handleInteraction(): void {
-    const prompt = interactionMgr.getCurrentPrompt();
-    const actionType = prompt?.actionType;
-    const res = interactionMgr.executeAction(currentSelectedCrop);
-    if (res.executed) {
-        if (res.isTrade) {
-            merchantMgr.open();
+    if (selectedWorldTarget) {
+        const action = contextUI.getActiveAction();
+        if (action && action.enabled) {
+            executeDirectContextAction(action);
             return;
         }
-        if (res.message) {
-            hud.showToast(res.message);
-            hud.updateResources(inventory.getAll());
-            if (res.xpReward) {
-                progression.addXP(res.xpReward);
-            }
+    }
 
-            if (actionType === 'harvest') {
-                const combo = registerHarvestCombo();
-                if (combo.bonusXp > 0) {
-                    progression.addXP(combo.bonusXp);
-                    setTimeout(() => {
-                        vfx.showFloatingText(combo.message, undefined, undefined, '#FBBF24');
-                    }, 200);
-                    if (combo.combo > 1) {
-                        objectives.recordProgress('harvest_combo');
-                    }
-                }
-                triggerHaptic('harvest');
-                vfx.showFloatingText(res.message, undefined, undefined, '#34D399');
-                objectives.recordProgress('harvest');
-                objectives.recordCropHarvested(res.cropType || 'rice');
-            } else if (actionType === 'plant') {
-                triggerHaptic('light');
-                vfx.showFloatingText(res.message, undefined, undefined, '#34D399');
-                objectives.recordCropPlanted(res.cropType || currentSelectedCrop);
-            } else if (actionType === 'fish') {
-                triggerHaptic('success');
-                vfx.showFloatingText(res.message, undefined, undefined, '#60A5FA');
-                objectives.recordProgress('fish');
-                objectives.recordProgress('fish_koi');
-            } else if (actionType === 'rest') {
-                triggerHaptic('light');
-                vfx.showFloatingText(res.message, undefined, undefined, '#F97316');
-                objectives.recordProgress('bonfire');
-            } else if (actionType === 'pet_chicken' || actionType === 'pet_fox') {
-                triggerHaptic('light');
-                vfx.showFloatingText(res.message, undefined, undefined, '#EC4899');
-                objectives.recordProgress('pet');
-                objectives.recordProgress('feed_animals');
-            } else {
-                vfx.showFloatingText(res.message, undefined, undefined, '#E5E7EB');
-            }
+    const nPos = ninja.entity.getPosition();
+    const nearest = findNearestSelectableTarget(nPos.x, nPos.z, 4.5);
+    if (nearest) {
+        selectTarget(nearest);
+        const action = contextUI.getActiveAction();
+        if (action && action.enabled) {
+            executeDirectContextAction(action);
         }
+    } else {
+        smokeDash();
     }
 }
 
@@ -668,6 +890,12 @@ function cancelCurrentAction(): void {
         actionCancelled = true;
     }
 
+    // 1.1. Desmarca alvo selecionado e oculta botão contextual
+    if (selectedWorldTarget) {
+        deselectTarget();
+        actionCancelled = true;
+    }
+
     // 2. Cancela colocação de construção ativa
     if (activePlacementType || ghostEntity) {
         setPlacementType(null);
@@ -879,7 +1107,7 @@ function handleTap(clientX: number, clientY: number): void {
         return;
     }
 
-    // Em modo normal de exploração: raycast para interagir ou mover ninja
+    // Em modo normal de exploração: raycast para selecionar entidade ou mover ninja (Seleção não é execução)
     if (cameraCtrl.entity.camera) {
         const ray = cameraCtrl.entity.camera.screenToWorld(clientX, clientY, 1.0);
         const camPos = cameraCtrl.entity.getPosition();
@@ -893,23 +1121,107 @@ function handleTap(clientX: number, clientY: number): void {
 
                 // 1. Tocou no Boneco de Treino do Dojo?
                 const dDist = Math.hypot(hitX - dummyPos.x, hitZ - dummyPos.z);
-                if (dDist <= 2.2) {
-                    throwShuriken();
-                    triggerHaptic('medium');
+                if (dDist <= 2.6) {
+                    selectTarget({
+                        id: 'training_dummy',
+                        type: 'dummy',
+                        name: 'Boneco de Treino',
+                        gridX: 20,
+                        gridY: 10,
+                        worldPosition: { x: dummyPos.x, y: 0, z: dummyPos.z }
+                    });
                     return;
                 }
 
-                // 2. Tocou em um canteiro próximo ou animal?
-                const prompt = interactionMgr.getCurrentPrompt();
-                if (prompt && prompt.distance <= 4.0) {
-                    handleInteraction();
+                // 2. Tocou no Mercador Itinerante?
+                const mDist = Math.hypot(hitX - merchantPos.x, hitZ - merchantPos.z);
+                if (mDist <= 2.8) {
+                    selectTarget({
+                        id: 'wandering_merchant',
+                        type: 'merchant',
+                        name: 'Mercador Itinerante',
+                        gridX: 20,
+                        gridY: 26,
+                        worldPosition: { x: merchantPos.x, y: 0, z: merchantPos.z }
+                    });
                     return;
                 }
 
-                // 3. Toque no terreno livre: Tap-to-Move com indicador visual!
+                // 3. Tocou em animal da fauna?
+                for (const anim of fauna.getAnimals()) {
+                    const aDist = Math.hypot(hitX - anim.position.x, hitZ - anim.position.z);
+                    if (aDist <= 2.5) {
+                        selectTarget({
+                            id: anim.id || `anim_${anim.type}`,
+                            type: 'animal',
+                            animalType: anim.type,
+                            name: anim.type === 'chicken' ? 'Galinha Caipira' : anim.type === 'cow' ? 'Vaca Leiteira' : 'Raposa Guardiã',
+                            hunger: anim.hunger ?? 20,
+                            readyToCollect: anim.readyToCollect ?? false,
+                            gridX: Math.floor(anim.position.x),
+                            gridY: Math.floor(anim.position.z),
+                            worldPosition: { x: anim.position.x, y: anim.position.y, z: anim.position.z }
+                        });
+                        return;
+                    }
+                }
+
+                // 4. Tocou em um canteiro ou construção na grade?
                 const coords = grid.worldToGrid(hitX, hitZ);
                 const cell = grid.getCell(coords.gridX, coords.gridY);
+                if (cell && cell.occupiedBy) {
+                    const b = grid.getBuilding(cell.occupiedBy);
+                    if (b) {
+                        const bWorld = grid.gridToWorld(b.gridX, b.gridY);
+                        if (b.type === 'crop_field') {
+                            const crop = cropSystem.getCrop(b.instanceId);
+                            let soilStatus: SoilStatus = (b.customData?.soilStatus as SoilStatus) || 'raw';
+                            if (crop) {
+                                if (crop.stage === 'ready') soilStatus = 'ready';
+                                else if (crop.stage === 'growing') soilStatus = crop.waterSupplied ? 'growing' : 'thirsty';
+                                else if (crop.stage === 'planted') soilStatus = crop.waterSupplied ? 'planted' : 'thirsty';
+                                else if (crop.stage === 'harvested' || crop.stage === 'empty') soilStatus = 'tilled';
+                            }
+                            selectTarget({
+                                id: b.instanceId,
+                                type: 'plot',
+                                name: 'Canteiro Agrícola',
+                                gridX: b.gridX,
+                                gridY: b.gridY,
+                                worldPosition: bWorld,
+                                soilStatus,
+                                cropType: crop?.cropType || currentSelectedCrop,
+                                cropInstanceId: crop?.instanceId,
+                                growthProgress: crop?.growthProgress ?? 0,
+                                waterSupplied: crop?.waterSupplied ?? true
+                            });
+                            return;
+                        } else {
+                            const def = BUILDING_CATALOG[b.type];
+                            selectTarget({
+                                id: b.instanceId,
+                                type: 'building',
+                                name: def?.name || b.type,
+                                buildingType: b.type,
+                                buildingHealth: b.health,
+                                maxHealth: def?.maxHealth,
+                                gridX: b.gridX,
+                                gridY: b.gridY,
+                                worldPosition: bWorld
+                            });
+                            return;
+                        }
+                    }
+                }
+
+                // 5. Toque no terreno livre: desmarca seleção anterior e move ninja até o ponto
+                if (selectedWorldTarget) {
+                    deselectTarget();
+                }
+
                 if (cell && cell.walkable) {
+                    ninjaWaypoints = [];
+                    pendingActionOnArrival = null;
                     tapMoveTarget = new Vec3(hitX, 0, hitZ);
                     vfx.spawnMoveBeacon(hitX, 0, hitZ);
                     triggerHaptic('light');
@@ -1006,7 +1318,7 @@ app.on('update', () => {
         cameraCtrl.entity.camera.clearColor = new Color(skyR, skyG, skyB);
     }
 
-    // 5. Locomoção do Ninja (WASD + Virtual Joystick + Tap-to-Move)
+    // 5. Locomoção do Ninja (WASD + Virtual Joystick + Waypoints Automáticos + Tap-to-Move)
     let moveX = 0;
     let moveZ = 0;
 
@@ -1015,12 +1327,40 @@ app.on('update', () => {
     if (keysDown.has('KeyA') || keysDown.has('ArrowLeft')) moveX -= 1;
     if (keysDown.has('KeyD') || keysDown.has('ArrowRight')) moveX += 1;
 
+    // Se o jogador utilizou comandos manuais, cancela a rota automática
+    if (moveX !== 0 || moveZ !== 0) {
+        ninjaWaypoints = [];
+        pendingActionOnArrival = null;
+        tapMoveTarget = null;
+    }
+
     // Adiciona vetor do joystick touch mobile
     const joyVec = joystick.getVector();
     if (joyVec.intensity > 0.1) {
         moveX += joyVec.x;
         moveZ += joyVec.y;
-        tapMoveTarget = null; // Joystick cancela o destino do toque
+        tapMoveTarget = null;
+        ninjaWaypoints = [];
+        pendingActionOnArrival = null;
+    } else if (ninjaWaypoints.length > 0) {
+        const curPos = ninja.entity.getPosition();
+        const wp = ninjaWaypoints[0];
+        const worldWp = grid.gridToWorld(wp.x, wp.y);
+        const toWpX = worldWp.x - curPos.x;
+        const toWpZ = worldWp.z - curPos.z;
+        const distWp = Math.hypot(toWpX, toWpZ);
+
+        if (distWp < 0.6) {
+            ninjaWaypoints.shift();
+            if (ninjaWaypoints.length === 0 && pendingActionOnArrival) {
+                const actionToRun = pendingActionOnArrival;
+                pendingActionOnArrival = null;
+                executeDirectContextAction(actionToRun);
+            }
+        } else {
+            moveX = toWpX / distWp;
+            moveZ = toWpZ / distWp;
+        }
     } else if (tapMoveTarget) {
         const curPos = ninja.entity.getPosition();
         const toTargetX = tapMoveTarget.x - curPos.x;
@@ -1095,40 +1435,43 @@ app.on('update', () => {
 
     ninja.update(dt);
 
-    // 6. Atualização de Proximidade e Interações (Contexto Dinâmico para o Botão Mobile)
+    // 6. Atualização de Proximidade e Interações Contextuais (Marco A)
     const nPos = ninja.entity.getPosition();
-    interactionMgr.update(nPos.x, nPos.z);
-
-    const prompt = interactionMgr.getCurrentPrompt();
-    if (prompt) {
-        if (prompt.actionType === 'harvest') {
-            joystick.setActionState('🌾', 'Colher');
-            joystick.showSeedPicker(false);
-        } else if (prompt.actionType === 'plant') {
-            joystick.setActionState('🌱', 'Plantar');
-            joystick.showSeedPicker(true);
-        } else if (prompt.actionType === 'pet_chicken') {
-            joystick.setActionState('🥚', 'Alimentar');
-            joystick.showSeedPicker(false);
-        } else if (prompt.actionType === 'pet_fox') {
-            joystick.setActionState('🦊', 'Acariciar');
-            joystick.showSeedPicker(false);
-        } else if (prompt.actionType === 'fish') {
-            joystick.setActionState('🎣', 'Pescar');
-            joystick.showSeedPicker(false);
-        } else if (prompt.actionType === 'rest') {
-            joystick.setActionState('🔥', 'Descansar');
-            joystick.showSeedPicker(false);
-        } else if (prompt.actionType === 'trade') {
-            joystick.setActionState('🪙', 'Comerciar');
-            joystick.showSeedPicker(false);
+    if (selectedWorldTarget) {
+        updateSelectedAction();
+    } else {
+        interactionMgr.update(nPos.x, nPos.z);
+        const prompt = interactionMgr.getCurrentPrompt();
+        if (prompt) {
+            if (prompt.actionType === 'harvest') {
+                joystick.setActionState('🌾', 'Colher');
+                joystick.showSeedPicker(false);
+            } else if (prompt.actionType === 'plant') {
+                joystick.setActionState('🌱', 'Plantar');
+                joystick.showSeedPicker(true);
+            } else if (prompt.actionType === 'pet_chicken') {
+                joystick.setActionState('🥚', 'Alimentar');
+                joystick.showSeedPicker(false);
+            } else if (prompt.actionType === 'pet_fox') {
+                joystick.setActionState('🦊', 'Acariciar');
+                joystick.showSeedPicker(false);
+            } else if (prompt.actionType === 'fish') {
+                joystick.setActionState('🎣', 'Pescar');
+                joystick.showSeedPicker(false);
+            } else if (prompt.actionType === 'rest') {
+                joystick.setActionState('🔥', 'Descansar');
+                joystick.showSeedPicker(false);
+            } else if (prompt.actionType === 'trade') {
+                joystick.setActionState('🪙', 'Comerciar');
+                joystick.showSeedPicker(false);
+            } else {
+                joystick.setActionState('🔍', 'Inspecionar');
+                joystick.showSeedPicker(false);
+            }
         } else {
-            joystick.setActionState('🔍', 'Inspecionar');
+            joystick.setActionState('💨', 'Esquiva');
             joystick.showSeedPicker(false);
         }
-    } else {
-        joystick.setActionState('💨', 'Esquiva');
-        joystick.showSeedPicker(false);
     }
 
     // Respiração sutil do Mercador

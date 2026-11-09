@@ -3,6 +3,7 @@ import { FarmGrid } from '../core/grid';
 import type { GlbAssetLoader } from './asset-loader';
 
 export interface AnimalInstance {
+    id?: string;
     entity: Entity;
     modelEntity?: Entity;
     animLayer?: any;
@@ -13,6 +14,8 @@ export interface AnimalInstance {
     targetRotation: number;
     state: 'idle' | 'walk' | 'eat';
     stateTimer: number;
+    hunger?: number;
+    readyToCollect?: boolean;
 }
 
 export class FaunaManager {

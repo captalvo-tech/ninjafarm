@@ -28,6 +28,8 @@ export class VisualEffectsManager {
     private sparkMat: StandardMaterial;
     private beaconMat: StandardMaterial;
     private beacons: { entity: Entity; life: number; maxLife: number }[] = [];
+    private selectionRing: Entity | null = null;
+    private selectionMat: StandardMaterial;
 
     constructor() {
         this.entity = new Entity('vfx_manager');
@@ -64,6 +66,13 @@ export class VisualEffectsManager {
         this.beaconMat.opacity = 0.7;
         this.beaconMat.blendType = 2; // BLEND_NORMAL
         this.beaconMat.update();
+
+        this.selectionMat = new StandardMaterial();
+        this.selectionMat.diffuse = new Color(0.1, 0.9, 0.6);
+        this.selectionMat.emissive = new Color(0.1, 0.8, 0.5);
+        this.selectionMat.opacity = 0.65;
+        this.selectionMat.blendType = 2; // BLEND_NORMAL
+        this.selectionMat.update();
     }
 
     registerTarget(target: HitTarget): void {
@@ -228,6 +237,28 @@ export class VisualEffectsManager {
             life: 0,
             maxLife: 0.45
         });
+    }
+
+    setSelectionHighlight(pos: { x: number; y: number; z: number } | null, radius: number = 2.0): void {
+        if (!pos) {
+            if (this.selectionRing) {
+                this.selectionRing.enabled = false;
+            }
+            return;
+        }
+
+        if (!this.selectionRing) {
+            this.selectionRing = new Entity('selection_ring');
+            this.selectionRing.addComponent('render', {
+                type: 'cylinder',
+                material: this.selectionMat
+            });
+            this.entity.addChild(this.selectionRing);
+        }
+
+        this.selectionRing.enabled = true;
+        this.selectionRing.setLocalScale(radius, 0.04, radius);
+        this.selectionRing.setPosition(pos.x, pos.y + 0.05, pos.z);
     }
 
     // Exibe número flutuante na tela ("+25 Alimento", etc.)

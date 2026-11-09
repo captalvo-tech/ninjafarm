@@ -22,6 +22,11 @@ export class InventorySystem {
         return this.resources[type];
     }
 
+    set(type: ResourceType, amount: number): void {
+        this.resources[type] = Math.max(0, amount);
+        domainEvents.emit('inventory.changed', { type, current: this.resources[type], added: 0 });
+    }
+
     getAll(): Readonly<ResourceInventory> {
         return { ...this.resources };
     }
