@@ -504,3 +504,4 @@ export class DroidChatModal {
         this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
     }
 }
+

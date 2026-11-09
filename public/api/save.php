@@ -263,3 +263,4 @@ if ($action === 'reset') {
 
 http_response_code(400);
 echo json_encode(['error' => 'Ação de save desconhecida.']);
+

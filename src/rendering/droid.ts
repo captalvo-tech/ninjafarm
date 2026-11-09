@@ -31,10 +31,10 @@ export class FarmDroid {
     private assetLoader?: GlbAssetLoader;
 
     // Materiais especializados para o chassi robótico do Droid
-    private chassisMat: StandardMaterial;
-    private visorMat: StandardMaterial;
-    private batteryBgMat: StandardMaterial;
-    private batteryFillMat: StandardMaterial;
+    private chassisMat?: StandardMaterial;
+    private visorMat?: StandardMaterial;
+    private batteryBgMat?: StandardMaterial;
+    private batteryFillMat?: StandardMaterial;
 
     constructor(
         grid: FarmGrid,
@@ -53,6 +53,30 @@ export class FarmDroid {
         this.entity.addChild(this.modelContainer);
         this.entity.addChild(this.batteryHudContainer);
 
+        if (this.hasActiveApp()) {
+            this.initMaterials();
+            this.setupVisuals();
+            this.setupFloatingBatteryHUD();
+        }
+
+        if (initialState) {
+            this.battery = initialState.battery ?? 100;
+            this.maxBattery = initialState.maxBattery ?? 100;
+            this.state = initialState.state ?? 'idle';
+            this.workSpeedMultiplier = initialState.workSpeedMultiplier ?? 1.0;
+            if (initialState.position) {
+                this.entity.setPosition(initialState.position.x, initialState.position.y, initialState.position.z);
+            }
+        } else {
+            // Posição inicial próxima à sede HQ e estação solar
+            const startPos = this.grid.gridToWorld(14, 15);
+            this.entity.setPosition(startPos.x, startPos.y, startPos.z);
+        }
+
+        this.updateBatteryVisuals();
+    }
+
+    private initMaterials(): void {
         // Materiais cibernéticos
         this.chassisMat = new StandardMaterial();
         this.chassisMat.diffuse = new Color(0.85, 0.9, 0.95);
@@ -76,25 +100,6 @@ export class FarmDroid {
         this.batteryFillMat.diffuse = new Color(0.1, 0.85, 0.45);
         this.batteryFillMat.emissive = new Color(0.1, 0.8, 0.4);
         this.batteryFillMat.update();
-
-        this.setupVisuals();
-        this.setupFloatingBatteryHUD();
-
-        if (initialState) {
-            this.battery = initialState.battery ?? 100;
-            this.maxBattery = initialState.maxBattery ?? 100;
-            this.state = initialState.state ?? 'idle';
-            this.workSpeedMultiplier = initialState.workSpeedMultiplier ?? 1.0;
-            if (initialState.position) {
-                this.entity.setPosition(initialState.position.x, initialState.position.y, initialState.position.z);
-            }
-        } else {
-            // Posição inicial próxima à sede HQ e estação solar
-            const startPos = this.grid.gridToWorld(14, 15);
-            this.entity.setPosition(startPos.x, startPos.y, startPos.z);
-        }
-
-        this.updateBatteryVisuals();
     }
 
     private hasActiveApp(): boolean {

@@ -230,3 +230,4 @@ describe('Fase B: Droid Único e Agendador de Tarefas', () => {
         expect(novoScheduler.getTasks()[0].id).toBe(task.id);
     });
 });
+

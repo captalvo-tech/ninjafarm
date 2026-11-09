@@ -119,3 +119,4 @@ describe('Fase E & F: Gemini AI Read-Only & Modo Limitado', () => {
         expect(res2.error).toContain('Intervalo de segurança ativo');
     });
 });
+
