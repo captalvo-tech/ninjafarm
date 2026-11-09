@@ -53,6 +53,28 @@ Uma IA pode automatizar scripts Blender para lote de conversões, mas inspeção
 5. 1 galinha animada **ou** peixe animado, conforme o primeiro asset legal com qualidade aceitável.
 6. 2 materiais de terreno de boa qualidade; 1 sky/HDRI autorizado.
 
+## Calibração Métrica Rigorosa da Fauna 3D (Marco M1)
+
+A PlayCanvas Engine adota o padrão estrito de **1 unidade de mundo = 1 metro métrico**. Os pacotes de assets da Quaternius CC0 utilizam armature raiz modelada em centímetros (fator 100). Sem a normalização correta, escalas multiplicadoras empíricas (como 16.0) produziam anomalias visuais como uma vaca com mais de 73 metros de altura.
+
+Para eliminar aberrações métricas, implementamos a medição via caixa delimitadora tridimensional AABB (_Axis-Aligned Bounding Box_) na classe [`fauna-calibrator.ts`](file:///Z:/AI/Ninja_Farm_Project/src/rendering/fauna-calibrator.ts) e normalizamos todas as entidades biológicas para as proporções naturais da Terra:
+
+| Modelo GLB      | Espécie / Papel     | Altura Bruta Mesh (u) | Escala Canônica | Altura Alvo no Jogo      | Offset Y Solo | Evidência Fotográfica              |
+| :-------------- | :------------------ | :-------------------- | :-------------- | :----------------------- | :------------ | :--------------------------------- |
+| `Cow.glb`       | Vaca Holandesa      | 4.587 m               | **0.316**       | **1.45 m** (cernelha)    | +0.018 m      | `fauna-side-comparison.png`        |
+| `Bull.glb`      | Touro Reprodutor    | 4.587 m               | **0.349**       | **1.60 m** (dorso)       | +0.019 m      | `fauna-front-comparison.png`       |
+| `Horse.glb`     | Cavalo de Tração    | 4.824 m               | **0.332**       | **1.60 m** (cernelha)    | +0.004 m      | `fauna-front-comparison.png`       |
+| `Donkey.glb`    | Burro de Carga      | 3.954 m               | **0.329**       | **1.30 m** (cernelha)    | -0.002 m      | `fauna-side-comparison.png`        |
+| `fox.glb`       | Raposa Vermelha     | 79.029 m              | **0.0048**      | **0.38 m** (porte baixo) | +0.001 m      | `fauna-perspective-comparison.png` |
+| `ShibaInu.glb`  | Cão de Guarda Shiba | 3.096 m               | **0.129**       | **0.40 m** (dorso)       | -0.001 m      | `fauna-perspective-comparison.png` |
+| `character.glb` | Ninja Humano        | 1.829 m               | **1.000**       | **1.83 m** (estatura)    | 0.000 m       | `fauna-front-comparison.png`       |
+
+> [!IMPORTANT]
+>
+> - O cálculo da escala uniforme para qualquer nova entidade segue: $\text{escala} = \frac{\text{altura física desejada (m)}}{\text{altura AABB bruta do GLB (pc units)}}$.
+> - O deslocamento de solo ($\text{offsetY} = -\text{aabb.min.y} \times \text{escala}$) é aplicado na raiz do nó visual para garantir contato exato com o plano $Y=0$.
+> - Todas as escalas e offsets estão centralizados em [`src/core/visual-config.ts`](file:///Z:/AI/Ninja_Farm_Project/src/core/visual-config.ts) e são versionadas no Ninja Farm Studio 3D.
+
 ## Licenciamento e provas
 
 Preencher `templates/asset-manifest.example.json` (copiar para `public/assets/manifest.json` real no projeto) para cada asset. Salvar referência legal, nunca compartilhar material de terceiro em repositório sem autorização. Testar animação na ferramenta e no navegador; screenshot PNG não comprova animação.

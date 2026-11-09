@@ -566,3 +566,23 @@
     - `POST /api/admin.php?action=setup_initial_admin` $\rightarrow$ Rejeitado com mensagem de restrição estrita a CLI.
     - `POST /api/auth.php?action=login&dev_mock=1` $\rightarrow$ Rejeitado com exigência mandatória de token Google.
     - `GET /api/ai.php?action=get_key_status` $\rightarrow$ HTTP 401 Exigência mandatória de sessão autenticada.
+
+### 2026-11-09 — Sincronização e Atualização Geral da Documentação Técnica (Alpha 0.1)
+
+- **Status:** Concluído e verificado em todos os documentos técnicos do projeto.
+- **Documentos Atualizados:**
+    - `docs/04-ARQUITETURA.md`: Adicionado diagrama do fluxo autoritativo de autenticação GIS, escritas atômicas e isolamento CLI do /admin.
+    - `docs/06-PIPELINE-ASSETS.md`: Especificação métrica rigorosa da fauna 3D (1u = 1m), matriz AABB e compensação de ground offset.
+    - `docs/07-SIMULACAO-RECURSOS.md`: Detalhamento do loop discreto de passos de 30s (`advanceTimeDeterministically`) com suporte a animais e ovos.
+    - `docs/08-DADOS-PERSISTENCIA.md`: Especificação das gravações atômicas (`tempnam()` + `rename()`), integridade de revisão e indicador honesto `CloudSyncStatus`.
+    - `docs/12-CUSTOS-LICENCAS-SEGURANCA.md`: Documentação das políticas de taxa limite, CSRF e isolamento de scripts administrativos fora do webroot.
+    - `docs/17-CHECKLIST-ENTREGA.md`: Checklist de entrega do Alpha 0.1 integralmente preenchido com evidências de 90/90 testes, conformidade M1, M4 e M5.
+    - `docs/20-SISTEMA-DROID-AGENDADOR-AUTH.md`: Atualização sobre validação de claims GIS, criptografia em repouso AES-256-GCM e reconversão AFK de fauna.
+    - `docs/22-MATRIZ-AUDITORIA-ALPHA-0-1.md`: Atualização da matriz para 27 módulos sob governança e detalhamento das 6 correções críticas de auditoria.
+    - `docs/23-SISTEMA-ADMIN-ROADMAP.md`: Documentação da integração dinâmica com `test-results.json` e bloqueio permanente HTTP 403 do setup web de administrador.
+- **Validação de Qualidade:**
+    - `npm run check:roadmap`: 27/27 módulos em conformidade.
+    - `npm run typecheck`: 0 erros.
+    - `npm run lint`: 0 erros.
+    - `npm run fmt`: 100% dos arquivos com formatação Prettier válida.
+    - `npm run test`: 90/90 testes aprovados em 14 suítes.

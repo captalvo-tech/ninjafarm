@@ -113,9 +113,41 @@ O agente deve ler o `package.json` gerado, criar scripts de `typecheck/test` se 
 - Limitar pixel ratio dinâmico, densidade de sombras, partículas e draw calls conforme preset.
 - Não usar texturas 4K repetidas por planta; catálogo de tamanhos e compactação deve ser inspecionado.
 
-## Servidor e implantação
+## Servidor, Backend e Segurança Autoritativa (Alpha 0.1)
 
-Fase 1 pode ser build estático servido em subdiretório, sujeito a regras de cache e SPA. Não presumir que hospedagem compartilhada/Cloud Startup permita processos persistentes de Node necessários ao multiplayer. Na Fase 2, validar VPS, serviços gerenciados ou runtime de backend antes de contratar. Não implantar sem confirmação.
+A arquitetura do Ninja Farm evoluiu para um modelo híbrido com backend autoritativo em PHP 8 rodando em infraestrutura Hostinger (`pinut.shop`), sem dependência de processos Node.js persistentes no servidor:
+
+```text
+Navegador (Desktop / Mobile)
+ ├─ PlayCanvas Engine 2.23 (WebGL 2 / WebGPU)
+ ├─ UI / HUD / Droid Chat / Studio 3D / /admin
+ └─ Camada de Serviços
+      ├─ AuthManager (Google GIS Oficial, dev_mock bloqueado em prod)
+      ├─ CloudSaveManager (serializeCompleteFarmState, detecção 409, status honesto)
+      └─ GeminiService (IA estritamente read-only, chaves criptografadas no backend)
+          │
+          ▼ HTTPS / REST API (PHP 8 + Atomic Storage)
+Hostinger Production (pinut.shop)
+ ├─ public_html/
+ │    ├─ index.html, studio.html, admin.html (.htaccess com rotas limpas)
+ │    ├─ test-results.json (Relatório comprovável de 90 testes unitários)
+ │    └─ api/
+ │         ├─ auth.php (Validação de JWT Google, emissão de cookie HttpOnly)
+ │         ├─ save.php (Escrita atômica tmp+rename, simulação AFK server-side)
+ │         ├─ ai.php (Criptografia AES-256-CBC de credenciais em repouso 0600)
+ │         ├─ admin.php (Autenticação HttpOnly, CSRF token, rate limit por REMOTE_ADDR)
+ │         └─ data/ (.htaccess: Require all denied, armazenamento atômico JSON)
+ └─ scripts/ (Fora do webroot)
+      └─ provision-admin.php (Provisionamento exclusivo CLI do superadmin)
+```
+
+### Princípios de Segurança e Integridade Implementados
+
+1. **Autenticação Autoritativa:** O login Google valida formalmente a assinatura e as claims do token JWT (`iss = accounts.google.com`, `aud = $googleClientId`, `exp > time()`, `sub` único). O modo de desenvolvimento `dev_mock` é bloqueado categoricamente em produção.
+2. **Salvamento Atômico & Concorrência:** O método `serializeCompleteFarmState()` centraliza o salvamento garantindo que o Droid, agendador e eventos nunca sejam descartados. A persistência no servidor utiliza arquivo temporário com `rename(LOCK_EX)` para impedir corrupção por concorrência. Conflitos de revisão retornam `HTTP 409 Conflict`.
+3. **Criptografia de Credenciais em Repouso:** As chaves de API do Gemini são criptografadas com AES-256-CBC utilizando chave mestra do servidor e gravadas com permissão `0600`. O cliente nunca armazena chaves em texto plano no `localStorage`.
+4. **Isolamento Administrativo:** O `/admin` não permite provisionamento público na web (a ação `setup_initial_admin` retorna HTTP 403). O provisionamento exige acesso ao terminal CLI do servidor via `php scripts/provision-admin.php`.
+5. **Observabilidade Real:** O painel administrativo consome os resultados reais de testes em `test-results.json` e reflete permissões de disco, contagem de sessões ativas e métricas econômicas sem dados simulados.
 
 ## Segurança futura
 

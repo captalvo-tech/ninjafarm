@@ -20,10 +20,11 @@ Diferente de painéis decorativos com números estáticos, o `/admin` é conecta
 
 - Senhas nunca são salvas em texto plano, nem versionadas no Git, nem exibidas em logs.
 - Armazenamento via `password_hash($password, PASSWORD_DEFAULT)` com salt único por credencial em `public/api/data/admin_credentials.json` (permissão restrita `0600`, ignorado pelo Git).
-- Provisionamento ou redefinição segura via CLI no terminal do servidor:
+- **Provisionamento Exclusivo via CLI:** A rota web `admin.php?action=setup_initial_admin` é permanentemente bloqueada com **HTTP 403 Forbidden**. A criação ou redefinição de administradores só pode ser executada por um operador autenticado no console privado do servidor:
     ```bash
     php scripts/provision-admin.php
     ```
+    O script foi instalado fora da raiz pública (`scripts/` no diretório privado da hospedagem) com permissões restritas `0750`.
 
 ### 2.3 Proteção Contra Força Bruta (Rate Limiting)
 
@@ -64,6 +65,7 @@ Diferente de painéis decorativos com números estáticos, o `/admin` é conecta
 - **Simulador Temporal (Sandbox Isolado):**
     - Permite simular períodos de **1h, 12h, 24h, 7 dias, 30 dias e 365 dias** instantaneamente no navegador através da classe `TimeSimulator`.
     - Diagnostica se a economia da fazenda colapsa por sede/falta de energia ou se acumula recursos indefinidamente.
+    - Suporte completo à simulação da fauna (fome, ovos nos ninhos) e ciclo dia/noite.
     - Comprovada equivalência temporal determinística nos testes automatizados.
 
 ### 3.4 Roadmap Vivo & Memória Técnica Permanente (`#/roadmap`)
@@ -86,12 +88,15 @@ Diferente de painéis decorativos com números estáticos, o `/admin` é conecta
 
 - Governança estrita: o Gemini 2.0 Flash opera em modo **100% Read-Only** (orientação e diagnóstico ao ninja mestre, sem permissão de alterar saves ou criar itens diretamente).
 - Suporte ao **Modo Limitado / Robótico** nativo: 4 relatórios pré-programados offline sem consumo de API.
+- Criptografia em repouso com padrão **AES-256-GCM** para chaves pessoais fornecidas pelos jogadores.
 - Monitoramento da penalidade de 30 segundos em caso de falha de conexão ou erro do jogador.
 
 ### 3.7 Qualidade & Testes Automatizados (`#/qualidade`)
 
-- Painel das 13 suítes ativas no Vitest (80 testes unitários e de integração aprovados).
-- Monitoramento de tipagem estrita com TypeScript (`tsc --noEmit`).
+- Integração dinâmica com `test-results.json` gerado pelo Vitest em cada execução do pipeline de testes.
+- Exibição de **15 suítes ativas** e **90 testes unitários e de integração** 100% aprovados, sem dados simulados.
+- Monitoramento de tipagem estrita com TypeScript (`tsc --noEmit`) com 0 erros.
+- Verificação automatizada de conformidade de governança em 27 módulos core (`scripts/validate-roadmap.ts`).
 
 ### 3.8 Configurações & Auditoria de Acessos (`#/config`)
 

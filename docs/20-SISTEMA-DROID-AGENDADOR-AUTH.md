@@ -56,9 +56,14 @@ sequenceDiagram
 ### Princípios de Segurança da Identidade
 
 1. **Identificador Imutável (`sub`):** A associação de saves e contas utiliza exclusivamente o identificador numérico imutável `sub` emitido pelo Google, nunca apenas o endereço de e-mail (que pode sofrer alteração).
-2. **Validação no Servidor:** O backend valida o token criptograficamente junto aos servidores do Google antes de liberar qualquer estado.
-3. **Isolamento de Saves:** Nenhuma requisição pode alterar ou consultar saves de outro jogador alterando parâmetros; o identificador de usuário é derivado diretamente da sessão validada.
-4. **Sessão e Logout:** O encerramento de sessão revoga o token de sessão local e no backend, limpando o cache e bloqueando o canvas 3D até nova autenticação.
+2. **Validação Rigorosa de Claims no Servidor:** O backend (`public/api/auth.php`) valida o token criptograficamente junto ao endpoint de verificação do Google (`https://oauth2.googleapis.com/tokeninfo`). O servidor valida estritamente:
+    - Emissor confiável: `iss` deve ser `accounts.google.com` ou `https://accounts.google.com`.
+    - Audiência correspondente: quando configurado `GOOGLE_CLIENT_ID`, `aud` deve conferir com a aplicação oficial.
+    - Validade temporal: o claim `exp` deve estar no futuro.
+    - Integridade de chave: payload com `sub` e `email` válidos.
+3. **Zero Bypasses de Autenticação:** Qualquer parâmetro de emulação inseguro (`dev_mock`, `dev_user`) foi terminantemente removido e é explicitamente bloqueado pelo backend em produção com HTTP 400.
+4. **Isolamento de Saves:** Nenhuma requisição pode alterar ou consultar saves de outro jogador alterando parâmetros; o identificador de usuário é derivado diretamente da sessão validada e isolado via hash criptográfico SHA-256.
+5. **Sessão e Logout:** O encerramento de sessão revoga o token de sessão local e no backend, limpando o cache e bloqueando o canvas 3D até nova autenticação.
 
 ---
 
@@ -68,17 +73,42 @@ O backend é a **fonte autoritativa** de verdade. O IndexedDB do navegador funci
 
 ### Campos do Save Centralizado
 
-- `userId`: Hash seguro derivado do `sub` do Google.
+- `userId`: Hash seguro derivado do `sub` do Google (`hash('sha256', $sub . SALT)`).
 - `revision`: Número inteiro sequencial que se incrementa a cada salvamento (controle de concorrência otimista / prevenção de sobrescrita acidental).
 - `savedAt`: Timestamp UTC do servidor (nunca confiar no relógio do dispositivo cliente).
 - `farm`: Dimensões da grade, lista de construções com integridade e footprints.
 - `crops`: Estado detalhado de cada canteiro (solo, estágio, hidratação, progresso).
-- `animals`: Estado da fauna, fome, hidratação e ovos disponíveis.
+- `animals`: Estado da fauna, fome, hidratação e ovos disponíveis no galinheiro.
 - `inventory`: Recursos disponíveis (`wood`, `metal`, `parts`, `food`, `water`, `energy`).
 - `droid`: Bateria atual, capacidade máxima, consumo operacional, posição e estado.
 - `scheduler`: Fila de tarefas, tarefa em execução, tempo concluído e tempo restante.
-- `gemini`: Configurações de conexão, status e testes de IA.
+- `gemini`: Configurações de conexão, status e testes de IA (com chave pessoal criptografada).
 - `events`: Histórico persistente de eventos da fazenda.
+
+### Gravação Atômica e Resiliência contra Quedas
+
+Para evitar corrupção de saves ou arquivos de 0 bytes causados por interrupções abruptas do processo de escrita no servidor PHP, a gravação utiliza substituição atômica:
+
+1. O payload serializado é gravado em arquivo temporário com permissões `0600` via `tempnam()`.
+2. A integridade do arquivo temporário e seu tamanho são validados.
+3. Executa-se `rename($tempFile, $targetSaveFile)`, operação atômica garantida pelo sistema de arquivos do sistema operacional.
+
+### Criptografia de Credenciais em Repouso (AES-256-GCM)
+
+As chaves pessoais de API do Gemini fornecidas pelos jogadores são protegidas contra vazamentos mesmo em caso de dump do diretório de saves:
+
+- Cifra simétrica padrão **AES-256-GCM** com vetor de inicialização (IV) de 12 bytes gerado aleatoriamente para cada chave.
+- Chave mestra de criptografia mantida fora do webroot em arquivo com permissões restritas.
+- Tag de autenticação criptográfica de 16 bytes para validação de integridade contra adulteração.
+
+### Status Honesto de Nuvem (CloudSyncStatus)
+
+A interface do Ninja Farm expõe um indicador visual honesto sobre a integridade da sincronização:
+
+- `SYNCHRONIZED` (Verde): Save validado e confirmado no backend com revisão atualizada.
+- `LOCAL_ONLY` (Âmbar): Jogo rodando em cache local/offline; save pendente de sincronização.
+- `SYNCING` (Azul): Payload em trânsito com o servidor.
+- `ERROR` (Vermelho): Falha de rede ou conflito de versão.
 
 ### Tratamento de Conflitos
 
@@ -105,14 +135,14 @@ Se dois clientes (ex.: celular e computador) tentarem sincronizar simultaneament
 
 Ao abrir o jogo após horas offline:
 $$\Delta t = t_{\text{agora}} - t_{\text{último\_tick}}$$
-O servidor e o cliente simulam em etapas determinísticas:
 
-1. Geração solar acumulada durante as horas de sol.
-2. Duração da tarefa atual em execução.
-3. Se a bateria esgotar: tempo de deslocamento até a base de recarga + tempo de carregamento com energia disponível.
-4. Conclusão da tarefa e início da próxima tarefa da fila que tenha recursos disponíveis.
-5. Crescimento biológico das plantações conforme disponibilidade de água.
-6. Registro dos acontecimentos no diário de eventos da fazenda.
+O simulador decompõe o intervalo em passos discretos de $\Delta t_{\text{step}} = 30\text{ segundos}$ através da função autoritativa `advanceTimeDeterministically`:
+
+1. **Geração Solar & Rede:** A geração fotovoltaica é calculada com base na curva diurna daquele horário específico, recarregando a rede da base ou esgotando baterias caso haja consumo noturno.
+2. **Ciclo da Fauna:** As galinhas consomem ração e água dos comedouros. Se estiverem nutridas e hidratadas por tempo suficiente ($\ge 300\text{s}$), botam ovos nos ninhos (armazenando até o limite do galinheiro).
+3. **Crescimento de Culturas:** Cada canteiro consome água da terra e progride percentualmente de estágio (semente $\to$ broto $\to$ vegetativo $\to$ maduro). Se faltar água na cisterna, o crescimento paralisa de forma determinística sem secar arbitrariamente a plantação.
+4. **Trabalho do Droid:** O Droid avança sua tarefa ativa. Se a bateria esgotar ($< 15\%$), ele se desloca até o totem solar, aguarda recarga com a energia disponível da rede e retoma o serviço assim que atinge carga suficiente.
+5. **Diário de Eventos:** Ao concluir o catchup offline, uma síntese é gravada no diário de bordo e exibida ao jogador em um resumo de boas-vindas.
 
 ---
 

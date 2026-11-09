@@ -68,9 +68,15 @@ A chuva do provedor real **não** entra em produção na Fase 1 como dependênci
 - Remoção/reembolso deve ser idempotente e testado contra duplicação.
 - Stamina: arquitetura com política `canPerform(action, state)`, `consume(action)`, `recover(time)`; parâmetros exatos pendentes.
 
-## Offline progress (proposto)
+## Offline progress e Simulação Autoritativa de Servidor
 
-Ao reabrir save, `elapsed=max(0, now-lastSimulatedAt)` e `effectiveElapsed=min(elapsed, offlineCatchupCapHours)`. Reprocessar por janelas de simulação agregadas/determinísticas, evitando rodar milhões de ticks na UI. Exibir tempo contabilizado e limites se houver. Se relógio local retrocede, não aplicar produção negativa. Na migração online, o tempo do servidor substitui o relógio do cliente.
+Ao reabrir save, a progressão offline é calculada de forma autoritativa pelo backend (`public/api/save.php` na ação `action=load`):
+
+- `elapsed = max(0, serverNow - lastSavedAt)` com teto máximo de proteção (`MAX_AFK_SECONDS = 86400 * 7`, 7 dias).
+- **Cálculo Solar Determinístico:** A irradiação solar acumulada integra o seno do ciclo diurno/noturno ($T = 1200\text{s}$ no jogo), sendo estritamente zero durante os períodos noturnos ($0.75 \le \text{fase} \le 1.0$ ou $0.0 \le \text{fase} \le 0.25$).
+- **Reconciliação Biológica e Hídrica:** Culturas amadurecem consumindo água da cisterna de forma proporcional. Se a reserva de água esgotar, o crescimento é interrompido sem matar a planta.
+- **Fauna e Postura de Ovos:** As galinhas acumulam fome gradualmente (+15/h). Enquanto a fome estiver controlada ($< 70$), produzem ovos determinísticos a cada 2 horas que aguardam coleta nos ninhos.
+- **Equivalência Temporal Comprovada:** O simulador administrativo [`time-simulator.ts`](file:///Z:/AI/Ninja_Farm_Project/src/simulation/time-simulator.ts) executa em passos de 30 segundos acoplado a instâncias reais de `FarmGrid`, `CropSystem`, `EnergySystem`, `FaunaManager` e `TaskScheduler`, comprovando em testes que duas execuções isoladas com mesmos parâmetros produzem 100% de equivalência matemática.
 
 ## Testes fundamentais
 
