@@ -1191,8 +1191,36 @@ function handleDemolishAt(gridX: number, gridY: number): void {
 }
 
 // ==========================================
-// 6. HUD & PERSISTENCE CALLBACKS
+// 6. SERIALIZAÇÃO CENTRAL & HUD CALLBACKS
 // ==========================================
+
+/**
+ * Serialização Central e Canônica da Fazenda (Fase 3 & Governança Alpha 0.1)
+ * Utilizada obrigatoriamente pelo salvamento manual, auto-save silencioso a cada 30s,
+ * encerramento de sessão (beforeunload) e rotinas de sincronização na nuvem.
+ * Garante que o Droid, a agenda de tarefas e o diário de eventos jamais sejam omitidos.
+ */
+function serializeCompleteFarmState(): FarmSaveState {
+    return {
+        version: 1,
+        savedAt: Date.now(),
+        resources: inventory.serialize(),
+        buildings: grid.getAllBuildings(),
+        crops: cropSystem.serialize(),
+        animals: fauna.serialize(),
+        dayTime: clock.getTimeOfDay(),
+        elapsedGameDays: clock.getTotalDays(),
+        ninjaPosition: {
+            x: ninja.entity.getPosition().x,
+            y: ninja.entity.getPosition().y,
+            z: ninja.entity.getPosition().z
+        },
+        droid: droid.serialize(),
+        scheduler: taskScheduler.serialize(),
+        eventsLog: eventJournal.serialize()
+    };
+}
+
 const hud = new FarmHUD({
     onModeChange: (mode) => cameraCtrl.setMode(mode),
     onSelectBuilding: (type) => setPlacementType(type),
@@ -1205,34 +1233,21 @@ const hud = new FarmHUD({
         }
     },
     onSaveGame: async () => {
-        const state: FarmSaveState = {
-            version: 1,
-            savedAt: Date.now(),
-            resources: inventory.serialize(),
-            buildings: grid.getAllBuildings(),
-            crops: cropSystem.serialize(),
-            animals: fauna.serialize(),
-            dayTime: clock.getTimeOfDay(),
-            elapsedGameDays: clock.getTotalDays(),
-            ninjaPosition: {
-                x: ninja.entity.getPosition().x,
-                y: ninja.entity.getPosition().y,
-                z: ninja.entity.getPosition().z
-            },
-            droid: droid.serialize(),
-            scheduler: taskScheduler.serialize(),
-            eventsLog: eventJournal.serialize()
-        };
-
+        const state = serializeCompleteFarmState();
         const result = await cloudSave.save(state);
-        if (result.success) {
+        if (result.success && result.status === 'SERVER_CONFIRMED') {
             sound.playHarvest();
             objectives.completeObjective('save');
             hud.showToast(`Progresso salvo na nuvem! (Rev. #${result.revision})`);
             vfx.showFloatingText(`☁️ Salvo na Nuvem (Rev #${result.revision})`);
+        } else if (result.status === 'LOCAL_CACHE_ONLY') {
+            hud.showToast('Sem conexão com o servidor. Salvo no cache local.');
+            vfx.showFloatingText('💾 Salvo Localmente', undefined, undefined, '#FBBF24');
         } else if (result.conflict && result.serverSave) {
             applySaveState(result.serverSave);
             hud.showToast('Conflito resolvido: save mais recente da nuvem carregado.');
+        } else {
+            hud.showToast('Falha ao salvar: ' + (result.error || 'Erro desconhecido'));
         }
     },
     onLoadGame: async () => {
@@ -2015,23 +2030,27 @@ app.on('update', () => {
     hud.updateWater(waterMetrics);
 
     // 9. Auto-Save silencioso em segundo plano a cada 30 segundos na nuvem
+    // Utiliza serialização completa (Fase 3: Droid, tarefas e eventos nunca são omitidos)
     autoSaveTimer += dt;
     if (autoSaveTimer >= 30.0) {
         autoSaveTimer = 0;
-        cloudSave.save({
-            version: 1,
-            savedAt: Date.now(),
-            resources: inventory.serialize(),
-            buildings: grid.getAllBuildings(),
-            crops: cropSystem.serialize(),
-            animals: fauna.serialize(),
-            dayTime: clock.getTimeOfDay(),
-            elapsedGameDays: clock.getTotalDays(),
-            ninjaPosition: {
-                x: ninja.entity.getPosition().x,
-                y: ninja.entity.getPosition().y,
-                z: ninja.entity.getPosition().z
+        const autoSaveState = serializeCompleteFarmState();
+        cloudSave.save(autoSaveState).then((res) => {
+            if (res.status === 'SERVER_CONFIRMED') {
+                telemetry.track('autosave_confirmed', { revision: res.revision });
             }
         });
     }
 });
+
+// Salvamento seguro no encerramento de sessão
+if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', () => {
+        try {
+            const exitSave = serializeCompleteFarmState();
+            cloudSave.save(exitSave);
+        } catch {
+            // Silencioso no fechamento
+        }
+    });
+}

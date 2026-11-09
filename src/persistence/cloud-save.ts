@@ -35,8 +35,11 @@ import type { FarmSaveState } from '../core/types';
 
 import { PersistenceManager } from './indexeddb';
 
+export type CloudSyncStatus = 'SERVER_CONFIRMED' | 'LOCAL_CACHE_ONLY' | 'PENDING_SYNC' | 'CONFLICT' | 'ERROR';
+
 export interface CloudSaveResult {
     success: boolean;
+    status: CloudSyncStatus;
     revision?: number;
     savedAt?: number;
     conflict?: boolean;
@@ -81,7 +84,7 @@ export class CloudSaveManager {
                 if (data.success && data.save) {
                     const serverSave: FarmSaveState = data.save;
                     this.currentRevision = serverSave.revision || 1;
-                    // Atualiza cache local
+                    // Atualiza cache local de forma consistente
                     await this.localCache.save(serverSave);
                     return serverSave;
                 }
@@ -100,6 +103,7 @@ export class CloudSaveManager {
 
     /**
      * Salva o estado da fazenda na nuvem com controle de concorrência por revisão.
+     * Distingue explicitamente se foi confirmado no servidor ou armazenado apenas no cache local.
      */
     public async save(state: FarmSaveState): Promise<CloudSaveResult> {
         const token = this.getSessionToken();
@@ -128,6 +132,7 @@ export class CloudSaveManager {
                 console.warn('[CloudSaveManager] Conflito de versão detectado:', conflictData);
                 return {
                     success: false,
+                    status: 'CONFLICT',
                     conflict: true,
                     serverSave: conflictData.serverSave,
                     error: 'Conflito de versão no servidor.'
@@ -146,6 +151,7 @@ export class CloudSaveManager {
 
                     return {
                         success: true,
+                        status: 'SERVER_CONFIRMED',
                         revision: data.revision,
                         savedAt: data.savedAt
                     };
@@ -155,12 +161,14 @@ export class CloudSaveManager {
             console.warn('[CloudSaveManager] Erro de rede ao sincronizar save. Armazenando localmente:', err);
         }
 
-        // Se a requisição de rede falhar, armazena no cache local
+        // Se a requisição de rede falhar, armazena no cache local e reporta status honesto
         await this.localCache.save(state);
         return {
-            success: true,
+            success: false,
+            status: 'LOCAL_CACHE_ONLY',
             revision: this.currentRevision,
-            savedAt: state.savedAt
+            savedAt: state.savedAt,
+            error: 'Rede offline. Progresso salvo exclusivamente no cache local (IndexedDB).'
         };
     }
 

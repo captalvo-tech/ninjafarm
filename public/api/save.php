@@ -203,6 +203,162 @@ function generateInitialStarterSave(string $userHash): array {
     ];
 }
 
+function validateSaveData(array &$incoming, ?array $currentServerSave): ?string {
+    if (!isset($incoming['version']) || (int)$incoming['version'] < 1) {
+        return 'Versão do esquema de save inválida.';
+    }
+
+    if (!isset($incoming['resources']) || !is_array($incoming['resources'])) {
+        return 'Recursos da fazenda ausentes ou inválidos.';
+    }
+
+    $validResources = ['wood', 'metal', 'parts', 'food', 'water', 'energy'];
+    foreach ($validResources as $resKey) {
+        $val = $incoming['resources'][$resKey] ?? 0;
+        if (!is_numeric($val) || $val < 0) {
+            return "Saldo do recurso '{$resKey}' não pode ser negativo ou não-numérico.";
+        }
+        if ($val > 1000000) {
+            return "Saldo do recurso '{$resKey}' excede a capacidade de armazenamento.";
+        }
+    }
+
+    if (!isset($incoming['buildings']) || !is_array($incoming['buildings'])) {
+        return 'Estruturas da fazenda ausentes ou inválidas.';
+    }
+
+    foreach ($incoming['buildings'] as $b) {
+        if (!isset($b['instanceId']) || !isset($b['type']) || !isset($b['gridX']) || !isset($b['gridY'])) {
+            return 'Estrutura com dados corrompidos ou incompletos.';
+        }
+        $gx = (int)$b['gridX'];
+        $gy = (int)$b['gridY'];
+        if ($gx < 0 || $gx >= 64 || $gy < 0 || $gy >= 36) {
+            return "Estrutura fora dos limites da grade 64x36 ({$gx}, {$gy}).";
+        }
+    }
+
+    if (isset($incoming['droid']) && is_array($incoming['droid'])) {
+        $battery = (float)($incoming['droid']['battery'] ?? 0);
+        if ($battery < 0.0 || $battery > 100.0) {
+            return 'Bateria do Droid fora dos limites operacionais (0 a 100%).';
+        }
+    }
+
+    return null;
+}
+
+function saveStateAtomically(string $saveFile, array $data): bool {
+    $dir = dirname($saveFile);
+    $tmpFile = $dir . '/tmp_save_' . bin2hex(random_bytes(8)) . '.json';
+    $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    if (file_put_contents($tmpFile, $json, LOCK_EX) === false) {
+        return false;
+    }
+    @chmod($tmpFile, 0644);
+    if (!@rename($tmpFile, $saveFile)) {
+        @unlink($tmpFile);
+        return file_put_contents($saveFile, $json, LOCK_EX) !== false;
+    }
+    return true;
+}
+
+function simulateServerAuthoritativeAFK(array &$saveData, int $nowSec): array {
+    $lastSec = (int)(($saveData['savedAt'] ?? 0) / 1000);
+    if ($lastSec <= 0) return ['elapsedSeconds' => 0];
+    $elapsedSeconds = max(0, $nowSec - $lastSec);
+    if ($elapsedSeconds < 10) return ['elapsedSeconds' => $elapsedSeconds];
+
+    $simSeconds = min($elapsedSeconds, 86400 * 30); // Limite de 30 dias por lote
+    $dayCycleDuration = 240.0;
+    $daysAdvanced = $simSeconds / $dayCycleDuration;
+    $currentDayTime = fmod(($saveData['dayTime'] ?? 0.35) + $daysAdvanced, 1.0);
+    $saveData['dayTime'] = $currentDayTime;
+    $saveData['elapsedGameDays'] = ($saveData['elapsedGameDays'] ?? 1) + (int)$daysAdvanced;
+
+    $solarPanels = 0;
+    if (isset($saveData['buildings']) && is_array($saveData['buildings'])) {
+        foreach ($saveData['buildings'] as $b) {
+            if (($b['type'] ?? '') === 'solar_panel' && empty($b['isBlueprint'])) {
+                $solarPanels++;
+            }
+        }
+    }
+    $solarWhGenerated = $solarPanels * 18.0 * ($simSeconds / 3600.0) * 0.35;
+    $saveData['resources']['energy'] = min(500.0, ($saveData['resources']['energy'] ?? 50) + $solarWhGenerated);
+
+    $maturedCrops = 0;
+    if (isset($saveData['crops']) && is_array($saveData['crops'])) {
+        foreach ($saveData['crops'] as &$crop) {
+            if (($crop['stage'] ?? '') === 'growing') {
+                if ($simSeconds >= 90.0) {
+                    $crop['stage'] = 'ready';
+                    $crop['growthProgress'] = 1.0;
+                    $maturedCrops++;
+                }
+            }
+        }
+    }
+
+    $eggsProduced = 0;
+    if (isset($saveData['animals']) && is_array($saveData['animals'])) {
+        $hours = $simSeconds / 3600.0;
+        foreach ($saveData['animals'] as &$animal) {
+            if (($animal['type'] ?? '') === 'chicken') {
+                $animal['hunger'] = min(100.0, ($animal['hunger'] ?? 20) + ($hours * 15.0));
+                if ($animal['hunger'] < 80.0 && $hours >= 2.0) {
+                    $eggs = (int)floor($hours / 2.0);
+                    $eggsProduced += $eggs;
+                    $animal['readyToCollect'] = true;
+                }
+            }
+        }
+    }
+
+    $tasksCompleted = 0;
+    if (isset($saveData['scheduler']['tasks']) && is_array($saveData['scheduler']['tasks'])) {
+        $battery = (float)($saveData['droid']['battery'] ?? 100);
+        $remainingTime = (float)$simSeconds;
+
+        foreach ($saveData['scheduler']['tasks'] as &$task) {
+            if (($task['status'] ?? '') === 'PENDING' || ($task['status'] ?? '') === 'IN_PROGRESS') {
+                $duration = (float)($task['duration'] ?? 15.0);
+                if ($battery < 15.0) {
+                    $task['status'] = 'WAITING_RESOURCES';
+                    break;
+                }
+                if ($remainingTime >= $duration) {
+                    $remainingTime -= $duration;
+                    $battery = max(0.0, $battery - 15.0);
+                    $task['status'] = 'COMPLETED';
+                    $task['progress'] = 1.0;
+                    $tasksCompleted++;
+                    if (str_contains($task['type'] ?? '', 'harvest')) {
+                        $saveData['resources']['food'] = ($saveData['resources']['food'] ?? 0) + 12;
+                    } elseif (str_contains($task['type'] ?? '', 'clean_debris')) {
+                        $saveData['resources']['wood'] = ($saveData['resources']['wood'] ?? 0) + 8;
+                    }
+                } else {
+                    $task['status'] = 'IN_PROGRESS';
+                    $task['progress'] = min(0.99, ($task['progress'] ?? 0) + ($remainingTime / $duration));
+                    break;
+                }
+            }
+        }
+        $saveData['droid']['battery'] = $battery;
+    }
+
+    $saveData['savedAt'] = $nowSec * 1000;
+
+    return [
+        'elapsedSeconds' => $simSeconds,
+        'solarWhGenerated' => round($solarWhGenerated, 1),
+        'maturedCrops' => $maturedCrops,
+        'eggsProduced' => $eggsProduced,
+        'tasksCompleted' => $tasksCompleted
+    ];
+}
+
 $input = json_decode(file_get_contents('php://input'), true) ?? [];
 $action = $_GET['action'] ?? $input['action'] ?? 'load';
 
@@ -214,7 +370,13 @@ if ($action === 'load') {
 
     if (!$saveData) {
         $saveData = generateInitialStarterSave($userHash);
-        file_put_contents($saveFile, json_encode($saveData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+        saveStateAtomically($saveFile, $saveData);
+    } else {
+        // Reconciliação autoritativa AFK offline no servidor
+        $afkResult = simulateServerAuthoritativeAFK($saveData, time());
+        if (($afkResult['elapsedSeconds'] ?? 0) > 10) {
+            saveStateAtomically($saveFile, $saveData);
+        }
     }
 
     echo json_encode([
@@ -240,6 +402,14 @@ if ($action === 'save') {
         $currentServerSave = json_decode(file_get_contents($saveFile), true);
     }
 
+    // Validação econômica e estrutural no backend
+    $validationError = validateSaveData($incoming, $currentServerSave);
+    if ($validationError !== null) {
+        http_response_code(422);
+        echo json_encode(['success' => false, 'error' => $validationError]);
+        exit;
+    }
+
     $currentServerRevision = (int)($currentServerSave['revision'] ?? 0);
 
     // Controle otimista de concorrência
@@ -260,7 +430,7 @@ if ($action === 'save') {
     $incoming['userId'] = $userHash;
     $incoming['savedAt'] = (int)(microtime(true) * 1000);
 
-    file_put_contents($saveFile, json_encode($incoming, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    saveStateAtomically($saveFile, $incoming);
 
     echo json_encode([
         'success' => true,

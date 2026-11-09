@@ -248,4 +248,23 @@ describe('Fase A: Autenticação Google & Persistência em Nuvem', () => {
         expect(freshSave?.userId).toBe('google_sub_998877');
         expect(freshSave?.resources.food).toBe(30);
     });
+
+    it('7. Distingue explicitamente salvamento na nuvem (SERVER_CONFIRMED) de cache local por falha de rede (LOCAL_CACHE_ONLY)', async () => {
+        const save = (await cloudSaveManager.load())!;
+
+        // 1. Salvo com sucesso no servidor
+        const onlineResult = await cloudSaveManager.save(save);
+        expect(onlineResult.success).toBe(true);
+        expect(onlineResult.status).toBe('SERVER_CONFIRMED');
+
+        // 2. Simula falha de rede (servidor inacessível)
+        vi.stubGlobal('fetch', async () => {
+            throw new Error('Network error: connection refused');
+        });
+
+        const offlineResult = await cloudSaveManager.save(save);
+        expect(offlineResult.success).toBe(false);
+        expect(offlineResult.status).toBe('LOCAL_CACHE_ONLY');
+        expect(offlineResult.error).toContain('Rede offline');
+    });
 });
