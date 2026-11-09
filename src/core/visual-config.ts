@@ -17,6 +17,7 @@ export interface FaunaVisualConfig {
     cow: {
         modelUrl: string;
         scale: number;
+        offsetY?: number;
         animations: {
             idle: string;
             walk: string;
@@ -26,11 +27,32 @@ export interface FaunaVisualConfig {
     fox: {
         modelUrl: string;
         scale: number;
+        offsetY?: number;
         animations: {
             idle: string;
             walk: string;
             run: string;
         };
+    };
+    bull?: {
+        modelUrl: string;
+        scale: number;
+        offsetY?: number;
+    };
+    horse?: {
+        modelUrl: string;
+        scale: number;
+        offsetY?: number;
+    };
+    donkey?: {
+        modelUrl: string;
+        scale: number;
+        offsetY?: number;
+    };
+    shiba?: {
+        modelUrl: string;
+        scale: number;
+        offsetY?: number;
     };
 }
 
@@ -107,7 +129,8 @@ export function getDefaultVisualConfig(): VisualConfig {
         fauna: {
             cow: {
                 modelUrl: 'assets/models/Cow.glb',
-                scale: 16.0,
+                scale: 0.316,
+                offsetY: 0.018,
                 animations: {
                     idle: 'Idle',
                     walk: 'Walk',
@@ -116,12 +139,33 @@ export function getDefaultVisualConfig(): VisualConfig {
             },
             fox: {
                 modelUrl: 'assets/models/fox.glb',
-                scale: 0.012,
+                scale: 0.0048,
+                offsetY: 0.001,
                 animations: {
                     idle: 'Survey',
                     walk: 'Walk',
                     run: 'Run'
                 }
+            },
+            bull: {
+                modelUrl: 'assets/models/Bull.glb',
+                scale: 0.349,
+                offsetY: 0.019
+            },
+            horse: {
+                modelUrl: 'assets/models/Horse.glb',
+                scale: 0.332,
+                offsetY: 0.004
+            },
+            donkey: {
+                modelUrl: 'assets/models/Donkey.glb',
+                scale: 0.329,
+                offsetY: -0.002
+            },
+            shiba: {
+                modelUrl: 'assets/models/ShibaInu.glb',
+                scale: 0.129,
+                offsetY: -0.001
             }
         },
         buildings: {

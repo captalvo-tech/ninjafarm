@@ -69,4 +69,15 @@ describe('VisualConfig & Ninja Farm Studio Presets', () => {
         const invalid = importVisualConfigJson('{ invalid json string ...');
         expect(invalid).toBe(false);
     });
+
+    it('deve validar escalas calibradas da fauna conforme padrão de 1 unidade = 1 metro', () => {
+        const config = getDefaultVisualConfig();
+        // Vaca calibrada para ~1.45m de altura na cernelha (escala ~0.316)
+        expect(config.fauna.cow.scale).toBeCloseTo(0.316, 2);
+        expect(config.fauna.cow.scale).toBeLessThan(1.0); // Jamais o valor absurdo de 16.0
+
+        // Raposa calibrada para ~0.38m de altura na cernelha (escala ~0.0048)
+        expect(config.fauna.fox.scale).toBeCloseTo(0.0048, 3);
+        expect(config.fauna.fox.scale).toBeLessThan(0.01);
+    });
 });

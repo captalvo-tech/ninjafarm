@@ -30,6 +30,7 @@ import { Application, Color, Entity, StandardMaterial, Vec3 } from 'playcanvas';
 
 import type { FarmGrid } from '../core/grid';
 import type { AnimalData, AnimalState, AnimalType } from '../core/types';
+import { getVisualConfig, onVisualConfigChange } from '../core/visual-config';
 
 import type { GlbAssetLoader } from './asset-loader';
 
@@ -105,6 +106,15 @@ export class FaunaManager {
             // 3. Carrega modelo e animações da Raposa Selvagem (Khronos CC0)
             const foxGlb = await loader.load('assets/models/fox.glb', 'fauna_fox');
 
+            const visualConfig = getVisualConfig();
+            const cowCfg = visualConfig.fauna.cow;
+            const cowScale = cowCfg?.scale ?? 0.316;
+            const cowOffsetY = cowCfg?.offsetY ?? 0.018;
+
+            const foxCfg = visualConfig.fauna.fox;
+            const foxScale = foxCfg?.scale ?? 0.0048;
+            const foxOffsetY = foxCfg?.offsetY ?? 0.001;
+
             // Spawna vacas pastando nos canteiros e pastos da fazenda
             const cowSpawns: [string, number, number][] = [
                 ['cow_farm_1', 22, 18],
@@ -119,8 +129,8 @@ export class FaunaManager {
 
                     const cowModel = cowGlb.instantiate();
                     cowModel.name = 'cow_mesh';
-                    cowModel.setLocalScale(16.0, 16.0, 16.0);
-                    cowModel.setLocalPosition(0, 0, 0);
+                    cowModel.setLocalScale(cowScale, cowScale, cowScale);
+                    cowModel.setLocalPosition(0, cowOffsetY, 0);
 
                     cowModel.addComponent('anim', {
                         activate: true,
@@ -168,8 +178,8 @@ export class FaunaManager {
 
                 const foxModel = foxGlb.instantiate();
                 foxModel.name = 'fox_mesh';
-                foxModel.setLocalScale(0.012, 0.012, 0.012);
-                foxModel.setLocalPosition(0, 0, 0);
+                foxModel.setLocalScale(foxScale, foxScale, foxScale);
+                foxModel.setLocalPosition(0, foxOffsetY, 0);
 
                 foxModel.addComponent('anim', {
                     activate: true,
@@ -207,6 +217,24 @@ export class FaunaManager {
                     readyToCollect: false
                 });
             }
+
+            // Escuta mudanças dinâmicas no Ninja Farm Studio e aplica em tempo real
+            onVisualConfigChange((newCfg) => {
+                const updatedCowScale = newCfg.fauna.cow?.scale ?? 0.316;
+                const updatedCowOffset = newCfg.fauna.cow?.offsetY ?? 0.018;
+                const updatedFoxScale = newCfg.fauna.fox?.scale ?? 0.0048;
+                const updatedFoxOffset = newCfg.fauna.fox?.offsetY ?? 0.001;
+
+                for (const a of this.animals) {
+                    if (a.type === 'cow' && a.modelEntity) {
+                        a.modelEntity.setLocalScale(updatedCowScale, updatedCowScale, updatedCowScale);
+                        a.modelEntity.setLocalPosition(0, updatedCowOffset, 0);
+                    } else if (a.type === 'fox' && a.modelEntity) {
+                        a.modelEntity.setLocalScale(updatedFoxScale, updatedFoxScale, updatedFoxScale);
+                        a.modelEntity.setLocalPosition(0, updatedFoxOffset, 0);
+                    }
+                }
+            });
         } catch (err) {
             console.error('[FaunaManager] Failed to load fauna 3D models:', err);
         }
@@ -412,7 +440,7 @@ export class FaunaManager {
                     if (a.animLayer) a.animLayer.transition('idle', 0.25);
                 } else {
                     dir.normalize();
-                    const walkSpeed = a.type === 'cow' ? 1.6 : a.type === 'chicken' ? 1.4 : 2.2;
+                    const walkSpeed = a.type === 'cow' ? 1.1 : a.type === 'chicken' ? 1.0 : a.type === 'fox' ? 2.0 : 1.4;
                     const step = Math.min(dist, walkSpeed * dt);
                     a.position.add(dir.mulScalar(step));
                     a.entity.setPosition(a.position.x, a.position.y, a.position.z);
