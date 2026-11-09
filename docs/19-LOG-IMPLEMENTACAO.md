@@ -496,3 +496,50 @@
     - `https://pinut.shop/api/auth.php?action=check` -> `{"authenticated":false}` (API de sessão ativa).
     - `https://pinut.shop/api/admin.php?action=check` -> `{"authenticated":false,"need_setup":true}` (Pronto para primeiro acesso seguro).
     - `https://pinut.shop/assets/models/character.glb` -> HTTP 200 OK (Assets 3D servidos corretamente).
+
+### 2026-11-09 — Correção Crítica de Segurança, Calibração Métrica da Fauna 3D e Governança
+
+- **Status:** Implementado, testado, validado e comitê realizado com push para `fix/m1-assets3d`.
+- **Entregas Realizadas:**
+    1. **Endurecimento de Segurança do Google Login ([`public/api/auth.php`](file:///Z:/AI/Ninja_Farm_Project/public/api/auth.php)):**
+        - Bloqueio categórico de parâmetros `dev_mock` e `dev_user` em ambiente de produção (`APP_ENV !== 'development'`).
+        - Validação autoritativa das claims do token Google (`iss`, `aud`, `exp`, `sub`).
+        - Remoção de tokens passados via parâmetro GET na URL.
+        - Exibição condicional do botão de login de desenvolvimento exclusivamente em `import.meta.env.DEV`.
+    2. **Segurança Administrativa & Provisionamento CLI ([`public/api/admin.php`](file:///Z:/AI/Ninja_Farm_Project/public/api/admin.php)):**
+        - Remoção da ação pública `setup_initial_admin` da API web.
+        - Provisionamento do administrador restrito ao terminal de linha de comando (`php scripts/provision-admin.php`).
+        - Autenticação baseada em cookie `HttpOnly` com `SameSite=Strict`.
+        - Validação de tokens CSRF e limitação de taxa por IP estritamente via `$_SERVER['REMOTE_ADDR']`.
+    3. **Integridade de Persistência & Status Honesto ([`src/persistence/cloud-save.ts`](file:///Z:/AI/Ninja_Farm_Project/src/persistence/cloud-save.ts)):**
+        - Função centralizada `serializeCompleteFarmState()` utilizada no salvamento manual, timer periódico de 30s e evento `beforeunload`, impedindo descarte de Droid, agendador e eventos.
+        - Status explícito `CloudSyncStatus` (`SERVER_CONFIRMED`, `LOCAL_CACHE_ONLY`, `CONFLICT`, etc.) sem falsificar sucesso quando offline.
+        - Salvamento atômico no servidor através de arquivo temporário e `rename(LOCK_EX)`.
+        - Reconciliação AFK autoritativa no servidor com simulação solar determinística.
+    4. **Calibração Métrica da Fauna 3D (1 Unidade = 1 Metro):**
+        - Medição exata das caixas delimitadoras AABB dentro do PlayCanvas via [`src/rendering/fauna-calibrator.ts`](file:///Z:/AI/Ninja_Farm_Project/src/rendering/fauna-calibrator.ts):
+            - Vaca (`Cow.glb`): escala ajustada de 16.0 (73m) para **0.316** (1.45m de cernelha).
+            - Touro (`Bull.glb`): escala **0.349** (1.60m).
+            - Cavalo (`Horse.glb`): escala **0.332** (1.60m).
+            - Burro (`Donkey.glb`): escala **0.329** (1.30m).
+            - Raposa (`fox.glb`): escala ajustada de 0.012 para **0.0048** (0.38m).
+            - Shiba Inu (`ShibaInu.glb`): escala **0.129** (0.40m).
+            - Ninja Humano (`character.glb`): escala **1.000** (1.83m).
+        - Captura de 6 evidências visuais comprovando alinhamento e proporções naturais em `docs/evidence/fauna/`.
+    5. **Criptografia AES-256-CBC do Gemini em Repouso ([`public/api/ai.php`](file:///Z:/AI/Ninja_Farm_Project/public/api/ai.php)):**
+        - Chaves de API do usuário criptografadas com chave mestra do servidor e permissões `0600`.
+        - Remoção de chaves em texto plano do `localStorage`, exibindo apenas formato mascarado (`AIzaSy...****`).
+        - Endpoints `set_key`, `get_key_status`, `delete_key` e `test`.
+        - Prompt do Droid rigorosamente somente-leitura e penalidade de 30s por erro.
+    6. **Observabilidade Real no /admin & Simulador Econômico ([`src/simulation/time-simulator.ts`](file:///Z:/AI/Ninja_Farm_Project/src/simulation/time-simulator.ts)):**
+        - Substituição de aproximações empíricas por ciclo determinístico em passos de 30s acoplado ao `FaunaManager` real.
+        - Geração de relatório automatizado de testes em `public/test-results.json` lido dinamicamente no painel administrativo sem métricas falsificadas.
+    7. **Governança do Roadmap Vivo & Central de Incidentes:**
+        - Correção dos timestamps de `project/roadmap/history.jsonl` para o padrão de época 2026 e eliminação de commits pendentes.
+        - Catálogo de alertas em `public/api/data/admin_alerts.json` registrando todas as vulnerabilidades corrigidas com seus respectivos testes e commits.
+        - `npm run check:roadmap` validando 100% dos 27 módulos com cabeçalho obrigatório de governança.
+- **Métricas de Qualidade da Sessão:**
+    - `npm run check:roadmap`: 26 features e 32 eventos históricos validados com 0 erros.
+    - `npm run test`: **90/90 testes unitários aprovados em 14 suítes**.
+    - `npm run typecheck`: 0 erros.
+    - Commits realizados: `a2f8bee`, `b277189`, `310d6b6`, `1f87b36`, `5f14c18`.

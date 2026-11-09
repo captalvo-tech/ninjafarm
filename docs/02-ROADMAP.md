@@ -27,6 +27,12 @@ Os marcos são sequenciais por prova, mas pequenos subitens de infraestrutura po
 
 Para cada M: teste automatizado relevante + execução real + evidência visual + registro de custo/licença + lista explícita do que NÃO está pronto. Uma falha no gate bloqueia apenas o avanço irresponsável, não impede correções.
 
+### Status de Validação dos Gates (Alpha 0.1)
+
+- **Gate M1 (Calibração Visual e Fauna 3D):** Aprovado e validado. Padrão métrico rigoroso 1 unidade = 1 metro em toda a fauna (Vaca 1.45m, Touro 1.60m, Cavalo 1.60m, Burro 1.30m, Raposa 0.38m, Shiba 0.40m, Ninja 1.83m). Evidências visuais registradas em `docs/evidence/fauna/`.
+- **Gate M4 (Autossuficiência & Droid):** Aprovado e validado. Droid único com agendador de tarefas físicas e simulação hídrico-elétrica determinística.
+- **Gate M5 (Persistência & Segurança):** Aprovado e validado. Google GIS autoritativo sem bypass em produção, saves atômicos sem perda de progresso, credenciais Gemini em repouso AES-256 e provisionamento CLI exclusivo para /admin.
+
 ## Futuro multiplayer
 
 Ao entrar em Fase 2, migrar fonte da verdade das ações econômicas para servidor, sem confiar no relógio ou nas alterações locais. O armazenamento local da Fase 1 é um protótipo, não segurança contra trapaças.

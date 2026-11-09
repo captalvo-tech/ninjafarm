@@ -47,6 +47,8 @@ export type TelemetryEvent =
     | 'gemini_error'
     | 'droid_low_battery'
     | 'task_blocked'
+    | 'save_completed'
+    | 'autosave_confirmed'
     | 'save_error';
 
 export interface TelemetrySummary {

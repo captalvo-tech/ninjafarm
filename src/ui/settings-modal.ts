@@ -399,7 +399,8 @@ export class SettingsModal {
                 const data = await res.json().catch(() => ({}));
                 if (res.ok && data.success) {
                     if (resultEl)
-                        resultEl.innerHTML = '<span style="color:#34D399;">✓ Conexão com Gemini validada com sucesso!</span>';
+                        resultEl.innerHTML =
+                            '<span style="color:#34D399;">✓ Conexão com Gemini validada com sucesso!</span>';
                 } else {
                     if (resultEl)
                         resultEl.innerHTML = `<span style="color:#F87171;">✕ ${data.error || 'Falha no teste de conexão.'}</span>`;
@@ -412,7 +413,9 @@ export class SettingsModal {
         this.overlay.querySelector('#disconnect-gemini-key-btn')?.addEventListener('click', async () => {
             try {
                 await fetch('/api/ai.php?action=delete_key', { method: 'POST' });
-            } catch {}
+            } catch (_err: unknown) {
+                // Silencioso se offline
+            }
             localStorage.removeItem('ninja_gemini_api_key');
             localStorage.removeItem('ninja_gemini_configured');
             localStorage.removeItem('ninja_gemini_masked');

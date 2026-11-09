@@ -440,7 +440,8 @@ export class FaunaManager {
                     if (a.animLayer) a.animLayer.transition('idle', 0.25);
                 } else {
                     dir.normalize();
-                    const walkSpeed = a.type === 'cow' ? 1.1 : a.type === 'chicken' ? 1.0 : a.type === 'fox' ? 2.0 : 1.4;
+                    const walkSpeed =
+                        a.type === 'cow' ? 1.1 : a.type === 'chicken' ? 1.0 : a.type === 'fox' ? 2.0 : 1.4;
                     const step = Math.min(dist, walkSpeed * dt);
                     a.position.add(dir.mulScalar(step));
                     a.entity.setPosition(a.position.x, a.position.y, a.position.z);

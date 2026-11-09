@@ -47,7 +47,9 @@ async function loadQualityData(container: HTMLElement): Promise<void> {
                     isVerified = true;
                 }
             }
-        } catch {}
+        } catch (_err: unknown) {
+            // Tentará fallback
+        }
 
         // Fallback para arquivo direto caso admin api falhe
         if (!reportData) {
@@ -57,7 +59,9 @@ async function loadQualityData(container: HTMLElement): Promise<void> {
                     reportData = await directRes.json();
                     isVerified = true;
                 }
-            } catch {}
+            } catch (_err: unknown) {
+                // Relatório não disponível
+            }
         }
 
         if (loadingEl) loadingEl.style.display = 'none';

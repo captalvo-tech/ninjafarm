@@ -163,6 +163,21 @@ function runRoadmapValidation() {
                 console.error(`❌ [ERRO] Linha ${i + 1} de history.jsonl possui campos incompletos.`);
                 hasErrors = true;
             }
+            if (entry.commit === 'pending') {
+                console.error(
+                    `❌ [ERRO] Linha ${i + 1} de history.jsonl possui commit "pending". Registros no histórico exigem commit real.`
+                );
+                hasErrors = true;
+            }
+            if (entry.date && entry.timestamp) {
+                const calculatedSeconds = Math.floor(new Date(entry.date).getTime() / 1000);
+                if (Math.abs(calculatedSeconds - entry.timestamp) > 10) {
+                    console.error(
+                        `❌ [ERRO] Linha ${i + 1} (${entry.id}): Timestamp ${entry.timestamp} não corresponde à data ISO "${entry.date}" (esperado: ${calculatedSeconds}).`
+                    );
+                    hasErrors = true;
+                }
+            }
             if (!featureIds.has(entry.featureId)) {
                 console.error(
                     `❌ [ERRO] Linha ${i + 1} de histórico referencia feature inexistente no catálogo: "${entry.featureId}". Funcionalidades nunca devem ser apagadas do catálogo!`

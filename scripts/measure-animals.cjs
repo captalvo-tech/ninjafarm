@@ -53,11 +53,11 @@ async function main() {
             const models = [
                 { id: 'character', file: 'assets/models/character.glb', targetH: 1.83, name: 'Ninja Humano' },
                 { id: 'cow', file: 'assets/models/Cow.glb', targetH: 1.45, name: 'Vaca Adulta' },
-                { id: 'bull', file: 'assets/models/Bull.glb', targetH: 1.60, name: 'Touro Adulto' },
-                { id: 'horse', file: 'assets/models/Horse.glb', targetH: 1.60, name: 'Cavalo' },
-                { id: 'donkey', file: 'assets/models/Donkey.glb', targetH: 1.30, name: 'Burro' },
+                { id: 'bull', file: 'assets/models/Bull.glb', targetH: 1.6, name: 'Touro Adulto' },
+                { id: 'horse', file: 'assets/models/Horse.glb', targetH: 1.6, name: 'Cavalo' },
+                { id: 'donkey', file: 'assets/models/Donkey.glb', targetH: 1.3, name: 'Burro' },
                 { id: 'fox', file: 'assets/models/fox.glb', targetH: 0.38, name: 'Raposa' },
-                { id: 'shiba', file: 'assets/models/ShibaInu.glb', targetH: 0.40, name: 'Shiba Inu' }
+                { id: 'shiba', file: 'assets/models/ShibaInu.glb', targetH: 0.4, name: 'Shiba Inu' }
             ];
 
             const results = [];
@@ -75,8 +75,12 @@ async function main() {
 
                 // Compute exact BoundingBox
                 const renders = entity.findComponents('render');
-                let minX = Infinity, minY = Infinity, minZ = Infinity;
-                let maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
+                let minX = Infinity,
+                    minY = Infinity,
+                    minZ = Infinity;
+                let maxX = -Infinity,
+                    maxY = -Infinity,
+                    maxZ = -Infinity;
 
                 for (const r of renders) {
                     for (const mi of r.meshInstances) {
@@ -136,7 +140,6 @@ async function main() {
         console.log('PLAYCANVAS GLB DIMENSION & CALIBRATION RESULTS:');
         console.log('======================================================\n');
         console.log(JSON.stringify(measurements, null, 2));
-
     } catch (err) {
         console.error('[Measure Err]', err);
         server.kill();

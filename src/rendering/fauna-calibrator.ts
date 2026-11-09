@@ -21,7 +21,7 @@
  * ============================================================================
  */
 
-import { BoundingBox, type Entity, type RenderComponent } from 'playcanvas';
+import type { BoundingBox, Entity, RenderComponent } from 'playcanvas';
 
 export interface ModelAABBMeasurement {
     min: [number, number, number];

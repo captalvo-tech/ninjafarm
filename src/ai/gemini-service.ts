@@ -116,7 +116,7 @@ export class GeminiService {
             const data = await res.json().catch(() => ({}));
             if (res.ok && data.success) {
                 this.apiKey = trimmed;
-                this.maskedKey = data.maskedKey || (trimmed.slice(0, 6) + '...' + trimmed.slice(-4));
+                this.maskedKey = data.maskedKey || trimmed.slice(0, 6) + '...' + trimmed.slice(-4);
                 this.mode = 'smart';
                 if (typeof localStorage !== 'undefined') {
                     // Remove texto plano de localStorage

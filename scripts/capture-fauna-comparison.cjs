@@ -72,12 +72,54 @@ async function run() {
 
             // Carrega modelos
             const lineup = [
-                { id: 'ninja', url: 'assets/models/character.glb', scale: 1.0, offsetY: 0, x: -7, name: 'Ninja (1.83m)' },
-                { id: 'cow', url: 'assets/models/Cow.glb', scale: 0.316, offsetY: 0.018, x: -3.5, name: 'Vaca (1.45m)' },
-                { id: 'bull', url: 'assets/models/Bull.glb', scale: 0.349, offsetY: 0.019, x: 0, name: 'Touro (1.60m)' },
-                { id: 'horse', url: 'assets/models/Horse.glb', scale: 0.332, offsetY: 0.004, x: 3.5, name: 'Cavalo (1.60m)' },
-                { id: 'fox', url: 'assets/models/fox.glb', scale: 0.0048, offsetY: 0.001, x: 6.5, name: 'Raposa (0.38m)' },
-                { id: 'shiba', url: 'assets/models/ShibaInu.glb', scale: 0.129, offsetY: -0.001, x: 8.5, name: 'Shiba (0.40m)' }
+                {
+                    id: 'ninja',
+                    url: 'assets/models/character.glb',
+                    scale: 1.0,
+                    offsetY: 0,
+                    x: -7,
+                    name: 'Ninja (1.83m)'
+                },
+                {
+                    id: 'cow',
+                    url: 'assets/models/Cow.glb',
+                    scale: 0.316,
+                    offsetY: 0.018,
+                    x: -3.5,
+                    name: 'Vaca (1.45m)'
+                },
+                {
+                    id: 'bull',
+                    url: 'assets/models/Bull.glb',
+                    scale: 0.349,
+                    offsetY: 0.019,
+                    x: 0,
+                    name: 'Touro (1.60m)'
+                },
+                {
+                    id: 'horse',
+                    url: 'assets/models/Horse.glb',
+                    scale: 0.332,
+                    offsetY: 0.004,
+                    x: 3.5,
+                    name: 'Cavalo (1.60m)'
+                },
+                {
+                    id: 'fox',
+                    url: 'assets/models/fox.glb',
+                    scale: 0.0048,
+                    offsetY: 0.001,
+                    x: 6.5,
+                    name: 'Raposa (0.38m)'
+                },
+                {
+                    id: 'shiba',
+                    url: 'assets/models/ShibaInu.glb',
+                    scale: 0.129,
+                    offsetY: -0.001,
+                    x: 8.5,
+                    name: 'Shiba (0.40m)'
+                }
             ];
 
             for (const item of lineup) {

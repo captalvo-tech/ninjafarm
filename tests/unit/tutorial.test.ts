@@ -7,7 +7,9 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { InteractiveTutorial, type TutorialStep } from '../../src/ui/tutorial';
+
+import { InteractiveTutorial } from '../../src/ui/tutorial';
+import type { TutorialStep } from '../../src/ui/tutorial';
 
 describe('InteractiveTutorial — Onboarding Interativo da Alpha 0.1', () => {
     let tutorial: InteractiveTutorial;
