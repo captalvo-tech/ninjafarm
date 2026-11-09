@@ -12,6 +12,7 @@ export interface HUDCallbacks {
     onRotateBuilding: () => void;
     onSaveGame: () => void;
     onLoadGame: () => void;
+    onOpenSettings?: () => void;
     onDemolishMode?: (active: boolean) => void;
     onVirtualMove?: (x: number, y: number) => void;
 }
@@ -713,6 +714,7 @@ export class FarmHUD {
                     <button class="hud-btn" id="btn-mode-build">${t('hud.mode.build')}</button>
                     <button class="hud-btn" id="btn-mode-overview">${t('hud.mode.overview')}</button>
                     <button class="hud-btn" id="btn-hud-save" title="Salvar">💾</button>
+                    <button class="hud-btn" id="btn-hud-settings" title="Configurações da Propriedade e Droid">⚙️</button>
                 </div>
             </div>
 
@@ -973,6 +975,13 @@ export class FarmHUD {
         btnSave.addEventListener('click', () => {
             sound.playClick();
             this.callbacks.onSaveGame();
+        });
+
+        const btnSettings = document.getElementById('btn-hud-settings');
+        btnSettings?.addEventListener('click', () => {
+            sound.playClick();
+            triggerHaptic('light');
+            this.callbacks.onOpenSettings?.();
         });
 
         // Modal do Codex / Almanaque Shinobi

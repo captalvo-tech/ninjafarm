@@ -89,8 +89,85 @@ export interface AnimalData {
     readyToCollect: boolean;
 }
 
+export interface UserProfile {
+    sub: string;
+    email: string;
+    name: string;
+    picture?: string;
+    createdAt: number;
+    lastLoginAt: number;
+}
+
+export interface DroidSaveState {
+    id: string;
+    battery: number; // 0 a 100
+    maxBattery: number;
+    state: 'idle' | 'walking' | 'working' | 'recharging' | 'paused' | 'depleted';
+    position: { x: number; y: number; z: number };
+    currentTaskId?: string | null;
+    workSpeedMultiplier: number;
+}
+
+export type TaskStatus =
+    | 'DRAFT'
+    | 'SCHEDULED'
+    | 'WAITING_RESOURCES'
+    | 'WAITING_ENERGY'
+    | 'WAITING_PATH'
+    | 'IN_PROGRESS'
+    | 'PAUSED'
+    | 'COMPLETED'
+    | 'CANCELLED'
+    | 'FAILED';
+
+export type TaskCategory = 'construction' | 'agriculture' | 'animals' | 'infrastructure' | 'general';
+
+export interface FarmTask {
+    id: string;
+    category: TaskCategory;
+    type: string;
+    title: string;
+    targetId: string;
+    targetPosition: { x: number; y: number; z: number };
+    status: TaskStatus;
+    priority: number;
+    totalDurationSeconds: number;
+    progressSeconds: number;
+    energyCostTotal: number;
+    requiredResources?: Partial<ResourceInventory>;
+    consumedResources?: Partial<ResourceInventory>;
+    createdAt: number;
+    startedAt?: number;
+    completedAt?: number;
+    blockedReason?: string;
+}
+
+export interface TaskSchedulerSaveState {
+    tasks: FarmTask[];
+    activeTaskId: string | null;
+    lastProcessedTimestamp: number;
+}
+
+export interface GeminiSaveConfig {
+    mode: 'smart' | 'limited';
+    hasCustomKey: boolean;
+    lastTestedAt?: number;
+    model?: string;
+}
+
+export interface FarmEventEntry {
+    id: string;
+    timestamp: number;
+    type: string;
+    title: string;
+    description: string;
+    entityId?: string;
+}
+
 export interface FarmSaveState {
     version: number;
+    revision?: number;
+    userId?: string;
     savedAt: number;
     resources: ResourceInventory;
     buildings: PlacedBuilding[];
@@ -99,5 +176,9 @@ export interface FarmSaveState {
     dayTime: number; // 0.0 to 1.0 (0.25 = sunrise, 0.5 = noon, 0.75 = sunset, 1.0 = midnight)
     elapsedGameDays: number;
     ninjaPosition: { x: number; y: number; z: number };
+    droid?: DroidSaveState;
+    scheduler?: TaskSchedulerSaveState;
+    geminiConfig?: GeminiSaveConfig;
+    eventsLog?: FarmEventEntry[];
 }
 

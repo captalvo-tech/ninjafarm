@@ -23,9 +23,10 @@
 
 ## Camadas de persistência
 
-1. **Fase 1:** IndexedDB; writes transacionais, autosave com debounce e save manual, exportação/importação JSON opcional. Usar `localStorage` apenas para preferências leves, não como único repositório de farm complexa.
-2. **Fase 2+:** backend autêntico com armazenamento transacional e políticas de acesso, relógio servidor; cliente mantém cache e snapshots versionados sem aceitar moeda/inventário do browser como autoridade.
-3. **Migração:** `v1→v2` funções puras testadas. Em erro de versão inesperada, backup/exportar local e mostrar recuperação; nunca sobrescrever save de versão mais nova silenciosamente.
+1. **Backend Autoritativo em Nuvem (`/api/save.php`):** Saves vinculados obrigatoriamente à conta Google autenticada via `sub` imutável. Utiliza versionamento sequencial (`revision`), relógio UTC autoritativo do servidor e controle otimista de concorrência (`409 Conflict`) para impedir duplicação de itens ou sobrescrita indevida entre múltiplos dispositivos.
+2. **IndexedDB como Cache Local & Fallback:** O navegador armazena a última versão confirmada para carregamento ultra-rápido de texturas e malhas, mas qualquer reconciliação de tarefas, recursos e energia é checada contra o servidor.
+3. **Reset de Progresso Seguro:** Endpoint de reinicialização atômica para começar a fazenda do zero com confirmação explícita do usuário, mantendo apenas a identidade Google.
+4. **Migração:** Funções puras de migração versionadas (`schemaVersion`). Ao detectar versão anterior ou save local legado sem vínculo na nuvem, solicita confirmação para migrar com segurança para o backend.
 
 ## Colisões e células
 

@@ -30,7 +30,10 @@ import { FarmTerrain } from './rendering/terrain';
 import { NinjaCharacter } from './rendering/character';
 import { CameraController } from './rendering/camera-controller';
 import { FarmHUD } from './ui/hud';
-import { PersistenceManager } from './persistence/indexeddb';
+import { AuthManager } from './persistence/auth';
+import { CloudSaveManager } from './persistence/cloud-save';
+import { LoginModal } from './ui/login-modal';
+import { SettingsModal } from './ui/settings-modal';
 import { sound } from './audio/sound';
 import { FaunaManager } from './rendering/fauna';
 import { ProximityInteractionManager } from './gameplay/interaction';
@@ -94,8 +97,27 @@ const clock = new SimulationClock(0.45); // Começa às 10:48
 const energySystem = new EnergySystem(grid, inventory, clock);
 const waterSystem = new WaterSystem(grid, inventory, energySystem);
 const cropSystem = new CropSystem(inventory, waterSystem);
-const persistence = new PersistenceManager();
-await persistence.init();
+
+// Persistência em nuvem vinculada à conta Google (Fase A)
+const authManager = new AuthManager({
+    onLogin: (user) => {
+        hud.showToast(`Conectado como ${user.name}`);
+    },
+    onLogout: () => {
+        loginModal.show();
+    }
+});
+const cloudSave = new CloudSaveManager(() => authManager.getSessionToken());
+await cloudSave.init();
+
+function applySaveState(saved: FarmSaveState): void {
+    inventory.load(saved.resources);
+    clock.setTimeOfDay(saved.dayTime);
+    if (saved.crops && saved.crops.length > 0) {
+        cropSystem.load(saved.crops);
+    }
+    hud.updateResources(inventory.getAll());
+}
 
 const objectives = new ObjectiveManager();
 const progression = new NinjaProgressionSystem(0, (level, title) => {
@@ -816,24 +838,64 @@ const hud = new FarmHUD({
             }
         };
 
-        const ok = await persistence.save(state);
-        if (ok) {
+        const result = await cloudSave.save(state);
+        if (result.success) {
             sound.playHarvest();
             objectives.completeObjective('save');
-            hud.showToast('Progresso salvo no navegador com sucesso!');
-            vfx.showFloatingText('💾 Progresso Salvo!');
+            hud.showToast(`Progresso salvo na nuvem! (Rev. #${result.revision})`);
+            vfx.showFloatingText(`☁️ Salvo na Nuvem (Rev #${result.revision})`);
+        } else if (result.conflict && result.serverSave) {
+            applySaveState(result.serverSave);
+            hud.showToast('Conflito resolvido: save mais recente da nuvem carregado.');
         }
     },
     onLoadGame: async () => {
-        const saved = await persistence.load();
+        const saved = await cloudSave.load();
         if (saved) {
-            inventory.load(saved.resources);
-            clock.setTimeOfDay(saved.dayTime);
-            hud.updateResources(inventory.getAll());
-            hud.showToast('Dados restaurados!');
+            applySaveState(saved);
+            hud.showToast('Dados restaurados da nuvem!');
+        }
+    },
+    onOpenSettings: () => {
+        settingsModal.open();
+    }
+});
+
+// Modais de Autenticação Google Obrigatória e Configurações da Conta
+const loginModal = new LoginModal(authManager, {
+    onLoginSuccess: async (user) => {
+        hud.showToast(`Autenticado como ${user.name}!`);
+        const serverSave = await cloudSave.load();
+        if (serverSave) {
+            applySaveState(serverSave);
         }
     }
 });
+
+const settingsModal = new SettingsModal(authManager, cloudSave, {
+    onLogout: () => {
+        loginModal.show();
+    },
+    onResetProgress: (freshSave) => {
+        applySaveState(freshSave);
+        hud.showToast('Progresso reinicializado com sucesso!');
+        vfx.showFloatingText('🔄 Fazenda Reiniciada!', undefined, undefined, '#34D399');
+    },
+    onGeminiConfigChange: (cfg) => {
+        hud.showToast(`Modo IA: ${cfg.mode === 'smart' ? 'Inteligente' : 'Limitado'}`);
+    }
+});
+
+// Verifica autenticação Google obrigatória no boot
+const isAuthed = await authManager.checkSession();
+if (!isAuthed) {
+    loginModal.show();
+} else {
+    const initialCloudSave = await cloudSave.load();
+    if (initialCloudSave) {
+        applySaveState(initialCloudSave);
+    }
+}
 
 // Conecta o gerenciador de provas shinobi ao HUD e ao Almanaque
 objectives.setRewardCallback((reward) => {
@@ -1488,11 +1550,11 @@ app.on('update', () => {
     hud.updateEnergy(energyMetrics);
     hud.updateWater(waterMetrics);
 
-    // 9. Auto-Save silencioso em segundo plano a cada 30 segundos
+    // 9. Auto-Save silencioso em segundo plano a cada 30 segundos na nuvem
     autoSaveTimer += dt;
     if (autoSaveTimer >= 30.0) {
         autoSaveTimer = 0;
-        persistence.save({
+        cloudSave.save({
             version: 1,
             savedAt: Date.now(),
             resources: inventory.serialize(),

@@ -296,3 +296,29 @@
   - `npm run test`: 38/38 testes unitários aprovados no Vitest (10 testes cobrindo todos os cenários obrigatórios de ação contextual).
   - `npm run build`: bundle otimizado gerado com sucesso em 365ms (`dist/index.html` e `dist/studio.html`).
   - Verificação real com Playwright no navegador headless capturando visual desktop e mobile.
+
+### 2026-11-09 — Droid Único, Agendador AFK & Fase A: Identidade Google e Persistência em Nuvem
+- **Status:** Implementado, testado e validado (Fase A concluída).
+- **Inovações de Arquitetura e Persistência:**
+  1. **Separação de Papéis (Ninja Estrategista vs. Droid Único Operacional):**
+     - O jogador é o mestre shinobi (planejamento, blueprints, exploração, missões externas).
+     - O Droid é a unidade robótica única responsável por todo o trabalho físico (agricultura, construção, transporte, recarga de bateria).
+     - Documentação completa registrada em [`docs/20-SISTEMA-DROID-AGENDADOR-AUTH.md`](file:///Z:/AI/Ninja_Farm_Project/docs/20-SISTEMA-DROID-AGENDADOR-AUTH.md).
+  2. **Login Google Obrigatório & Sessão Segura ([`public/api/auth.php`](file:///Z:/AI/Ninja_Farm_Project/public/api/auth.php), [`src/persistence/auth.ts`](file:///Z:/AI/Ninja_Farm_Project/src/persistence/auth.ts)):**
+     - Autenticação obrigatória com Google Identity Services (GIS). O jogo bloqueia acesso direto até a confirmação do login.
+     - Validação autoritativa do token JWT no servidor pelo campo estável e imutável `sub` do Google.
+     - Emissão de token de sessão seguro (cookie HTTP-only e Bearer token) e proteção contra acesso indevido entre contas.
+     - Modal de login [`LoginModal`](file:///Z:/AI/Ninja_Farm_Project/src/ui/login-modal.ts) com suporte a GIS e modo de desenvolvimento.
+  3. **Persistência Autoritativa em Nuvem ([`public/api/save.php`](file:///Z:/AI/Ninja_Farm_Project/public/api/save.php), [`src/persistence/cloud-save.ts`](file:///Z:/AI/Ninja_Farm_Project/src/persistence/cloud-save.ts)):**
+     - O backend é a fonte de verdade do progresso da fazenda.
+     - Controle otimista de concorrência com versionamento sequencial (`revision`). Rejeição automática de sobrescritas concorrentes (`409 Conflict`) impedindo perda de progresso ou duplicação de itens.
+     - O IndexedDB atua como cache local de alta performance, sincronizado com o servidor.
+  4. **Tela de Configurações da Propriedade ([`src/ui/settings-modal.ts`](file:///Z:/AI/Ninja_Farm_Project/src/ui/settings-modal.ts)):**
+     - **Seção Conta:** Visualização do perfil Google autenticado, status da sessão e botão de Logout.
+     - **Seção Progresso:** Função "Apagar progresso e começar do zero" com confirmação explícita de segurança (recria o estado inicial sem apagar a identidade).
+     - **Seção Gemini AI:** Exibição do modo ativo (*Inteligente* vs. *Limitado*), campo seguro para chave pessoal do Google AI Studio e desconexão.
+     - Botão de acesso direto `⚙️` integrado à barra superior do HUD ([`src/ui/hud.ts`](file:///Z:/AI/Ninja_Farm_Project/src/ui/hud.ts)).
+- **Testes & Qualidade:**
+  - `npm run typecheck`: 0 erros (TypeScript estrito).
+  - `npm run test`: 44/44 testes unitários aprovados no Vitest (6 novos testes automatizados em [`tests/unit/auth-persistence.test.ts`](file:///Z:/AI/Ninja_Farm_Project/tests/unit/auth-persistence.test.ts) cobrindo sessão, saves na nuvem, conflito de versão e reinicialização de progresso).
+  - `npm run build`: bundle de produção gerado com sucesso em 381ms.
