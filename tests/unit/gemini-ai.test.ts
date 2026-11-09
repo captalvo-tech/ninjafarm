@@ -120,4 +120,36 @@ describe('Fase E & F: Gemini AI Read-Only & Modo Limitado', () => {
         expect(res2.success).toBe(false);
         expect(res2.error).toContain('Intervalo de segurança ativo');
     });
+
+    it('8. Salva chave no servidor com criptografia em repouso e remove texto plano do localStorage', async () => {
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({
+                success: true,
+                message: 'Chave salva',
+                maskedKey: 'AIzaSy...ABCD'
+            })
+        } as any);
+
+        const result = await gemini.saveKeyToServer('AIzaSySecretApiKey123456');
+        expect(result.success).toBe(true);
+        expect(result.maskedKey).toBe('AIzaSy...ABCD');
+        expect(gemini.getMode()).toBe('smart');
+        // Não deve persistir a chave em texto plano no localStorage
+        expect(localStorage.getItem('ninja_gemini_api_key')).toBeNull();
+        expect(localStorage.getItem('ninja_gemini_configured')).toBe('true');
+        expect(localStorage.getItem('ninja_gemini_masked')).toBe('AIzaSy...ABCD');
+    });
+
+    it('9. Desconecta chave no servidor e limpa marcadores locais', async () => {
+        global.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ success: true })
+        } as any);
+
+        const res = await gemini.deleteKeyFromServer();
+        expect(res.success).toBe(true);
+        expect(gemini.getMode()).toBe('limited');
+        expect(localStorage.getItem('ninja_gemini_configured')).toBeNull();
+    });
 });

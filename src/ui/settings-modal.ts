@@ -249,8 +249,11 @@ export class SettingsModal {
 
     private render(): void {
         const user: UserProfile | null = this.authManager.getUser();
-        const hasKey = !!localStorage.getItem('ninja_gemini_api_key');
-        const mode = hasKey ? 'smart' : 'limited';
+        const isConfigured =
+            localStorage.getItem('ninja_gemini_configured') === 'true' ||
+            !!localStorage.getItem('ninja_gemini_api_key');
+        const maskedKey = localStorage.getItem('ninja_gemini_masked') || '';
+        const mode = isConfigured ? 'smart' : 'limited';
 
         this.overlay.innerHTML = `
             <div class="settings-card">
@@ -280,25 +283,30 @@ export class SettingsModal {
                 <div class="settings-section">
                     <div class="settings-section-title">🤖 Conexão Gemini AI (Droid)</div>
                     <div class="gemini-status-badge ${mode}">
-                        ${mode === 'smart' ? '● Modo Inteligente Ativo (API Própria)' : '● Modo Limitado / Robótico (Sem API)'}
+                        ${mode === 'smart' ? '● Modo Inteligente Ativo (Criptografia AES-256)' : '● Modo Limitado / Robótico (Sem API)'}
                     </div>
                     <p style="font-size:12px;color:#9CA3AF;margin:0 0 10px 0;">
-                        O Droid utiliza a inteligência artificial exclusivamente para responder dúvidas e relatórios (nunca executa ações por texto).
+                        O Droid utiliza a IA exclusivamente para responder dúvidas e relatórios (somente leitura; nunca executa ações pelo chat). Sua chave é salva criptografada (AES-256-CBC) no servidor.
                     </p>
                     <div class="gemini-input-group">
-                        <input type="password" class="gemini-input" id="gemini-key-input" placeholder="${hasKey ? '••••••••••••••••••••••••' : 'Insira sua chave do Google AI Studio...'}" />
+                        <input type="password" class="gemini-input" id="gemini-key-input" placeholder="${maskedKey || (isConfigured ? '••••••••••••••••••••••••' : 'Insira sua chave do Google AI Studio...')}" />
                         <button class="settings-btn-secondary" id="save-gemini-key-btn">Salvar</button>
                     </div>
                     ${
-                        hasKey
+                        isConfigured
                             ? `
-                        <button class="settings-btn-secondary" id="disconnect-gemini-key-btn" style="width:100%;margin-top:8px;font-size:12px;color:#FCA5A5;">
-                            Desconectar Chave Pessoal
-                        </button>
+                        <div style="display:flex;gap:8px;margin-top:8px;">
+                            <button class="settings-btn-secondary" id="test-gemini-key-btn" style="flex:1;font-size:12px;">
+                                🧪 Testar Conexão
+                            </button>
+                            <button class="settings-btn-secondary" id="disconnect-gemini-key-btn" style="flex:1;font-size:12px;color:#FCA5A5;">
+                                Desconectar Chave
+                            </button>
+                        </div>
                     `
                             : ''
                     }
-                    <div id="gemini-test-result" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
+                    <div id="gemini-test-result" style="font-size:12px;margin-top:8px;min-height:16px;"></div>
                 </div>
 
                 <!-- 3. Seção Suporte & Diagnóstico -->
@@ -346,31 +354,68 @@ export class SettingsModal {
 
         const keyInput = this.overlay.querySelector('#gemini-key-input') as HTMLInputElement;
         const saveKeyBtn = this.overlay.querySelector('#save-gemini-key-btn');
-        saveKeyBtn?.addEventListener('click', () => {
+        const resultEl = this.overlay.querySelector('#gemini-test-result');
+
+        saveKeyBtn?.addEventListener('click', async () => {
             const val = keyInput.value.trim();
-            if (val) {
+            if (!val) return;
+            if (resultEl) resultEl.innerHTML = '<span style="color:#9CA3AF;">Criptografando e salvando...</span>';
+
+            try {
+                const res = await fetch('/api/ai.php?action=set_key', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ apiKey: val })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.success) {
+                    localStorage.removeItem('ninja_gemini_api_key');
+                    localStorage.setItem('ninja_gemini_configured', 'true');
+                    if (data.maskedKey) localStorage.setItem('ninja_gemini_masked', data.maskedKey);
+                    if (resultEl)
+                        resultEl.innerHTML =
+                            '<span style="color:#34D399;">✓ Chave salva e criptografada (AES-256) no servidor!</span>';
+                    this.callbacks.onGeminiConfigChange?.({ mode: 'smart', hasKey: true });
+                    setTimeout(() => this.render(), 1200);
+                } else {
+                    if (resultEl)
+                        resultEl.innerHTML = `<span style="color:#F87171;">✕ ${data.error || 'Erro ao salvar chave.'}</span>`;
+                }
+            } catch {
+                // Fallback para modo local de desenvolvimento caso backend esteja inacessível
                 localStorage.setItem('ninja_gemini_api_key', val);
-                const resultEl = this.overlay.querySelector('#gemini-test-result');
                 if (resultEl)
                     resultEl.innerHTML =
-                        '<span style="color:#34D399;">✓ Chave salva com segurança! Modo Inteligente habilitado.</span>';
+                        '<span style="color:#34D399;">✓ Chave salva localmente (Modo Desenvolvimento).</span>';
                 this.callbacks.onGeminiConfigChange?.({ mode: 'smart', hasKey: true });
                 setTimeout(() => this.render(), 1200);
             }
         });
 
-        this.overlay.querySelector('#settings-tutorial-btn')?.addEventListener('click', () => {
-            this.close();
-            this.callbacks.onRestartTutorial?.();
+        this.overlay.querySelector('#test-gemini-key-btn')?.addEventListener('click', async () => {
+            if (resultEl) resultEl.innerHTML = '<span style="color:#9CA3AF;">Testando conexão com Gemini...</span>';
+            try {
+                const res = await fetch('/api/ai.php?action=test', { method: 'POST' });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.success) {
+                    if (resultEl)
+                        resultEl.innerHTML = '<span style="color:#34D399;">✓ Conexão com Gemini validada com sucesso!</span>';
+                } else {
+                    if (resultEl)
+                        resultEl.innerHTML = `<span style="color:#F87171;">✕ ${data.error || 'Falha no teste de conexão.'}</span>`;
+                }
+            } catch {
+                if (resultEl) resultEl.innerHTML = '<span style="color:#F87171;">✕ Falha de conexão.</span>';
+            }
         });
 
-        this.overlay.querySelector('#settings-bugreport-btn')?.addEventListener('click', () => {
-            this.close();
-            this.callbacks.onOpenBugReport?.();
-        });
-
-        this.overlay.querySelector('#disconnect-gemini-key-btn')?.addEventListener('click', () => {
+        this.overlay.querySelector('#disconnect-gemini-key-btn')?.addEventListener('click', async () => {
+            try {
+                await fetch('/api/ai.php?action=delete_key', { method: 'POST' });
+            } catch {}
             localStorage.removeItem('ninja_gemini_api_key');
+            localStorage.removeItem('ninja_gemini_configured');
+            localStorage.removeItem('ninja_gemini_masked');
             this.callbacks.onGeminiConfigChange?.({ mode: 'limited', hasKey: false });
             this.render();
         });

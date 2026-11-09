@@ -50,6 +50,7 @@ export interface FarmAIContext {
 
 export class GeminiService {
     private apiKey = '';
+    private maskedKey = '';
     private mode: 'smart' | 'limited' = 'limited';
     private lockoutUntil = 0;
 
@@ -57,7 +58,9 @@ export class GeminiService {
         if (typeof localStorage !== 'undefined') {
             this.apiKey =
                 localStorage.getItem('ninja_gemini_api_key') || localStorage.getItem('ninja_gemini_key') || '';
-            this.mode = this.apiKey ? 'smart' : 'limited';
+            const isConfigured = localStorage.getItem('ninja_gemini_configured') === 'true';
+            this.maskedKey = localStorage.getItem('ninja_gemini_masked') || '';
+            this.mode = this.apiKey || isConfigured ? 'smart' : 'limited';
         }
     }
 
@@ -73,6 +76,10 @@ export class GeminiService {
         return this.apiKey;
     }
 
+    public getMaskedKey(): string {
+        return this.maskedKey;
+    }
+
     public setApiKey(key: string): void {
         this.apiKey = key.trim();
         if (typeof localStorage !== 'undefined') {
@@ -83,9 +90,101 @@ export class GeminiService {
             } else {
                 localStorage.removeItem('ninja_gemini_api_key');
                 localStorage.removeItem('ninja_gemini_key');
+                localStorage.removeItem('ninja_gemini_configured');
+                localStorage.removeItem('ninja_gemini_masked');
+                this.maskedKey = '';
                 this.mode = 'limited';
             }
         }
+    }
+
+    /**
+     * Salva a chave do Gemini de forma segura e criptografada no servidor (AES-256-CBC).
+     * Nunca armazena o texto plano no localStorage em produção.
+     */
+    public async saveKeyToServer(key: string): Promise<{ success: boolean; maskedKey?: string; error?: string }> {
+        const trimmed = key.trim();
+        if (!trimmed || trimmed.length < 15) {
+            return { success: false, error: 'Chave Gemini inválida ou curta demais.' };
+        }
+        try {
+            const res = await fetch('/api/ai.php?action=set_key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ apiKey: trimmed })
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.success) {
+                this.apiKey = trimmed;
+                this.maskedKey = data.maskedKey || (trimmed.slice(0, 6) + '...' + trimmed.slice(-4));
+                this.mode = 'smart';
+                if (typeof localStorage !== 'undefined') {
+                    // Remove texto plano de localStorage
+                    localStorage.removeItem('ninja_gemini_api_key');
+                    localStorage.removeItem('ninja_gemini_key');
+                    localStorage.setItem('ninja_gemini_configured', 'true');
+                    localStorage.setItem('ninja_gemini_masked', this.maskedKey);
+                }
+                return { success: true, maskedKey: this.maskedKey };
+            }
+            return { success: false, error: data.error || 'Erro ao salvar chave no servidor.' };
+        } catch (_err) {
+            return { success: false, error: 'Falha de rede ao conectar com servidor.' };
+        }
+    }
+
+    /**
+     * Remove a chave pessoal criptografada do servidor e retorna ao Modo Limitado.
+     */
+    public async deleteKeyFromServer(): Promise<{ success: boolean; error?: string }> {
+        try {
+            const res = await fetch('/api/ai.php?action=delete_key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const data = await res.json().catch(() => ({}));
+            this.apiKey = '';
+            this.maskedKey = '';
+            this.mode = 'limited';
+            if (typeof localStorage !== 'undefined') {
+                localStorage.removeItem('ninja_gemini_api_key');
+                localStorage.removeItem('ninja_gemini_key');
+                localStorage.removeItem('ninja_gemini_configured');
+                localStorage.removeItem('ninja_gemini_masked');
+            }
+            return { success: !!data?.success };
+        } catch (_err) {
+            return { success: false, error: 'Falha ao desconectar chave no servidor.' };
+        }
+    }
+
+    /**
+     * Sincroniza o status da chave criptografada do usuário autenticado no servidor.
+     */
+    public async checkServerKeyStatus(): Promise<{ success: boolean; hasCustomKey: boolean; maskedKey?: string }> {
+        try {
+            const res = await fetch('/api/ai.php?action=get_key_status');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.hasCustomKey) {
+                    this.mode = 'smart';
+                    this.maskedKey = data.maskedKey || '';
+                    if (typeof localStorage !== 'undefined') {
+                        localStorage.setItem('ninja_gemini_configured', 'true');
+                        if (this.maskedKey) localStorage.setItem('ninja_gemini_masked', this.maskedKey);
+                    }
+                    return { success: true, hasCustomKey: true, maskedKey: this.maskedKey };
+                } else {
+                    if (typeof localStorage !== 'undefined') {
+                        localStorage.removeItem('ninja_gemini_configured');
+                        localStorage.removeItem('ninja_gemini_masked');
+                    }
+                }
+            }
+        } catch {
+            // Em caso de falha de rede mantém o estado atual
+        }
+        return { success: false, hasCustomKey: false };
     }
 
     public getRemainingLockoutSeconds(): number {
@@ -113,7 +212,7 @@ export class GeminiService {
             };
         }
 
-        if (this.mode === 'limited' || !this.apiKey) {
+        if (this.mode === 'limited' && !this.apiKey) {
             return {
                 success: false,
                 error: 'Modo Limitado ativo. Utilize os relatórios diagnósticos pré-programados.'
@@ -121,12 +220,16 @@ export class GeminiService {
         }
 
         try {
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json'
+            };
+            if (this.apiKey) {
+                headers['X-Gemini-Key'] = this.apiKey;
+            }
+
             const res = await fetch('/api/ai.php?action=query', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Gemini-Key': this.apiKey
-                },
+                headers,
                 body: JSON.stringify({
                     question,
                     context

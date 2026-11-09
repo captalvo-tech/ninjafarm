@@ -29,13 +29,14 @@
 
 /**
  * Ninja Farm - Gemini AI Read-Only Assistant Endpoint
- * Enforces authenticated session, read-only system prompt, and 30-second penalty on error.
+ * Production Hardened: Encrypted credentials at rest per user, read-only system prompt,
+ * rate limit penalty on error, and support for key set/delete/test actions.
  */
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Gemini-Key');
+header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
@@ -45,11 +46,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 $dataDir = __DIR__ . '/data';
 $rateLimitsDir = $dataDir . '/rate_limits';
 $sessionsDir = $dataDir . '/sessions';
+$usersDir = $dataDir . '/users';
 
-foreach ([$dataDir, $rateLimitsDir, $sessionsDir] as $dir) {
+foreach ([$dataDir, $rateLimitsDir, $sessionsDir, $usersDir] as $dir) {
     if (!is_dir($dir)) {
         @mkdir($dir, 0750, true);
     }
+}
+
+function getMasterEncryptionKey(): string {
+    $configFile = __DIR__ . '/config.php';
+    if (file_exists($configFile)) {
+        $cfg = require $configFile;
+        if (!empty($cfg['app_key'])) return hash('sha256', $cfg['app_key'], true);
+    }
+    $envKey = getenv('APP_KEY');
+    if (!empty($envKey)) return hash('sha256', $envKey, true);
+
+    $masterKeyFile = __DIR__ . '/data/master.key';
+    if (file_exists($masterKeyFile)) {
+        return file_get_contents($masterKeyFile);
+    }
+    $newKey = random_bytes(32);
+    @file_put_contents($masterKeyFile, $newKey);
+    @chmod($masterKeyFile, 0600);
+    return $newKey;
+}
+
+function encryptKey(string $plainText, string $masterKey): string {
+    $iv = random_bytes(16);
+    $ciphertext = openssl_encrypt($plainText, 'AES-256-CBC', $masterKey, OPENSSL_RAW_DATA, $iv);
+    return base64_encode($iv . $ciphertext);
+}
+
+function decryptKey(string $encryptedData, string $masterKey): ?string {
+    $raw = base64_decode($encryptedData, true);
+    if (!$raw || strlen($raw) < 17) return null;
+    $iv = substr($raw, 0, 16);
+    $ciphertext = substr($raw, 16);
+    $decrypted = openssl_decrypt($ciphertext, 'AES-256-CBC', $masterKey, OPENSSL_RAW_DATA, $iv);
+    return $decrypted !== false ? $decrypted : null;
 }
 
 function getBearerToken(): ?string {
@@ -60,13 +96,10 @@ function getBearerToken(): ?string {
     if (isset($_COOKIE['ninja_session'])) {
         return $_COOKIE['ninja_session'];
     }
-    if (isset($_GET['token'])) {
-        return $_GET['token'];
-    }
     return null;
 }
 
-function getSessionUser(?string $token, string $sessionsDir): ?array {
+function getSessionUser(?string $token, string $sessionsDir, string $usersDir): ?array {
     if (!$token || !preg_match('/^[a-f0-9]{64}$/', $token)) {
         return null;
     }
@@ -79,11 +112,17 @@ function getSessionUser(?string $token, string $sessionsDir): ?array {
         @unlink($sessionFile);
         return null;
     }
-    return $data['user'] ?? null;
+    $userHash = $data['userHash'] ?? hash('sha256', 'ninja_user_' . ($data['sub'] ?? ''));
+    $userFile = $usersDir . '/' . $userHash . '.json';
+    if (file_exists($userFile)) {
+        $profile = json_decode(file_get_contents($userFile), true);
+        if ($profile) return $profile;
+    }
+    return ['sub' => $data['sub'] ?? 'anonymous', 'userHash' => $userHash];
 }
 
 $token = getBearerToken();
-$user = getSessionUser($token, $sessionsDir);
+$user = getSessionUser($token, $sessionsDir, $usersDir);
 
 if (!$user) {
     http_response_code(401);
@@ -91,8 +130,10 @@ if (!$user) {
     exit;
 }
 
-$userId = hash('sha256', $user['sub'] ?? 'anonymous');
-$rateLimitFile = $rateLimitsDir . '/' . $userId . '.json';
+$userHash = $user['userHash'] ?? hash('sha256', 'ninja_user_' . ($user['sub'] ?? 'anonymous'));
+$rateLimitFile = $rateLimitsDir . '/' . $userHash . '.json';
+$userKeyFile = $usersDir . '/' . $userHash . '_gemini.enc';
+$masterKey = getMasterEncryptionKey();
 
 // Checa penalidade de 30 segundos
 if (file_exists($rateLimitFile)) {
@@ -115,8 +156,66 @@ $rawInput = file_get_contents('php://input');
 $body = json_decode($rawInput, true) ?: [];
 $action = $_GET['action'] ?? $body['action'] ?? 'query';
 
-// Identifica a chave Gemini (passada pelo cliente ou variável de ambiente)
-$apiKey = $_SERVER['HTTP_X_GEMINI_KEY'] ?? $body['apiKey'] ?? getenv('GEMINI_API_KEY');
+// 1. Salvar chave pessoal criptografada
+if ($action === 'set_key') {
+    $apiKey = trim($body['apiKey'] ?? '');
+    if (empty($apiKey) || strlen($apiKey) < 20) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'Chave da API inválida ou incompleta.']);
+        exit;
+    }
+
+    $encrypted = encryptKey($apiKey, $masterKey);
+    file_put_contents($userKeyFile, $encrypted);
+    @chmod($userKeyFile, 0600);
+
+    $masked = substr($apiKey, 0, 6) . '...' . substr($apiKey, -4);
+    echo json_encode([
+        'success' => true,
+        'message' => 'Chave pessoal do Gemini criptografada e salva com sucesso no servidor.',
+        'maskedKey' => $masked
+    ]);
+    exit;
+}
+
+// 2. Consultar status da chave pessoal
+if ($action === 'get_key_status') {
+    $hasKey = file_exists($userKeyFile);
+    $masked = '';
+    if ($hasKey) {
+        $encrypted = file_get_contents($userKeyFile);
+        $decrypted = decryptKey($encrypted, $masterKey);
+        if ($decrypted && strlen($decrypted) >= 10) {
+            $masked = substr($decrypted, 0, 6) . '...' . substr($decrypted, -4);
+        }
+    }
+    echo json_encode([
+        'success' => true,
+        'hasCustomKey' => $hasKey,
+        'maskedKey' => $masked,
+        'model' => 'gemini-2.0-flash'
+    ]);
+    exit;
+}
+
+// 3. Remover chave pessoal
+if ($action === 'delete_key') {
+    if (file_exists($userKeyFile)) {
+        @unlink($userKeyFile);
+    }
+    echo json_encode(['success' => true, 'message' => 'Chave pessoal removida. Jogo retornado ao Modo Limitado.']);
+    exit;
+}
+
+// Recupera a chave para test ou query (do usuário ou fallback do servidor)
+$apiKey = null;
+if (file_exists($userKeyFile)) {
+    $encrypted = file_get_contents($userKeyFile);
+    $apiKey = decryptKey($encrypted, $masterKey);
+}
+if (!$apiKey) {
+    $apiKey = getenv('GEMINI_API_KEY') ?: null;
+}
 
 if (!$apiKey) {
     echo json_encode([
@@ -128,7 +227,6 @@ if (!$apiKey) {
 }
 
 if ($action === 'test') {
-    // Teste leve de conectividade
     $testUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" . urlencode($apiKey);
     $payload = json_encode([
         'contents' => [
@@ -147,9 +245,8 @@ if ($action === 'test') {
     curl_close($ch);
 
     if ($httpCode === 200) {
-        echo json_encode(['success' => true, 'message' => 'Conexão com Gemini estabelecida!']);
+        echo json_encode(['success' => true, 'message' => 'Conexão com Gemini 2.0 Flash validada com sucesso!']);
     } else {
-        // Registra erro com penalidade
         file_put_contents($rateLimitFile, json_encode(['lastErrorTime' => time()]));
         http_response_code(400);
         echo json_encode(['success' => false, 'error' => 'Chave inválida ou cota excedida.', 'httpCode' => $httpCode]);
@@ -204,7 +301,6 @@ Contexto atual da fazenda:\n" . json_encode($farmContext, JSON_PRETTY_PRINT | JS
         $reply = $json['candidates'][0]['content']['parts'][0]['text'] ?? 'Desculpe, mestre. Não consegui processar essa resposta.';
         echo json_encode(['success' => true, 'reply' => $reply]);
     } else {
-        // Registra penalidade de 30 segundos após erro
         file_put_contents($rateLimitFile, json_encode(['lastErrorTime' => time()]));
         http_response_code(400);
         echo json_encode([
