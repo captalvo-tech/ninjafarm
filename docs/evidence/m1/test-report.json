@@ -1,0 +1,41 @@
+{
+  "testDate": "2026-11-09T04:10:04.195Z",
+  "browser": "Google Chrome (Headless) / Playwright 1.63.0",
+  "viewportTests": [
+    {
+      "mode": "Desktop",
+      "dimensions": "1920x1080",
+      "file": "desktop-1920x1080.png"
+    },
+    {
+      "mode": "Mobile Portrait",
+      "dimensions": "390x844",
+      "file": "mobile-portrait-390x844.png"
+    },
+    {
+      "mode": "Mobile Landscape",
+      "dimensions": "844x390",
+      "file": "mobile-landscape-844x390.png"
+    },
+    {
+      "mode": "Locomotion Action",
+      "file": "ninja-walking.png"
+    },
+    {
+      "mode": "Build Camera View",
+      "file": "camera-build-mode.png"
+    }
+  ],
+  "performance": {
+    "fps": 57,
+    "frames": 114,
+    "elapsed": 2.0119000000059604,
+    "mem": {
+      "usedJSHeapSize": "43 MB",
+      "totalJSHeapSize": "68 MB"
+    }
+  },
+  "consoleErrorsCount": 0,
+  "consoleErrors": [],
+  "logSample": []
+}

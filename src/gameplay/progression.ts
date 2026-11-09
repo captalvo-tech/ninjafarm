@@ -7,11 +7,11 @@ export interface NinjaRank {
 }
 
 export const NINJA_RANKS: NinjaRank[] = [
-    { level: 1, title: 'Genin Farmer', requiredXp: 0 },
-    { level: 2, title: 'Chunin Cultivator', requiredXp: 100 },
-    { level: 3, title: 'Jonin Harvester', requiredXp: 280 },
-    { level: 4, title: 'Sannin Agricultor', requiredXp: 650 },
-    { level: 5, title: 'Kage of the Harvest', requiredXp: 1300 }
+    { level: 1, title: 'Field Novice', requiredXp: 0 },
+    { level: 2, title: 'Skilled Cultivator', requiredXp: 100 },
+    { level: 3, title: 'Master Harvester', requiredXp: 280 },
+    { level: 4, title: 'Estate Warden', requiredXp: 650 },
+    { level: 5, title: 'Grand Agronomist', requiredXp: 1300 }
 ];
 
 export class NinjaProgressionSystem {

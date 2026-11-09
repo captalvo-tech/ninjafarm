@@ -2,7 +2,7 @@
 // NINJA FARM - HAPTIC FEEDBACK ENGINE (MOBILE-FIRST)
 // ==========================================
 
-export type HapticPattern = 'light' | 'medium' | 'heavy' | 'harvest' | 'plant' | 'jutsu' | 'levelUp' | 'success';
+export type HapticPattern = 'light' | 'medium' | 'heavy' | 'harvest' | 'plant' | 'tool' | 'levelUp' | 'success';
 
 let hapticsEnabled = true;
 
@@ -36,7 +36,7 @@ export function triggerHaptic(pattern: HapticPattern = 'light'): void {
             case 'plant':
                 navigator.vibrate([14, 20, 16]);
                 break;
-            case 'jutsu':
+            case 'tool':
                 navigator.vibrate([22, 18, 30]);
                 break;
             case 'levelUp':

@@ -1,150 +1,202 @@
-import { Entity } from 'playcanvas';
+import { Color, Entity, StandardMaterial } from 'playcanvas';
 import type { FarmMaterials } from './materials';
+import type { GlbAssetLoader, LoadedGLB } from './asset-loader';
+import { type CharacterVisualConfig, getVisualConfig } from '../core/visual-config';
 
 export type NinjaLocomotionState = 'idle' | 'walk' | 'run';
+
+function hexToColor(hex: string, fallback: Color): Color {
+    try {
+        const cleaned = hex.replace('#', '');
+        if (cleaned.length === 6) {
+            const r = parseInt(cleaned.slice(0, 2), 16) / 255;
+            const g = parseInt(cleaned.slice(2, 4), 16) / 255;
+            const b = parseInt(cleaned.slice(4, 6), 16) / 255;
+            return new Color(r, g, b);
+        }
+    } catch {
+        // fallback
+    }
+    return fallback;
+}
 
 export class NinjaCharacter {
     readonly entity: Entity;
     private materials: FarmMaterials;
+    private modelRoot: Entity | null = null;
+    private animLayer: any = null;
+    private assetLoader?: GlbAssetLoader;
+    private currentGlb: LoadedGLB | null = null;
+    private config: CharacterVisualConfig;
 
-    // Partes articuladas para animação
-    private leftLeg!: Entity;
-    private rightLeg!: Entity;
-    private leftArm!: Entity;
-    private rightArm!: Entity;
-    private torso!: Entity;
-    private headRibbon!: Entity;
+    private customMainMat: StandardMaterial | null = null;
+    private customJointsMat: StandardMaterial | null = null;
 
     private state: NinjaLocomotionState = 'idle';
-    private animTime: number = 0;
     private targetRotation: number = 0;
     private currentRotation: number = 0;
+    private isLoaded: boolean = false;
 
-    constructor(materials: FarmMaterials) {
+    constructor(materials: FarmMaterials, assetLoader?: GlbAssetLoader, config?: CharacterVisualConfig) {
         this.materials = materials;
+        this.assetLoader = assetLoader;
+        this.config = config || getVisualConfig().character;
         this.entity = new Entity('ninja_player');
-        this.buildNinjaModel();
+
+        if (assetLoader) {
+            this.loadGlbCharacter();
+        }
     }
 
-    private buildNinjaModel(): void {
-        // Root de animação
-        this.torso = new Entity('ninja_torso');
-        this.torso.addComponent('render', {
-            type: 'box',
-            material: this.materials.ninjaCharcoal
-        });
-        this.torso.setLocalScale(0.7, 0.9, 0.45);
-        this.torso.setLocalPosition(0, 1.35, 0);
-        this.entity.addChild(this.torso);
+    private applyMaterials(modelEntity: Entity): void {
+        const mainColor = hexToColor(this.config.tintMain, this.materials.ninjaCharcoal.diffuse);
+        const jointsColor = hexToColor(this.config.tintJoints, this.materials.ninjaCrimson.diffuse);
 
-        // Faixa carmesim na cintura
-        const sash = new Entity('ninja_sash');
-        sash.addComponent('render', {
-            type: 'box',
-            material: this.materials.ninjaCrimson
-        });
-        sash.setLocalScale(0.74, 0.22, 0.49);
-        sash.setLocalPosition(0, -0.3, 0);
-        this.torso.addChild(sash);
+        if (!this.customMainMat) {
+            this.customMainMat = new StandardMaterial();
+            this.customMainMat.gloss = 0.35;
+            this.customMainMat.useMetalness = true;
+            this.customMainMat.metalness = 0.1;
+        }
+        this.customMainMat.diffuse = mainColor;
+        this.customMainMat.update();
 
-        // Katana nas costas
-        const scabbard = new Entity('katana_scabbard');
-        scabbard.addComponent('render', {
-            type: 'box',
-            material: this.materials.ninjaCharcoal
-        });
-        scabbard.setLocalScale(0.1, 1.4, 0.1);
-        scabbard.setLocalPosition(0.2, 0.1, -0.28);
-        scabbard.setLocalEulerAngles(0, 0, -35);
-        this.torso.addChild(scabbard);
+        if (!this.customJointsMat) {
+            this.customJointsMat = new StandardMaterial();
+            this.customJointsMat.gloss = 0.5;
+            this.customJointsMat.useMetalness = true;
+            this.customJointsMat.metalness = 0.2;
+        }
+        this.customJointsMat.diffuse = jointsColor;
+        this.customJointsMat.update();
 
-        const hilt = new Entity('katana_hilt');
-        hilt.addComponent('render', {
-            type: 'cylinder',
-            material: this.materials.ninjaCrimson
-        });
-        hilt.setLocalScale(0.08, 0.35, 0.08);
-        hilt.setLocalPosition(0.65, 0.7, -0.28);
-        hilt.setLocalEulerAngles(0, 0, -35);
-        this.torso.addChild(hilt);
+        const renders = modelEntity.findComponents('render');
+        for (const r of renders) {
+            const meshInstances = (r as any).meshInstances || [];
+            for (const mi of meshInstances) {
+                if (mi.material?.name === 'M_Main' || mi.material?.name?.toLowerCase().includes('main')) {
+                    mi.material = this.customMainMat;
+                } else if (mi.material?.name === 'M_Joints' || mi.material?.name?.toLowerCase().includes('joint')) {
+                    mi.material = this.customJointsMat;
+                }
+            }
+        }
+    }
 
-        // Cabeça com máscara ninja
-        const head = new Entity('ninja_head');
-        head.addComponent('render', {
-            type: 'box',
-            material: this.materials.ninjaCharcoal
-        });
-        head.setLocalScale(0.48, 0.5, 0.48);
-        head.setLocalPosition(0, 0.72, 0);
-        this.torso.addChild(head);
+    private async loadGlbCharacter(): Promise<void> {
+        if (!this.assetLoader) return;
+        try {
+            const url = this.config.modelUrl || 'assets/models/character.glb';
+            const glb = await this.assetLoader.load(url, 'character_ninja');
+            this.currentGlb = glb;
+            const modelEntity = glb.instantiate();
+            modelEntity.name = 'ninja_mesh_root';
 
-        // Testeira / Faixa na testa
-        const headband = new Entity('ninja_headband');
-        headband.addComponent('render', {
-            type: 'box',
-            material: this.materials.ninjaCrimson
-        });
-        headband.setLocalScale(0.51, 0.14, 0.51);
-        headband.setLocalPosition(0, 0.12, 0);
-        head.addChild(headband);
+            // Escala e alinhamento do personagem humanoide
+            const scale = this.config.scale || 1.0;
+            modelEntity.setLocalScale(scale, scale, scale);
+            modelEntity.setLocalPosition(0, 0, 0);
+            modelEntity.setLocalEulerAngles(0, this.config.rotationOffsetY || 0, 0);
 
-        // Fitas da bandana atrás da cabeça
-        this.headRibbon = new Entity('headband_ribbon');
-        this.headRibbon.addComponent('render', {
-            type: 'box',
-            material: this.materials.ninjaCrimson
-        });
-        this.headRibbon.setLocalScale(0.12, 0.6, 0.04);
-        this.headRibbon.setLocalPosition(0, -0.2, -0.26);
-        head.addChild(this.headRibbon);
+            // Adiciona o componente de animação
+            modelEntity.addComponent('anim', {
+                activate: true,
+                speed: 1.0
+            });
 
-        // Perna esquerda
-        this.leftLeg = new Entity('left_leg');
-        this.leftLeg.addComponent('render', {
-            type: 'box',
-            material: this.materials.ninjaCharcoal
-        });
-        this.leftLeg.setLocalScale(0.24, 0.9, 0.26);
-        this.leftLeg.setLocalPosition(-0.2, 0.45, 0);
-        this.entity.addChild(this.leftLeg);
+            // Extrai as faixas de locomoção configuradas
+            const idleClipName = this.config.animations?.idle || 'Idle_Loop';
+            const walkClipName = this.config.animations?.walk || 'Walk_Loop';
+            const runClipName = this.config.animations?.run || 'Jog_Fwd_Loop';
 
-        // Perna direita
-        this.rightLeg = new Entity('right_leg');
-        this.rightLeg.addComponent('render', {
-            type: 'box',
-            material: this.materials.ninjaCharcoal
-        });
-        this.rightLeg.setLocalScale(0.24, 0.9, 0.26);
-        this.rightLeg.setLocalPosition(0.2, 0.45, 0);
-        this.entity.addChild(this.rightLeg);
+            const idleTrack = glb.getTrack(idleClipName) || glb.getTrack('Idle');
+            const walkTrack = glb.getTrack(walkClipName) || glb.getTrack('Walk');
+            const runTrack = glb.getTrack(runClipName) || glb.getTrack('Run') || glb.getTrack('Sprint');
 
-        // Braço esquerdo
-        this.leftArm = new Entity('left_arm');
-        this.leftArm.addComponent('render', {
-            type: 'box',
-            material: this.materials.ninjaCharcoal
-        });
-        this.leftArm.setLocalScale(0.2, 0.8, 0.2);
-        this.leftArm.setLocalPosition(-0.5, 0.05, 0);
-        this.torso.addChild(this.leftArm);
+            if (idleTrack) {
+                modelEntity.anim?.assignAnimation('idle', idleTrack, undefined, 1.0, true);
+            }
+            if (walkTrack) {
+                const walkSpeed = this.config.walkAnimSpeed || 1.25;
+                modelEntity.anim?.assignAnimation('walk', walkTrack, undefined, walkSpeed, true);
+            }
+            if (runTrack) {
+                const runSpeed = this.config.runAnimSpeed || 1.35;
+                modelEntity.anim?.assignAnimation('run', runTrack, undefined, runSpeed, true);
+            }
 
-        // Braço direito
-        this.rightArm = new Entity('right_arm');
-        this.rightArm.addComponent('render', {
-            type: 'box',
-            material: this.materials.ninjaCharcoal
-        });
-        this.rightArm.setLocalScale(0.2, 0.8, 0.2);
-        this.rightArm.setLocalPosition(0.5, 0.05, 0);
-        this.torso.addChild(this.rightArm);
+            // Customização dos materiais
+            this.applyMaterials(modelEntity);
+
+            if (this.modelRoot) {
+                this.entity.removeChild(this.modelRoot);
+                this.modelRoot.destroy();
+            }
+
+            this.entity.addChild(modelEntity);
+            this.modelRoot = modelEntity;
+            this.animLayer = modelEntity.anim?.baseLayer || null;
+            this.isLoaded = true;
+
+            // Transiciona para o estado atual se já foi definido antes do carregamento
+            if (this.animLayer) {
+                this.animLayer.transition(this.state, 0.1);
+            }
+        } catch (err) {
+            console.error('[NinjaCharacter] Failed to load GLB model:', err);
+        }
+    }
+
+    async applyVisualConfig(newConfig: CharacterVisualConfig): Promise<void> {
+        const modelChanged = this.config.modelUrl !== newConfig.modelUrl;
+        this.config = { ...newConfig };
+
+        if (modelChanged && this.assetLoader) {
+            await this.loadGlbCharacter();
+        } else if (this.modelRoot) {
+            const scale = this.config.scale || 1.0;
+            this.modelRoot.setLocalScale(scale, scale, scale);
+            this.modelRoot.setLocalEulerAngles(0, this.config.rotationOffsetY || 0, 0);
+            this.applyMaterials(this.modelRoot);
+
+            // Atualiza velocidade de reprodução
+            if (this.modelRoot.anim?.baseLayer) {
+                const idleTrack = this.currentGlb?.getTrack(this.config.animations?.idle || 'Idle_Loop');
+                const walkTrack = this.currentGlb?.getTrack(this.config.animations?.walk || 'Walk_Loop');
+                const runTrack = this.currentGlb?.getTrack(this.config.animations?.run || 'Jog_Fwd_Loop');
+
+                if (idleTrack) this.modelRoot.anim.assignAnimation('idle', idleTrack, undefined, 1.0, true);
+                if (walkTrack) this.modelRoot.anim.assignAnimation('walk', walkTrack, undefined, this.config.walkAnimSpeed || 1.25, true);
+                if (runTrack) this.modelRoot.anim.assignAnimation('run', runTrack, undefined, this.config.runAnimSpeed || 1.35, true);
+            }
+        }
+    }
+
+    getConfig(): CharacterVisualConfig {
+        return { ...this.config };
     }
 
     setState(state: NinjaLocomotionState): void {
+        if (this.state === state) return;
         this.state = state;
+
+        if (this.animLayer) {
+            // Transição com crossfade suave entre os estados de animação
+            const crossfadeTime = state === 'idle' ? 0.25 : 0.18;
+            this.animLayer.transition(state, crossfadeTime);
+        }
     }
 
     getState(): NinjaLocomotionState {
         return this.state;
+    }
+
+    getModelRoot(): Entity | null {
+        return this.modelRoot;
+    }
+
+    getIsLoaded(): boolean {
+        return this.isLoaded;
     }
 
     setFacing(angleDegrees: number): void {
@@ -156,53 +208,11 @@ export class NinjaCharacter {
     }
 
     update(dt: number): void {
-        this.animTime += dt;
-
-        // Suavização da rotação do personagem
+        // Suavização da rotação angular do ninja
         let diff = this.targetRotation - this.currentRotation;
         while (diff < -180) diff += 360;
         while (diff > 180) diff -= 360;
         this.currentRotation += diff * Math.min(1.0, dt * 14.0);
         this.entity.setEulerAngles(0, this.currentRotation, 0);
-
-        // Máquina de estados de animação
-        if (this.state === 'idle') {
-            // Respiração sutil e descanso em postura ninja
-            const breath = Math.sin(this.animTime * 3.0) * 0.03;
-            this.torso.setLocalPosition(0, 1.35 + breath, 0);
-            this.torso.setLocalEulerAngles(0, 0, 0);
-
-            this.leftLeg.setLocalEulerAngles(0, 0, -4);
-            this.rightLeg.setLocalEulerAngles(0, 0, 4);
-            this.leftArm.setLocalEulerAngles(0, 0, -6);
-            this.rightArm.setLocalEulerAngles(0, 0, 6);
-
-            this.headRibbon.setLocalEulerAngles(Math.sin(this.animTime * 2.5) * 8, 0, 0);
-        } else {
-            // Ciclo de passada (walk ou run)
-            const speedMultiplier = this.state === 'run' ? 14.0 : 8.5;
-            const strideAngle = this.state === 'run' ? 42 : 28;
-            const armAngle = this.state === 'run' ? 45 : 26;
-
-            const cycle = Math.sin(this.animTime * speedMultiplier);
-            const bounce = Math.abs(Math.sin(this.animTime * speedMultiplier)) * (this.state === 'run' ? 0.08 : 0.04);
-
-            // Inclinação para frente ao correr
-            const forwardLean = this.state === 'run' ? 16 : 8;
-            this.torso.setLocalEulerAngles(forwardLean, 0, cycle * 3.5);
-            this.torso.setLocalPosition(0, 1.35 + bounce, 0);
-
-            // Pernas alternadas
-            this.leftLeg.setLocalEulerAngles(cycle * strideAngle, 0, 0);
-            this.rightLeg.setLocalEulerAngles(-cycle * strideAngle, 0, 0);
-
-            // Braços em contra-fase
-            this.leftArm.setLocalEulerAngles(-cycle * armAngle, 0, -5);
-            this.rightArm.setLocalEulerAngles(cycle * armAngle, 0, 5);
-
-            // Bandana balançando com a velocidade do vento
-            const windFlutter = Math.sin(this.animTime * 18.0) * 20;
-            this.headRibbon.setLocalEulerAngles(-25 + windFlutter, 0, 0);
-        }
     }
 }

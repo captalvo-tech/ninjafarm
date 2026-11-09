@@ -1,12 +1,62 @@
 import { Color, Entity } from 'playcanvas';
 import type { FarmMaterials } from './materials';
 import type { BuildingType, CropStage, CropType } from '../core/types';
+import type { GlbAssetLoader, LoadedGLB } from './asset-loader';
 
 export class BuildingModelFactory {
     private materials: FarmMaterials;
+    private assetLoader?: GlbAssetLoader;
+    private house1Glb: LoadedGLB | null = null;
+    private house2Glb: LoadedGLB | null = null;
+    private treeGlb: LoadedGLB | null = null;
+    private lilypadGlb: LoadedGLB | null = null;
+    private cropGlbs = new Map<string, LoadedGLB>();
 
-    constructor(materials: FarmMaterials) {
+    constructor(materials: FarmMaterials, assetLoader?: GlbAssetLoader) {
         this.materials = materials;
+        this.assetLoader = assetLoader;
+    }
+
+    /**
+     * Pré-carrega os modelos GLB da fazenda (Quaternius CC0)
+     */
+    async preload(): Promise<void> {
+        if (!this.assetLoader) return;
+        try {
+            const [h1, h2, tree, lily] = await Promise.all([
+                this.assetLoader.load('assets/models/House1.glb', 'hq_house'),
+                this.assetLoader.load('assets/models/House2.glb', 'shed_barn'),
+                this.assetLoader.load('assets/models/CommonTree_1.glb', 'nature_tree'),
+                this.assetLoader.load('assets/models/Lilypad.glb', 'nature_lilypad')
+            ]);
+            this.house1Glb = h1;
+            this.house2Glb = h2;
+            this.treeGlb = tree;
+            this.lilypadGlb = lily;
+
+            const cropFiles = [
+                'Rice_1.glb',
+                'Rice_2.glb',
+                'Rice_3.glb',
+                'Rice_4.glb',
+                'Carrot_1.glb',
+                'Carrot_2.glb',
+                'Carrot_3.glb',
+                'Carrot_4.glb',
+                'Flower_1.glb',
+                'Flower_2.glb',
+                'Flower_3.glb',
+                'Flower_4.glb'
+            ];
+            await Promise.all(
+                cropFiles.map(async (file) => {
+                    const loaded = await this.assetLoader!.load(`assets/models/${file}`);
+                    this.cropGlbs.set(file, loaded);
+                })
+            );
+        } catch (err) {
+            console.warn('[BuildingModelFactory] Non-critical warning preloading GLBs:', err);
+        }
     }
 
     createBuildingEntity(type: BuildingType): Entity {
@@ -43,6 +93,44 @@ export class BuildingModelFactory {
     // Sede Ninja / HQ 3D detalhada (4x4 células = 8m x 8m)
     createHQ(): Entity {
         const root = new Entity('building_hq');
+
+        if (this.house1Glb) {
+            // Deck de fundação de madeira tradicional japonesa
+            const deck = new Entity('hq_deck');
+            deck.addComponent('render', {
+                type: 'box',
+                material: this.materials.wood
+            });
+            deck.setLocalScale(7.4, 0.35, 7.4);
+            deck.setLocalPosition(0, 0.175, 0);
+            root.addChild(deck);
+
+            // Modelo arquitetônico rural autêntico (Quaternius CC0)
+            const house = this.house1Glb.instantiate();
+            house.name = 'hq_house_mesh';
+            house.setLocalScale(1.85, 1.85, 1.85);
+            house.setLocalPosition(0, 0.35, 0);
+            root.addChild(house);
+
+            // Lanternas estilizadas nas extremidades da varanda
+            const lanternPositions = [
+                [-3.2, 0.6, 3.2],
+                [3.2, 0.6, 3.2]
+            ];
+            for (let i = 0; i < lanternPositions.length; i++) {
+                const lp = lanternPositions[i];
+                const lantern = new Entity(`hq_lantern_${i}`);
+                lantern.addComponent('render', {
+                    type: 'sphere',
+                    material: this.materials.lanternGlow
+                });
+                lantern.setLocalScale(0.35, 0.45, 0.35);
+                lantern.setLocalPosition(lp[0], lp[1], lp[2]);
+                root.addChild(lantern);
+            }
+
+            return root;
+        }
 
         // Fundação / Deck de pedra e madeira
         const foundation = new Entity('foundation');
@@ -140,6 +228,25 @@ export class BuildingModelFactory {
     // Galpão de Suprimentos (3x3 células = 6m x 6m)
     createShed(): Entity {
         const root = new Entity('building_shed');
+
+        if (this.house2Glb) {
+            const platform = new Entity('shed_platform');
+            platform.addComponent('render', {
+                type: 'box',
+                material: this.materials.wood
+            });
+            platform.setLocalScale(5.6, 0.25, 5.6);
+            platform.setLocalPosition(0, 0.125, 0);
+            root.addChild(platform);
+
+            const barn = this.house2Glb.instantiate();
+            barn.name = 'shed_barn_mesh';
+            barn.setLocalScale(1.5, 1.5, 1.5);
+            barn.setLocalPosition(0, 0.25, 0);
+            root.addChild(barn);
+
+            return root;
+        }
 
         const base = new Entity('shed_base');
         base.addComponent('render', {
@@ -379,6 +486,41 @@ export class BuildingModelFactory {
 
         if (stage === 'empty' || stage === 'harvested') return;
 
+        // Verifica se temos os modelos 3D reais (Quaternius CC0)
+        let glbFileName: string | null = null;
+        if (cropType === 'rice') {
+            glbFileName = stage === 'planted' ? 'Rice_1.glb' : stage === 'growing' ? 'Rice_3.glb' : 'Rice_4.glb';
+        } else if (cropType === 'vegetable') {
+            glbFileName = stage === 'planted' ? 'Carrot_1.glb' : stage === 'growing' ? 'Carrot_2.glb' : 'Carrot_4.glb';
+        } else if (cropType === 'lotus') {
+            glbFileName = stage === 'planted' ? 'Flower_1.glb' : stage === 'growing' ? 'Flower_2.glb' : 'Flower_4.glb';
+        }
+
+        const cropGlb = glbFileName ? this.cropGlbs.get(glbFileName) : null;
+
+        if (cropGlb) {
+            // Distribuição limpa e volumétrica de 4 mudas por canteiro
+            const slots: [number, number][] = [
+                [-0.8, -0.8],
+                [0.8, -0.8],
+                [-0.8, 0.8],
+                [0.8, 0.8]
+            ];
+
+            const scale = cropType === 'rice' ? 1.6 : cropType === 'vegetable' ? 1.3 : 1.4;
+
+            for (let i = 0; i < slots.length; i++) {
+                const [sx, sz] = slots[i];
+                const plant = cropGlb.instantiate();
+                plant.name = `plant_${cropType}_${i}`;
+                plant.setLocalScale(scale, scale, scale);
+                plant.setLocalPosition(sx, 0.05, sz);
+                plant.setLocalEulerAngles(0, (i * 90 + i * 25) % 360, 0);
+                group.addChild(plant);
+            }
+            return;
+        }
+
         const rows = 3;
         const cols = 3;
 
@@ -533,27 +675,84 @@ export class BuildingModelFactory {
         }
     }
 
-    // Galinheiro (3x2 células)
+    // Galinheiro Arquitetônico com Piquete e Ninho (3x2 células = 6m x 4m)
     createChickenCoop(): Entity {
         const root = new Entity('building_chicken_coop');
 
-        const coopBody = new Entity('coop_body');
-        coopBody.addComponent('render', {
+        // Plataforma sobre estacas de madeira
+        const platform = new Entity('coop_platform');
+        platform.addComponent('render', {
             type: 'box',
             material: this.materials.wood
         });
-        coopBody.setLocalScale(4.5, 1.8, 3.0);
-        coopBody.setLocalPosition(0, 0.9, 0);
-        root.addChild(coopBody);
+        platform.setLocalScale(5.4, 0.25, 3.4);
+        platform.setLocalPosition(0, 0.45, 0);
+        root.addChild(platform);
 
-        const coopRoof = new Entity('coop_roof');
-        coopRoof.addComponent('render', {
+        // Estacas de sustentação
+        const stiltPositions = [
+            [-2.4, -1.4], [2.4, -1.4],
+            [-2.4, 1.4], [2.4, 1.4]
+        ];
+        for (const [sx, sz] of stiltPositions) {
+            const stilt = new Entity('coop_stilt');
+            stilt.addComponent('render', {
+                type: 'cylinder',
+                material: this.materials.wood
+            });
+            stilt.setLocalScale(0.18, 0.45, 0.18);
+            stilt.setLocalPosition(sx, 0.225, sz);
+            root.addChild(stilt);
+        }
+
+        // Casa de ninho fechada (lado esquerdo)
+        const nestHouse = new Entity('coop_nest_house');
+        nestHouse.addComponent('render', {
+            type: 'box',
+            material: this.materials.wood
+        });
+        nestHouse.setLocalScale(2.6, 1.6, 3.2);
+        nestHouse.setLocalPosition(-1.3, 1.35, 0);
+        root.addChild(nestHouse);
+
+        // Telhado inclinado do galinheiro
+        const roof = new Entity('coop_roof');
+        roof.addComponent('render', {
             type: 'box',
             material: this.materials.roof
         });
-        coopRoof.setLocalScale(5.0, 0.25, 3.5);
-        coopRoof.setLocalPosition(0, 1.9, 0);
-        root.addChild(coopRoof);
+        roof.setLocalScale(3.0, 0.22, 3.6);
+        roof.setLocalPosition(-1.3, 2.2, 0);
+        roof.setLocalEulerAngles(0, 0, -8);
+        root.addChild(roof);
+
+        // Piquete com cerca protetora
+        const runFences = [
+            { pos: [1.3, 1.0, -1.6], scale: [2.6, 1.1, 0.08] },
+            { pos: [1.3, 1.0, 1.6], scale: [2.6, 1.1, 0.08] },
+            { pos: [2.6, 1.0, 0], scale: [0.08, 1.1, 3.2] }
+        ];
+        for (const f of runFences) {
+            const fence = new Entity('coop_run_fence');
+            fence.addComponent('render', {
+                type: 'box',
+                material: this.materials.metal
+            });
+            fence.setLocalScale(f.scale[0], f.scale[1], f.scale[2]);
+            fence.setLocalPosition(f.pos[0], f.pos[1], f.pos[2]);
+            root.addChild(fence);
+        }
+
+        // Rampa de acesso das galinhas
+        const ramp = new Entity('coop_ramp');
+        ramp.addComponent('render', {
+            type: 'box',
+            material: this.materials.wood
+        });
+        ramp.setLocalScale(0.65, 0.06, 1.4);
+        ramp.setLocalPosition(0.2, 0.22, 1.7);
+        ramp.setLocalEulerAngles(20, 0, 0);
+        root.addChild(ramp);
 
         return root;
     }
@@ -602,14 +801,22 @@ export class BuildingModelFactory {
         root.addChild(koi2);
 
         // Vitória-régia no canto com flor de lótus flutuante
-        const pad = new Entity('pond_lilypad');
-        pad.addComponent('render', {
-            type: 'cylinder',
-            material: this.materials.lotusPad
-        });
-        pad.setLocalScale(0.85, 0.04, 0.85);
-        pad.setLocalPosition(-1.4, 0.45, 1.3);
-        root.addChild(pad);
+        if (this.lilypadGlb) {
+            const padMesh = this.lilypadGlb.instantiate();
+            padMesh.name = 'pond_lilypad_mesh';
+            padMesh.setLocalScale(1.8, 1.8, 1.8);
+            padMesh.setLocalPosition(-1.4, 0.45, 1.3);
+            root.addChild(padMesh);
+        } else {
+            const pad = new Entity('pond_lilypad');
+            pad.addComponent('render', {
+                type: 'cylinder',
+                material: this.materials.lotusPad
+            });
+            pad.setLocalScale(0.85, 0.04, 0.85);
+            pad.setLocalPosition(-1.4, 0.45, 1.3);
+            root.addChild(pad);
+        }
 
         const lotus = new Entity('pond_lotus');
         lotus.addComponent('render', {
@@ -932,9 +1139,19 @@ export class BuildingModelFactory {
         return root;
     }
 
-    // Árvore 3D estilizada
+    // Árvore 3D (Quaternius CC0 com modelo volumétrico)
     createTree(): Entity {
         const root = new Entity('tree');
+
+        if (this.treeGlb) {
+            const tree = this.treeGlb.instantiate();
+            tree.name = 'tree_mesh_glb';
+            const scale = 1.6 + (Math.random() - 0.5) * 0.4;
+            tree.setLocalScale(scale, scale, scale);
+            tree.setLocalEulerAngles(0, Math.random() * 360, 0);
+            root.addChild(tree);
+            return root;
+        }
 
         // Tronco
         const trunk = new Entity('trunk');

@@ -304,11 +304,11 @@ export class ObjectiveManager {
             reward: { xp: 25, resourceType: 'water', resourceAmount: 25 }
         },
         {
-            id: 'suiton',
+            id: 'irrigation',
             chapter: 1,
-            titleKey: 'trial.suiton.title',
-            descKey: 'trial.suiton.desc',
-            icon: '🌊',
+            titleKey: 'trial.irrigation.title',
+            descKey: 'trial.irrigation.desc',
+            icon: '💧',
             targetCount: 1,
             currentCount: 0,
             completed: false,

@@ -1,4 +1,5 @@
 import {
+    AnimComponentSystem,
     AppBase,
     AppOptions,
     CameraComponentSystem,
@@ -22,7 +23,8 @@ import { InventorySystem } from './simulation/inventory';
 import { EnergySystem } from './simulation/energy';
 import { WaterSystem } from './simulation/water';
 import { CropSystem } from './simulation/crops';
-import { createFarmMaterials } from './rendering/materials';
+import { createFarmMaterials, loadPbrTextures } from './rendering/materials';
+import { GlbAssetLoader } from './rendering/asset-loader';
 import { BuildingModelFactory } from './rendering/models';
 import { FarmTerrain } from './rendering/terrain';
 import { NinjaCharacter } from './rendering/character';
@@ -43,7 +45,7 @@ import { HolographicGridOverlay } from './rendering/grid-overlay';
 import { TrainingDummy } from './rendering/training-dummy';
 import { WeatherSystem } from './rendering/weather';
 import { NinjaProgressionSystem } from './gameplay/progression';
-import { ShadowCloneManager } from './gameplay/shadow-clone';
+import { getVisualConfig, onVisualConfigChange } from './core/visual-config';
 import type { BuildingOrientation, BuildingType, CropType, FarmSaveState } from './core/types';
 
 // ==========================================
@@ -55,12 +57,19 @@ device.maxPixelRatio = Math.min(window.devicePixelRatio, 2);
 
 const createOptions = new AppOptions();
 createOptions.graphicsDevice = device;
-createOptions.componentSystems = [RenderComponentSystem, CameraComponentSystem, LightComponentSystem];
+createOptions.componentSystems = [
+    RenderComponentSystem,
+    CameraComponentSystem,
+    LightComponentSystem,
+    AnimComponentSystem
+];
 createOptions.resourceHandlers = [TextureHandler, ContainerHandler];
 
 const app = new AppBase(canvas);
 app.init(createOptions);
 app.start();
+
+const assetLoader = new GlbAssetLoader(app);
 
 app.setCanvasFillMode(FILLMODE_FILL_WINDOW);
 app.setCanvasResolution(RESOLUTION_AUTO);
@@ -92,7 +101,10 @@ const progression = new NinjaProgressionSystem(0, (level, title) => {
 // 3. 3D RENDERING & ATMOSPHERE SETUP
 // ==========================================
 const materials = createFarmMaterials();
-const modelFactory = new BuildingModelFactory(materials);
+loadPbrTextures(materials, app);
+
+const modelFactory = new BuildingModelFactory(materials, assetLoader);
+await modelFactory.preload();
 
 // Terreno e limites
 const terrain = new FarmTerrain(materials, modelFactory);
@@ -124,8 +136,8 @@ const dummyPos = grid.gridToWorld(20, 10);
 dummy.entity.setPosition(dummyPos.x, 0, dummyPos.z);
 app.root.addChild(dummy.entity);
 
-// Fauna animada (Galinhas no terreiro e Raposa nos limites)
-const fauna = new FaunaManager(grid);
+// Fauna animada com modelos e rigs reais (Quaternius CC0: Vaca pastando e Raposa)
+const fauna = new FaunaManager(grid, assetLoader);
 app.root.addChild(fauna.entity);
 
 // Câmera adaptativa
@@ -151,25 +163,64 @@ app.root.addChild(sunLight);
 const ambientLight = new Entity('ambient_light');
 ambientLight.addComponent('light', {
     type: 'directional',
-    color: new Color(0.25, 0.35, 0.5),
+    color: new Color(0.35, 0.44, 0.58),
     castShadows: false,
-    intensity: 0.4
+    intensity: 0.55
 });
 ambientLight.setEulerAngles(-60, 200, 0);
 app.root.addChild(ambientLight);
 
-// Ninja Jogador
-const ninja = new NinjaCharacter(materials);
+// Ninja Jogador humanoide rigado com animações reais (Universal Animation Library CC0)
+const visualConfig = getVisualConfig();
+const ninja = new NinjaCharacter(materials, assetLoader, visualConfig.character);
 app.root.addChild(ninja.entity);
 const ninjaWorldPos = grid.gridToWorld(20, 16);
 ninja.entity.setPosition(ninjaWorldPos.x, ninjaWorldPos.y, ninjaWorldPos.z);
 
+// Sincronização em tempo real com o Ninja Farm Studio (sem reiniciar o jogo)
+onVisualConfigChange((updatedConfig) => {
+    ninja.applyVisualConfig(updatedConfig.character);
+    if (sunLight.light) {
+        sunLight.light.intensity = updatedConfig.lighting.sunIntensity;
+    }
+});
+
+// Acesso seguro ao Ninja Farm Studio em ambiente local/desenvolvimento
+const isDev = import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.search.includes('studio');
+if (isDev) {
+    const studioBtn = document.createElement('a');
+    studioBtn.href = './studio.html';
+    studioBtn.id = 'ninja-studio-dev-btn';
+    studioBtn.innerHTML = '🛠️ Studio [F1]';
+    studioBtn.title = 'Ninja Farm Studio (Visual 3D Editor)';
+    studioBtn.style.position = 'fixed';
+    studioBtn.style.bottom = '12px';
+    studioBtn.style.left = '12px';
+    studioBtn.style.zIndex = '99999';
+    studioBtn.style.background = 'rgba(15, 23, 42, 0.85)';
+    studioBtn.style.backdropFilter = 'blur(8px)';
+    studioBtn.style.color = '#38bdf8';
+    studioBtn.style.border = '1px solid rgba(56, 189, 248, 0.4)';
+    studioBtn.style.borderRadius = '8px';
+    studioBtn.style.padding = '6px 12px';
+    studioBtn.style.fontSize = '12px';
+    studioBtn.style.fontWeight = 'bold';
+    studioBtn.style.textDecoration = 'none';
+    studioBtn.style.boxShadow = '0 4px 12px rgba(0,0,0,0.5)';
+    studioBtn.style.fontFamily = 'monospace';
+    studioBtn.style.cursor = 'pointer';
+    document.body.appendChild(studioBtn);
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'F1') {
+            e.preventDefault();
+            window.location.href = './studio.html';
+        }
+    });
+}
+
 // Sistema de Interações de Proximidade ([E]) com canteiros e fauna
 const interactionMgr = new ProximityInteractionManager(grid, cropSystem, inventory, fauna);
-
-// Kage Bunshin no Jutsu: Sistema de Clones das Sombras Autônomos
-const shadowClone = new ShadowCloneManager(grid, cropSystem, vfx, materials, progression);
-app.root.addChild(shadowClone.entity);
 
 // Mercador Itinerante Shinobi (Wandering Merchant 3D & Trading Post)
 const merchantEntity = modelFactory.createMerchantModel();
@@ -283,47 +334,9 @@ function smokeDash(): void {
     }
 }
 
-function suitonWaterJutsu(): void {
-    const pos = ninja.entity.getPosition();
-    vfx.spawnSuitonRing(pos.x, pos.y, pos.z);
-    sound.playWaterSplash();
-    objectives.recordProgress('suiton');
-
-    let watered = 0;
-    for (const crop of cropSystem.getAllCrops()) {
-        const b = grid.getBuilding(crop.buildingInstanceId);
-        if (b) {
-            const bPos = grid.gridToWorld(b.gridX, b.gridY);
-            const dist = Math.hypot(pos.x - bPos.x, pos.z - bPos.z);
-            if (dist <= 6.5) {
-                crop.waterSupplied = true;
-                watered++;
-            }
-        }
-    }
-
-    objectives.recordProgress('water_soil', Math.max(1, watered));
-
-    if (watered > 0) {
-        progression.addXP(10 * watered);
-        vfx.showFloatingText(`🌊 Suiton: ${watered} Canteiros Irrigados! (+${10 * watered} XP)`, undefined, undefined, '#60A5FA');
-    } else {
-        vfx.showFloatingText('🌊 Suiton Jutsu Ativado!', undefined, undefined, '#60A5FA');
-    }
-}
-
 function toggleGrid(): void {
     const vis = gridOverlay.toggle();
     hud.showToast(`Grade Holográfica: ${vis ? 'Ativada' : 'Desativada'}`);
-}
-
-function castShadowClone(): void {
-    const pos = ninja.entity.getPosition();
-    const yaw = ninja.getFacing();
-    const success = shadowClone.spawnClone(pos.x, pos.y, pos.z, yaw);
-    if (!success) {
-        hud.showToast('Aguarde o chakra recarregar para invocar outro clone!');
-    }
 }
 
 let currentSelectedCrop: CropType = 'rice';
@@ -630,12 +643,6 @@ const joystick = new VirtualJoystick({
     onDash: () => {
         smokeDash();
     },
-    onWaterJutsu: () => {
-        suitonWaterJutsu();
-    },
-    onCloneJutsu: () => {
-        castShadowClone();
-    },
     onSelectCrop: (crop) => {
         currentSelectedCrop = crop;
         const name = crop === 'lotus' ? 'Flor de Lótus 🪷' : crop === 'vegetable' ? 'Cenoura Ninja 🥕' : 'Arroz Tradicional 🌾';
@@ -725,12 +732,6 @@ window.addEventListener('keydown', (e) => {
     }
     if (e.code === 'KeyQ') {
         smokeDash();
-    }
-    if (e.code === 'KeyC') {
-        suitonWaterJutsu();
-    }
-    if (e.code === 'KeyB') {
-        castShadowClone();
     }
     if (e.code === 'KeyG') {
         toggleGrid();
@@ -971,25 +972,37 @@ app.on('update', () => {
     celestial.update();
     dummy.update(dt);
     vfx.update(dt);
-    shadowClone.update(dt, ninja.entity.getPosition());
+    // shadowClone desativado reversivelmente (Tarefa 8)
     sound.updateAmbientMusic(dt, clock.isNight());
 
-    // 4. Atualização da iluminação solar com o horário
+    // 4. Atualização da iluminação solar e atmosfera
     const sunlightFactor = clock.getSunlightFactor();
     const isNight = clock.isNight();
 
     if (sunLight.light) {
-        sunLight.light.intensity = sunlightFactor * 1.3;
-        // Tom mais quente no amanhecer/entardecer
-        const warmth = 1.0 - Math.abs(sunlightFactor - 0.5) * 0.5;
-        sunLight.light.color = new Color(1.0, 0.9 * warmth, 0.75 * warmth);
+        sunLight.light.intensity = sunlightFactor * 1.45;
+        // Tom quente dourado equilibrado para a tarde e amanhecer
+        const warmth = 1.0 - Math.abs(sunlightFactor - 0.5) * 0.4;
+        sunLight.light.color = new Color(1.0, 0.92 * warmth, 0.78 * warmth);
+    }
+
+    if (ambientLight.light) {
+        if (isNight) {
+            // Noite iluminada por luar suave azulado para que a fazenda permaneça visível
+            ambientLight.light.intensity = 0.45;
+            ambientLight.light.color = new Color(0.20, 0.28, 0.45);
+        } else {
+            // Dia claro e radiante com preenchimento natural do céu
+            ambientLight.light.intensity = 0.85;
+            ambientLight.light.color = new Color(0.55, 0.65, 0.78);
+        }
     }
 
     if (cameraCtrl.entity.camera) {
-        // Céu dinâmico
-        const skyR = isNight ? 0.05 : 0.45 * sunlightFactor;
-        const skyG = isNight ? 0.08 : 0.65 * sunlightFactor;
-        const skyB = isNight ? 0.15 : 0.95 * Math.max(0.2, sunlightFactor);
+        // Céu dinâmico diurno/noturno sem escurecimento prematuro
+        const skyR = isNight ? 0.05 : 0.42 * Math.max(0.35, sunlightFactor);
+        const skyG = isNight ? 0.08 : 0.62 * Math.max(0.35, sunlightFactor);
+        const skyB = isNight ? 0.18 : 0.92 * Math.max(0.4, sunlightFactor);
         cameraCtrl.entity.camera.clearColor = new Color(skyR, skyG, skyB);
     }
 

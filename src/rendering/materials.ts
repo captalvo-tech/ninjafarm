@@ -1,4 +1,4 @@
-import { Color, StandardMaterial } from 'playcanvas';
+import { AppBase, Asset, Color, StandardMaterial, Vec2 } from 'playcanvas';
 
 export interface FarmMaterials {
     grass: StandardMaterial;
@@ -27,18 +27,16 @@ export interface FarmMaterials {
 export function createFarmMaterials(): FarmMaterials {
     // Grama estilizada PBR
     const grass = new StandardMaterial();
-    grass.diffuse = new Color(0.18, 0.45, 0.22);
-    grass.gloss = 0.15;
-    grass.useMetalness = true;
-    grass.metalness = 0.05;
+    grass.diffuse = new Color(0.35, 0.65, 0.32);
+    grass.gloss = 0.05;
+    grass.useMetalness = false;
     grass.update();
 
     // Terra arada
     const soil = new StandardMaterial();
-    soil.diffuse = new Color(0.28, 0.18, 0.12);
+    soil.diffuse = new Color(0.38, 0.25, 0.16);
     soil.gloss = 0.05;
-    soil.useMetalness = true;
-    soil.metalness = 0.0;
+    soil.useMetalness = false;
     soil.update();
 
     // Madeira nobre para estruturas
@@ -208,4 +206,54 @@ export function createFarmMaterials(): FarmMaterials {
         lotusPad,
         wetSoil
     };
+}
+
+/**
+ * Carrega texturas PBR gratuitas (Poly Haven CC0) para grama e solo fértil
+ */
+export function loadPbrTextures(materials: FarmMaterials, app: AppBase): void {
+    const loadTex = (name: string, url: string, cb: (tex: any) => void) => {
+        const asset = new Asset(name, 'texture', { url });
+        asset.ready((loaded) => cb(loaded.resource));
+        app.assets.add(asset);
+        app.assets.load(asset);
+    };
+
+    // Grama PBR (Albedo + Normal)
+    loadTex('grass_diff', 'assets/textures/grass_diff_1k.jpg', (tex) => {
+        materials.grass.diffuse = new Color(1.0, 1.0, 1.0);
+        materials.grass.diffuseMap = tex;
+        materials.grass.diffuseMapTiling = new Vec2(32, 18);
+        materials.grass.update();
+    });
+    loadTex('grass_nor', 'assets/textures/grass_nor_1k.jpg', (tex) => {
+        materials.grass.normalMap = tex;
+        materials.grass.normalMapTiling = new Vec2(32, 18);
+        materials.grass.bumpiness = 1.0;
+        materials.grass.update();
+    });
+
+    // Solo PBR (Albedo + Normal)
+    loadTex('soil_diff', 'assets/textures/soil_diff_1k.jpg', (tex) => {
+        materials.soil.diffuse = new Color(1.0, 1.0, 1.0);
+        materials.soil.diffuseMap = tex;
+        materials.soil.diffuseMapTiling = new Vec2(16, 9);
+        materials.soil.update();
+
+        materials.wetSoil.diffuse = new Color(0.6, 0.6, 0.6);
+        materials.wetSoil.diffuseMap = tex;
+        materials.wetSoil.diffuseMapTiling = new Vec2(2, 2);
+        materials.wetSoil.update();
+    });
+    loadTex('soil_nor', 'assets/textures/soil_nor_1k.jpg', (tex) => {
+        materials.soil.normalMap = tex;
+        materials.soil.normalMapTiling = new Vec2(16, 9);
+        materials.soil.bumpiness = 1.0;
+        materials.soil.update();
+
+        materials.wetSoil.normalMap = tex;
+        materials.wetSoil.normalMapTiling = new Vec2(2, 2);
+        materials.wetSoil.bumpiness = 1.2;
+        materials.wetSoil.update();
+    });
 }

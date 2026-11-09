@@ -52,7 +52,7 @@ export const MERCHANT_TRADES: TradeOffer[] = [
     },
     {
         id: 'trade_wood_to_energy',
-        title: 'Comprar Elixir de Chakra Vital',
+        title: 'Comprar Tônico de Ervas Revigorante',
         costType: 'wood',
         costAmount: 15,
         giveType: 'energy',

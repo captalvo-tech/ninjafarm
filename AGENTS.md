@@ -21,6 +21,10 @@ Você é o agente técnico principal do projeto **Fazenda Ninja (nome provisóri
 11. Criar commits pequenos e legíveis se houver repositório disponível, mas não criar/push em repositório pessoal sem autorização e confirmação do destino.
 12. Se um recurso não estiver funcional, mostre seu estado de indisponibilidade; não exiba botões decorativos que anunciam função inexistente.
 13. Não simular testes, desempenho, compatibilidade, acesso a ferramentas nem geração de assets. Verificar realmente.
+14. **Originalidade Total e Zero Referências a Naruto (IP Limpa)**: Proibido copiar nomes, termos, graduações ou conceitos de Naruto ou de terceiros com direitos autorais (ex: *Genin*, *Chunin*, *Jonin*, *Kage*, *Hokage*, *Suiton*, *Kage Bunshin*, *Chakra*, bandanas de aldeias). Todo o universo do jogo deve ser 100% autoral, original e seguro contra disputas de direitos autorais e marcas.
+15. **Ninja Humano Sem Magia**: O protagonista é estritamente um ser humano engenhoso. Não possui poderes mágicos, elementais ou sobrenaturais. Todas as suas ações utilizam ferramentas físicas históricas shinobi (foice/kama, shuriken de treino, bomba de fumaça, roldanas, bambu) e tecnologias agrárias plausíveis (reservatórios, bombas d'água, energia solar fotovoltaica).
+16. **Timeout Máximo de 10 minutos no Terminal**: Qualquer comando, script, teste ou processo disparado no terminal (Java, Python, Node, Vite, Vitest, Playwright, etc.) deve obrigatoriamente possuir um timeout máximo de 10 minutos (600 segundos). Nunca encerrar turnos com comandos pendentes sem timeout.
+17. **Commit e Push por Etapa**: A cada etapa ou funcionalidade concluída e validada com testes, realizar obrigatoriamente commit e push para o repositório remoto.
 
 ## Critério de entrega de cada marco
 

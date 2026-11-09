@@ -88,12 +88,12 @@ describe('ObjectiveManager (Farm Expansion & Building Trials)', () => {
         const onClaim = vi.fn();
         const mgr = new ObjectiveManager({ onClaimReward: onClaim });
 
-        mgr.completeObjective('suiton');
-        mgr.claimReward('suiton');
+        mgr.completeObjective('irrigation');
+        mgr.claimReward('irrigation');
         expect(onClaim).toHaveBeenCalledTimes(1);
 
         // Attempt second claim
-        mgr.claimReward('suiton');
+        mgr.claimReward('irrigation');
         expect(onClaim).toHaveBeenCalledTimes(1);
     });
 

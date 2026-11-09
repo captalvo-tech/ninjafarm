@@ -27,6 +27,7 @@ A Fazenda tem núcleo funcional de **água, alimento, energia e armazenamento**.
 
 - Rural contemporâneo / tecnologia acessível: galpões, estufas, cisternas, tanques, painéis solares, baterias, cabeamento e sensores.
 - Ninja tático moderno: personagem ágil, sem poderes mágicos; gadgets credíveis; 4 de 20 slots escolhíveis na própria base (Fase 3).
+- **Originalidade Absoluta (Zero Naruto / Sem Cópias de IP de Terceiros)**: Nomes, graduações, termos, diálogos e mecânicas são 100% autorais e independentes de franquias de terceiros (sem *Genin*, *Chunin*, *Jonin*, *Kage*, *Suiton*, *Kage Bunshin* ou *Chakra*).
 - Visualmente, preferir estética **3D estilizada com materiais críveis**, rica em profundidade, volumetria leve, iluminação diurna/noturna e animações de qualidade.
 - Sem UI de cassino, popups agressivos ou pay-to-win como premissa.
 

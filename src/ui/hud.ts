@@ -680,7 +680,7 @@ export class FarmHUD {
                 <div class="hud-rank-section">
                     <span class="hud-rank-badge" id="hud-rank-level">LV.1</span>
                     <div class="hud-rank-info">
-                        <span class="hud-rank-title" id="hud-rank-title">Genin</span>
+                        <span class="hud-rank-title" id="hud-rank-title">Iniciante</span>
                         <div class="hud-xp-bar-container">
                             <div class="hud-xp-bar-bg">
                                 <div class="hud-xp-bar-fill" id="hud-xp-fill"></div>
@@ -777,11 +777,11 @@ export class FarmHUD {
 
                         <!-- ABA 2: GRADUAÇÕES -->
                         <div class="codex-panel" id="codex-panel-ranks">
-                            <div class="codex-rank-card"><span class="rank-badge">LV.1</span> <div><strong>Genin Farmer</strong><br><small>Iniciação no caminho do cultivo shinobi</small></div></div>
-                            <div class="codex-rank-card"><span class="rank-badge">LV.3</span> <div><strong>Chunin Cultivador</strong><br><small>Domínio do ciclo solar, hídrico e elétrico</small></div></div>
-                            <div class="codex-rank-card"><span class="rank-badge">LV.5</span> <div><strong>Jonin das Colheitas</strong><br><small>Eficiência avançada e maestria em jutsus elementais</small></div></div>
-                            <div class="codex-rank-card"><span class="rank-badge">LV.8</span> <div><strong>Sannin Lendário</strong><br><small>Harmonia total com a terra fértil e a fauna da fazenda</small></div></div>
-                            <div class="codex-rank-card"><span class="rank-badge">LV.10</span> <div><strong>Kage da Agricultura</strong><br><small>Patamar supremo da Fazenda Ninja autossustentável</small></div></div>
+                            <div class="codex-rank-card"><span class="rank-badge">LV.1</span> <div><strong>Iniciante Rural (Field Novice)</strong><br><small>Iniciação no caminho do cultivo e técnicas manuais de fazenda</small></div></div>
+                            <div class="codex-rank-card"><span class="rank-badge">LV.2</span> <div><strong>Cultivador Prático (Skilled Cultivator)</strong><br><small>Domínio do ciclo solar, hídrico e manejo da terra</small></div></div>
+                            <div class="codex-rank-card"><span class="rank-badge">LV.3</span> <div><strong>Mestre da Colheita (Master Harvester)</strong><br><small>Eficiência avançada na colheita e ferramentas físicas</small></div></div>
+                            <div class="codex-rank-card"><span class="rank-badge">LV.4</span> <div><strong>Guardião da Fazenda (Estate Warden)</strong><br><small>Harmonia total com a terra fértil e fauna da propriedade</small></div></div>
+                            <div class="codex-rank-card"><span class="rank-badge">LV.5</span> <div><strong>Grão-Agrônomo (Grand Agronomist)</strong><br><small>Patamar supremo da Fazenda Ninja autossustentável</small></div></div>
                         </div>
 
                         <!-- ABA 3: MISSÕES & PROVAS SHINOBI -->

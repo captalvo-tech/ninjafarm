@@ -1,0 +1,768 @@
+/* ==========================================================================
+   Ninja Farm Studio — Visual 3D Editor Stylesheet
+   Modern Glassmorphism Dark Theme
+   ========================================================================== */
+
+:root {
+    --bg-darkest: #070a0f;
+    --bg-darker: #0d121c;
+    --bg-dark: #121926;
+    --bg-panel: rgba(18, 25, 38, 0.88);
+    --bg-panel-hover: #1e283d;
+    --bg-input: #0a0e17;
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-highlight: rgba(56, 189, 248, 0.35);
+
+    --primary: #38bdf8;
+    --primary-hover: #0284c7;
+    --primary-glow: rgba(56, 189, 248, 0.25);
+
+    --success: #10b981;
+    --success-hover: #059669;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+
+    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+    --header-height: 54px;
+    --sidebar-left-width: 300px;
+    --sidebar-right-width: 360px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--bg-darkest);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+input, button, select, textarea {
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+    outline: none;
+}
+
+/* ==========================================================================
+   App Shell & Layout
+   ========================================================================== */
+
+#studio-app {
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Header / Toolbar */
+.studio-header {
+    height: var(--header-height);
+    background: var(--bg-darker);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    z-index: 100;
+    gap: 12px;
+}
+
+.brand-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.brand-icon {
+    font-size: 20px;
+}
+
+.brand-title {
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.brand-badge {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--primary);
+    border: 1px solid var(--border-highlight);
+    border-radius: 4px;
+    padding: 2px 6px;
+    letter-spacing: 0.5px;
+}
+
+/* Viewport Switcher */
+.viewport-switcher {
+    display: flex;
+    align-items: center;
+    background: var(--bg-darkest);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 2px;
+    gap: 2px;
+}
+
+.vp-btn {
+    background: transparent;
+    border: none;
+    padding: 5px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.vp-btn:hover {
+    color: var(--text-main);
+    background: var(--bg-panel-hover);
+}
+
+.vp-btn.active {
+    background: var(--primary);
+    color: #000000;
+    font-weight: 600;
+    box-shadow: 0 0 12px var(--primary-glow);
+}
+
+/* Action Toolbar */
+.action-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.studio-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    background: var(--bg-dark);
+    color: var(--text-main);
+    transition: all 0.15s ease;
+}
+
+.studio-btn:hover {
+    background: var(--bg-panel-hover);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.studio-btn.primary {
+    background: var(--success);
+    color: #ffffff;
+    border-color: var(--success-hover);
+}
+
+.studio-btn.primary:hover {
+    background: var(--success-hover);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
+}
+
+.studio-btn.accent {
+    background: var(--primary);
+    color: #050e18;
+    border-color: var(--primary-hover);
+}
+
+.studio-btn.accent:hover {
+    background: var(--primary-hover);
+    color: #ffffff;
+}
+
+/* ==========================================================================
+   Workspace Main Area
+   ========================================================================== */
+
+.studio-main {
+    flex: 1;
+    display: flex;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+}
+
+/* Sidebar Columns */
+.sidebar {
+    background: var(--bg-panel);
+    backdrop-filter: blur(16px);
+    border-color: var(--border-color);
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+    overflow: hidden;
+}
+
+.sidebar-left {
+    width: var(--sidebar-left-width);
+    border-right: 1px solid var(--border-color);
+}
+
+.sidebar-right {
+    width: var(--sidebar-right-width);
+    border-left: 1px solid var(--border-color);
+}
+
+.sidebar-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.sidebar-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+}
+
+/* Asset Catalog (Left Sidebar) */
+.catalog-search-box {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.search-input {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 7px 10px;
+    color: var(--text-main);
+    font-size: 12px;
+}
+
+.search-input:focus {
+    border-color: var(--primary);
+}
+
+.category-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.category-pill {
+    background: var(--bg-darkest);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 3px 8px;
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.category-pill:hover, .category-pill.active {
+    background: var(--primary-glow);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+
+.asset-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.asset-card {
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.asset-card:hover {
+    border-color: var(--border-highlight);
+    background: var(--bg-panel-hover);
+    transform: translateY(-1px);
+}
+
+.asset-card.active {
+    border-color: var(--primary);
+    background: rgba(56, 189, 248, 0.08);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.15);
+}
+
+.card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.card-title {
+    font-weight: 600;
+    font-size: 13px;
+    color: #ffffff;
+}
+
+.card-badge {
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+}
+
+.card-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: var(--text-dim);
+}
+
+/* ==========================================================================
+   Center 3D Viewport
+   ========================================================================== */
+
+.viewport-area {
+    flex: 1;
+    position: relative;
+    background: #06090e;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.viewport-frame {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: width 0.3s ease, height 0.3s ease;
+}
+
+.viewport-frame.mobile-portrait {
+    width: 390px;
+    height: 844px;
+    max-height: calc(100vh - var(--header-height) - 40px);
+    border-radius: 36px;
+    border: 8px solid #272e3f;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+.viewport-frame.mobile-landscape {
+    width: 844px;
+    height: 390px;
+    max-width: calc(100vw - var(--sidebar-left-width) - var(--sidebar-right-width) - 40px);
+    border-radius: 36px;
+    border: 8px solid #272e3f;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 0 2px rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+}
+
+#studio-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    outline: none;
+}
+
+/* Viewport Overlays */
+.viewport-overlay {
+    position: absolute;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.viewport-overlay > * {
+    pointer-events: auto;
+}
+
+.overlay-top-left {
+    top: 14px;
+    left: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.overlay-top-right {
+    top: 14px;
+    right: 14px;
+    display: flex;
+    gap: 6px;
+}
+
+.overlay-bottom {
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 32px);
+    max-width: 640px;
+}
+
+/* Stats Widget */
+.stats-widget {
+    background: rgba(10, 14, 23, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    gap: 12px;
+}
+
+.stat-item span {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+/* Quick Camera Gizmo Buttons */
+.camera-quick-btn {
+    background: rgba(18, 25, 38, 0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.camera-quick-btn:hover {
+    color: #ffffff;
+    border-color: var(--primary);
+    background: var(--bg-panel-hover);
+}
+
+/* Animation Bar at Viewport Bottom */
+.animation-playback-bar {
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.anim-play-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #070a0f;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.15s ease;
+}
+
+.anim-play-btn:hover {
+    transform: scale(1.05);
+    background: #7dd3fc;
+}
+
+.anim-clip-select {
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    color: var(--text-main);
+    flex: 1;
+    min-width: 140px;
+}
+
+.anim-scrubber-track {
+    flex: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.anim-slider {
+    flex: 1;
+    cursor: pointer;
+}
+
+.anim-time-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    min-width: 70px;
+}
+
+/* ==========================================================================
+   Inspector & Properties (Right Sidebar)
+   ========================================================================== */
+
+.inspector-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--bg-darkest);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 10px 4px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.tab-btn:hover {
+    color: var(--text-main);
+}
+
+.tab-btn.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    background: rgba(56, 189, 248, 0.05);
+}
+
+.tab-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Inspector Form Groups */
+.prop-section {
+    margin-bottom: 18px;
+}
+
+.prop-section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.prop-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 10px;
+}
+
+.prop-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    flex: 1;
+}
+
+.prop-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1.5;
+}
+
+.prop-slider {
+    flex: 1;
+}
+
+.prop-number-input {
+    width: 60px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-main);
+    text-align: right;
+}
+
+.prop-color-input {
+    width: 36px;
+    height: 26px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    cursor: pointer;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+/* Banner Notification */
+#studio-banner {
+    position: fixed;
+    top: 66px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: var(--success);
+    color: #ffffff;
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 9999;
+    font-size: 13px;
+}
+
+#studio-banner.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Game Preview Modal */
+#game-preview-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+    flex-direction: column;
+}
+
+#game-preview-modal.visible {
+    display: flex;
+}
+
+.preview-modal-header {
+    height: 48px;
+    background: var(--bg-darker);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+}
+
+.preview-frame-container {
+    flex: 1;
+    width: 100%;
+    height: calc(100% - 48px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000000;
+}
+
+#game-preview-iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* Security Auth Modal */
+#auth-gate-modal {
+    position: fixed;
+    inset: 0;
+    background: #070a0f;
+    z-index: 20000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.auth-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-highlight);
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 400px;
+    width: 90%;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+}

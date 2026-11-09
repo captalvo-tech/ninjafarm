@@ -12,8 +12,6 @@ export interface TouchControlsCallbacks {
     onAction?: () => void;
     onShuriken?: () => void;
     onDash?: () => void;
-    onWaterJutsu?: () => void;
-    onCloneJutsu?: () => void;
     onSelectCrop?: (crop: CropType) => void;
 }
 
@@ -21,11 +19,9 @@ export class VirtualJoystick {
     private baseElement: HTMLElement;
     private stickElement: HTMLElement;
     private actionBtn: HTMLElement;
-    private jutsuContainer: HTMLElement;
+    private toolsContainer: HTMLElement;
     private shurikenBtn: HTMLElement;
     private dashBtn: HTMLElement;
-    private waterBtn: HTMLElement;
-    private cloneBtn: HTMLElement;
     private seedPickerElement: HTMLElement;
 
     private activeTouchId: number | null = null;
@@ -53,34 +49,22 @@ export class VirtualJoystick {
         this.actionBtn.id = 'mobile-main-action-btn';
         this.actionBtn.innerHTML = '<span class="action-icon">🎯</span><span class="action-text">Ação</span>';
 
-        // Cluster de Jutsus Ninjas (Satélites ergonômicos no arco do polegar direito)
-        this.jutsuContainer = document.createElement('div');
-        this.jutsuContainer.id = 'mobile-jutsu-cluster';
+        // Cluster de Ferramentas Ninjas (Shuriken de treino e Evasão tática)
+        this.toolsContainer = document.createElement('div');
+        this.toolsContainer.id = 'mobile-tools-cluster';
 
         this.shurikenBtn = document.createElement('button');
-        this.shurikenBtn.className = 'mobile-jutsu-btn jutsu-shuriken';
-        this.shurikenBtn.innerHTML = '🗡️';
-        this.shurikenBtn.title = 'Lançar Shuriken';
+        this.shurikenBtn.className = 'mobile-tool-btn tool-shuriken';
+        this.shurikenBtn.innerHTML = '🎯';
+        this.shurikenBtn.title = 'Treino de Shuriken no Alvo';
 
         this.dashBtn = document.createElement('button');
-        this.dashBtn.className = 'mobile-jutsu-btn jutsu-dash';
+        this.dashBtn.className = 'mobile-tool-btn tool-dash';
         this.dashBtn.innerHTML = '💨';
-        this.dashBtn.title = 'Shunshin Dash';
+        this.dashBtn.title = 'Salto Tático com Fumaça';
 
-        this.waterBtn = document.createElement('button');
-        this.waterBtn.className = 'mobile-jutsu-btn jutsu-water';
-        this.waterBtn.innerHTML = '🌊';
-        this.waterBtn.title = 'Suiton: Chuva de Irrigação';
-
-        this.cloneBtn = document.createElement('button');
-        this.cloneBtn.className = 'mobile-jutsu-btn jutsu-clone';
-        this.cloneBtn.innerHTML = '👤';
-        this.cloneBtn.title = 'Kage Bunshin: Clone Autônomo';
-
-        this.jutsuContainer.appendChild(this.shurikenBtn);
-        this.jutsuContainer.appendChild(this.dashBtn);
-        this.jutsuContainer.appendChild(this.waterBtn);
-        this.jutsuContainer.appendChild(this.cloneBtn);
+        this.toolsContainer.appendChild(this.shurikenBtn);
+        this.toolsContainer.appendChild(this.dashBtn);
 
         // Seletor Rápido de Sementes Mobile (Centro-Inferior)
         this.seedPickerElement = document.createElement('div');
@@ -94,7 +78,7 @@ export class VirtualJoystick {
         this.injectStyles();
         document.body.appendChild(this.baseElement);
         document.body.appendChild(this.actionBtn);
-        document.body.appendChild(this.jutsuContainer);
+        document.body.appendChild(this.toolsContainer);
         document.body.appendChild(this.seedPickerElement);
 
         this.setupEvents();
@@ -207,8 +191,8 @@ export class VirtualJoystick {
                 background: linear-gradient(135deg, #34D399, #10B981);
             }
 
-            /* CLUSTER DE JUTSUS NINJAS */
-            #mobile-jutsu-cluster {
+            /* CLUSTER DE FERRAMENTAS NINJAS (POLEGAR DIREITO) */
+            #mobile-tools-cluster {
                 position: fixed;
                 bottom: calc(24px + env(safe-area-inset-bottom, 0px));
                 right: calc(22px + env(safe-area-inset-right, 0px));
@@ -219,7 +203,7 @@ export class VirtualJoystick {
                 display: none;
             }
 
-            .mobile-jutsu-btn {
+            .mobile-tool-btn {
                 position: absolute;
                 width: 48px;
                 height: 48px;
@@ -239,31 +223,21 @@ export class VirtualJoystick {
                 transition: transform 0.1s ease, background 0.2s ease;
             }
 
-            .mobile-jutsu-btn:active {
+            .mobile-tool-btn:active {
                 transform: scale(0.88);
                 background: rgba(16, 185, 129, 0.8);
             }
 
             /* Posições no arco do polegar */
-            .jutsu-shuriken {
+            .tool-shuriken {
                 bottom: 6px;
                 right: 90px;
                 border-color: rgba(245, 158, 11, 0.5);
             }
-            .jutsu-dash {
+            .tool-dash {
                 bottom: 62px;
                 right: 88px;
                 border-color: rgba(168, 85, 247, 0.5);
-            }
-            .jutsu-water {
-                bottom: 108px;
-                right: 52px;
-                border-color: rgba(59, 130, 246, 0.5);
-            }
-            .jutsu-clone {
-                bottom: 112px;
-                right: -2px;
-                border-color: rgba(16, 185, 129, 0.5);
             }
 
             /* SELETOR RÁPIDO DE SEMENTES */
@@ -327,7 +301,7 @@ export class VirtualJoystick {
                 #mobile-main-action-btn {
                     display: flex;
                 }
-                #mobile-jutsu-cluster {
+                #mobile-tools-cluster {
                     display: block;
                 }
             }
@@ -384,7 +358,7 @@ export class VirtualJoystick {
             this.actionBtn.style.transform = 'scale(1)';
         });
 
-        // Jutsus Ninjas
+        // Ferramentas Ninjas
         this.shurikenBtn.addEventListener('touchstart', (e) => {
             e.preventDefault();
             this.shurikenBtn.style.transform = 'scale(0.88)';
@@ -403,26 +377,6 @@ export class VirtualJoystick {
         }, { passive: false });
         this.dashBtn.addEventListener('touchend', () => {
             this.dashBtn.style.transform = 'scale(1)';
-        });
-
-        this.waterBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            this.waterBtn.style.transform = 'scale(0.88)';
-            triggerHaptic('jutsu');
-            this.callbacks.onWaterJutsu?.();
-        }, { passive: false });
-        this.waterBtn.addEventListener('touchend', () => {
-            this.waterBtn.style.transform = 'scale(1)';
-        });
-
-        this.cloneBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            this.cloneBtn.style.transform = 'scale(0.88)';
-            triggerHaptic('jutsu');
-            this.callbacks.onCloneJutsu?.();
-        }, { passive: false });
-        this.cloneBtn.addEventListener('touchend', () => {
-            this.cloneBtn.style.transform = 'scale(1)';
         });
 
         // Seletor de sementes
@@ -473,7 +427,7 @@ export class VirtualJoystick {
     setVisible(visible: boolean): void {
         this.baseElement.style.display = visible ? 'flex' : 'none';
         this.actionBtn.style.display = visible ? 'flex' : 'none';
-        this.jutsuContainer.style.display = visible ? 'block' : 'none';
+        this.toolsContainer.style.display = visible ? 'block' : 'none';
         if (!visible) {
             this.showSeedPicker(false);
         }

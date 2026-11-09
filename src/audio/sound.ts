@@ -197,7 +197,7 @@ class SoundManager {
         osc.stop(ctx.currentTime + 0.24);
     }
 
-    // Suiton: Jutsu de Água (onda de água refrescante)
+    // Respingo de Água da Irrigação Manual
     playWaterSplash(): void {
         if (this.isMuted) return;
         const ctx = this.getContext();
@@ -297,8 +297,8 @@ class SoundManager {
         });
     }
 
-    // Kage Bunshin no Jutsu: Spawn do Clone das Sombras
-    playCloneSpawn(): void {
+    // Ferramenta manual / acionamento de mecanismo
+    playToolDeploy(): void {
         if (this.isMuted) return;
         const ctx = this.getContext();
         if (!ctx) return;

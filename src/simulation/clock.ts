@@ -33,17 +33,27 @@ export class SimulationClock {
     }
 
     // Retorna fator de luz solar de 0.0 (escuridão da noite) até 1.0 (pico do meio-dia)
+    // Mantém iluminação plena durante a tarde (0.35 a 0.68) para evitar escurecimento precoce
     getSunlightFactor(): number {
-        // Sol nasce em 0.25 e se põe em 0.75
+        // Sol nasce em 0.22 (05:16) e se põe em 0.78 (18:43)
         if (this.timeOfDay < 0.22 || this.timeOfDay > 0.78) {
             return 0.0;
         }
 
-        // Curva seno suave durante o período diurno (0.25 a 0.75)
-        const dayFraction = (this.timeOfDay - 0.25) / 0.5; // 0 a 1
-        if (dayFraction < 0 || dayFraction > 1) return 0.0;
+        // Platô de luminosidade plena mantido ao longo de toda a tarde (08:24 às 16:20)
+        if (this.timeOfDay >= 0.35 && this.timeOfDay <= 0.68) {
+            return 1.0;
+        }
 
-        return Math.max(0, Math.sin(dayFraction * Math.PI));
+        if (this.timeOfDay < 0.35) {
+            // Transição suave da aurora (05:16 a 08:24)
+            const dawnFraction = (this.timeOfDay - 0.22) / (0.35 - 0.22);
+            return 0.5 - 0.5 * Math.cos(dawnFraction * Math.PI);
+        } else {
+            // Entardecer dourado suave (16:20 a 18:43)
+            const duskFraction = (this.timeOfDay - 0.68) / (0.78 - 0.68);
+            return 0.5 + 0.5 * Math.cos(duskFraction * Math.PI);
+        }
     }
 
     isNight(): boolean {

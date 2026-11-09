@@ -148,9 +148,9 @@ export class VisualEffectsManager {
         });
     }
 
-    // Suiton: Anel de água expansivo no solo
-    spawnSuitonRing(x: number, y: number, z: number): void {
-        const ring = new Entity('suiton_ring');
+    // Efeito de anel de água expansivo da irrigação física
+    spawnWaterSplashRing(x: number, y: number, z: number): void {
+        const ring = new Entity('water_splash_ring');
         ring.addComponent('render', {
             type: 'cylinder',
             material: this.waterMat
@@ -315,7 +315,7 @@ export class VisualEffectsManager {
             }
         }
 
-        // Atualiza anéis de água do Suiton
+        // Atualiza anéis de água da irrigação física
         for (let i = this.waterRings.length - 1; i >= 0; i--) {
             const ring = this.waterRings[i];
             ring.life += dt;

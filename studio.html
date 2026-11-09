@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛠️</text></svg>" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+        <title>Ninja Farm Studio — 3D Asset & Visual Configurator</title>
+        <link rel="stylesheet" href="/src/studio/studio.css" />
+    </head>
+    <body>
+        <!-- Production Security Auth Gate -->
+        <div id="auth-gate-modal" style="display: none;">
+            <div class="auth-card">
+                <div style="font-size: 36px;">🔒</div>
+                <h2 style="font-size: 18px; font-weight: 700; color: #ffffff;">Ninja Farm Studio</h2>
+                <p style="font-size: 13px; color: var(--text-muted);">
+                    Internal developer suite. Please enter the developer access key to continue.
+                </p>
+                <input type="password" id="auth-key-input" class="search-input" placeholder="Enter dev access key..." />
+                <button id="auth-submit-btn" class="studio-btn accent" style="justify-content: center; width: 100%;">
+                    Unlock Studio
+                </button>
+                <span id="auth-error-msg" style="color: var(--danger); font-size: 11px; display: none;">Invalid access key.</span>
+            </div>
+        </div>
+
+        <div id="studio-app">
+            <!-- Top Navigation & Action Bar -->
+            <header class="studio-header">
+                <div class="brand-section">
+                    <span class="brand-icon">🥷</span>
+                    <span class="brand-title">
+                        Ninja Farm Studio
+                        <span class="brand-badge">Dev Suite v1.0</span>
+                    </span>
+                </div>
+
+                <!-- Viewport Preset Switcher -->
+                <div class="viewport-switcher" id="viewport-switcher">
+                    <button class="vp-btn active" data-viewport="desktop" title="Full Desktop Viewport">
+                        🖥️ Desktop
+                    </button>
+                    <button class="vp-btn" data-viewport="mobile-portrait" title="Mobile Portrait (390×844)">
+                        📱 Mobile Portrait
+                    </button>
+                    <button class="vp-btn" data-viewport="mobile-landscape" title="Mobile Landscape (844×390)">
+                        📱 Mobile Landscape
+                    </button>
+                </div>
+
+                <!-- Global Action Toolbar -->
+                <div class="action-toolbar">
+                    <button id="btn-save-game" class="studio-btn primary" title="Save configuration directly into the live game">
+                        💾 Save to Game
+                    </button>
+                    <button id="btn-export-json" class="studio-btn" title="Export visual configuration as JSON file">
+                        📥 Export JSON
+                    </button>
+                    <button id="btn-import-json" class="studio-btn" title="Import visual configuration from JSON">
+                        📤 Import JSON
+                    </button>
+                    <input type="file" id="json-file-input" accept=".json" style="display: none;" />
+                    <button id="btn-reset-defaults" class="studio-btn" title="Restore factory defaults">
+                        🔄 Reset
+                    </button>
+                    <button id="btn-preview-game" class="studio-btn accent" title="Test changes directly in live farm game">
+                        🎮 Test in Farm
+                    </button>
+                </div>
+            </header>
+
+            <!-- Workspace Columns -->
+            <main class="studio-main">
+                <!-- Left Sidebar: Asset Catalog -->
+                <aside class="sidebar sidebar-left">
+                    <div class="sidebar-header">
+                        <span class="sidebar-title">Asset Library</span>
+                        <span id="asset-count-badge" class="card-badge">0 Assets</span>
+                    </div>
+
+                    <div class="catalog-search-box">
+                        <input type="text" id="catalog-search-input" class="search-input" placeholder="🔍 Search GLB models..." />
+                        <div class="category-pills" id="category-pills">
+                            <button class="category-pill active" data-category="all">All</button>
+                            <button class="category-pill" data-category="character">Characters</button>
+                            <button class="category-pill" data-category="fauna">Animals</button>
+                            <button class="category-pill" data-category="building">Buildings</button>
+                            <button class="category-pill" data-category="nature">Crops & Nature</button>
+                        </div>
+                    </div>
+
+                    <div class="asset-list" id="asset-list-container">
+                        <!-- Dynamically populated from manifest.json -->
+                    </div>
+                </aside>
+
+                <!-- Center: 3D Viewport Area -->
+                <section class="viewport-area" id="viewport-area">
+                    <div class="viewport-frame" id="viewport-frame">
+                        <canvas id="studio-canvas"></canvas>
+
+                        <!-- Overlays: Stats Top-Left -->
+                        <div class="viewport-overlay overlay-top-left">
+                            <div class="stats-widget">
+                                <div class="stat-item">FPS: <span id="stat-fps">60</span></div>
+                                <div class="stat-item">Triangles: <span id="stat-triangles">0</span></div>
+                                <div class="stat-item">Draw Calls: <span id="stat-drawcalls">0</span></div>
+                            </div>
+                        </div>
+
+                        <!-- Overlays: Camera Quick Presets Top-Right -->
+                        <div class="viewport-overlay overlay-top-right">
+                            <button class="camera-quick-btn" id="cam-front" title="Front View">👤</button>
+                            <button class="camera-quick-btn" id="cam-side" title="Side View">📐</button>
+                            <button class="camera-quick-btn" id="cam-top" title="Top View">🔝</button>
+                            <button class="camera-quick-btn" id="cam-iso" title="Isometric View">🌐</button>
+                            <button class="camera-quick-btn" id="cam-focus" title="Focus Model">🎯</button>
+                            <button class="camera-quick-btn" id="cam-grid" title="Toggle Grid Plane">▦</button>
+                        </div>
+
+                        <!-- Overlays: Animation Playback Bar Bottom -->
+                        <div class="viewport-overlay overlay-bottom" id="anim-bar-container">
+                            <div class="animation-playback-bar">
+                                <button class="anim-play-btn" id="anim-play-toggle" title="Play / Pause">
+                                    ▶
+                                </button>
+                                <select class="anim-clip-select" id="anim-clip-select" title="Active Animation Clip">
+                                    <option value="">No animations</option>
+                                </select>
+                                <div class="anim-scrubber-track">
+                                    <input type="range" class="anim-slider" id="anim-time-slider" min="0" max="100" value="0" step="0.1" />
+                                    <span class="anim-time-label" id="anim-time-label">0.0s / 0.0s</span>
+                                </div>
+                                <div style="display: flex; gap: 4px;">
+                                    <button class="studio-btn" id="anim-speed-down" style="padding: 4px 8px; font-size: 11px;">0.5x</button>
+                                    <button class="studio-btn" id="anim-speed-normal" style="padding: 4px 8px; font-size: 11px;">1x</button>
+                                    <button class="studio-btn" id="anim-speed-up" style="padding: 4px 8px; font-size: 11px;">1.5x</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Right Sidebar: Inspector & Configurator -->
+                <aside class="sidebar sidebar-right">
+                    <div class="inspector-tabs">
+                        <button class="tab-btn active" data-tab="tab-transform">Transform</button>
+                        <button class="tab-btn" data-tab="tab-animations">Animations</button>
+                        <button class="tab-btn" data-tab="tab-materials">Materials</button>
+                        <button class="tab-btn" data-tab="tab-environment">Lighting</button>
+                        <button class="tab-btn" data-tab="tab-diagnostics">Diagnostics</button>
+                    </div>
+
+                    <!-- TAB 1: Transform & Model Assignment -->
+                    <div class="tab-content active" id="tab-transform">
+                        <div class="prop-section">
+                            <div class="prop-section-title">Active Target</div>
+                            <div style="background: var(--bg-darkest); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 12px;">
+                                <div id="target-model-name" style="font-weight: 700; color: #ffffff;">character.glb</div>
+                                <div id="target-model-path" style="font-size: 11px; color: var(--text-dim); word-break: break-all;">assets/models/character.glb</div>
+                            </div>
+                            <button id="btn-assign-as-ninja" class="studio-btn accent" style="width: 100%; justify-content: center; margin-bottom: 14px;">
+                                🥷 Use Model as Ninja Character
+                            </button>
+                        </div>
+
+                        <div class="prop-section">
+                            <div class="prop-section-title">Scale Calibration</div>
+                            <div class="prop-row">
+                                <span class="prop-label">Uniform Scale</span>
+                                <div class="prop-control">
+                                    <input type="range" class="prop-slider" id="scale-slider" min="0.01" max="20.0" step="0.05" value="1.0" />
+                                    <input type="number" class="prop-number-input" id="scale-input" min="0.001" max="50" step="0.05" value="1.0" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="prop-section">
+                            <div class="prop-section-title">Rotation & Offset</div>
+                            <div class="prop-row">
+                                <span class="prop-label">Rotation Y (Yaw)</span>
+                                <div class="prop-control">
+                                    <input type="range" class="prop-slider" id="rot-y-slider" min="0" max="360" step="5" value="0" />
+                                    <input type="number" class="prop-number-input" id="rot-y-input" min="0" max="360" step="5" value="0" />
+                                </div>
+                            </div>
+                            <div class="prop-row">
+                                <span class="prop-label">Height Offset Y</span>
+                                <div class="prop-control">
+                                    <input type="range" class="prop-slider" id="pos-y-slider" min="-2.0" max="2.0" step="0.05" value="0.0" />
+                                    <input type="number" class="prop-number-input" id="pos-y-input" min="-5" max="5" step="0.05" value="0.0" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="prop-section">
+                            <div class="prop-section-title">Locomotion Speeds</div>
+                            <div class="prop-row">
+                                <span class="prop-label">Walk Anim Speed</span>
+                                <div class="prop-control">
+                                    <input type="range" class="prop-slider" id="walk-speed-slider" min="0.5" max="2.5" step="0.05" value="1.25" />
+                                    <input type="number" class="prop-number-input" id="walk-speed-input" min="0.1" max="5" step="0.05" value="1.25" />
+                                </div>
+                            </div>
+                            <div class="prop-row">
+                                <span class="prop-label">Run Anim Speed</span>
+                                <div class="prop-control">
+                                    <input type="range" class="prop-slider" id="run-speed-slider" min="0.5" max="2.5" step="0.05" value="1.35" />
+                                    <input type="number" class="prop-number-input" id="run-speed-input" min="0.1" max="5" step="0.05" value="1.35" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: Animation Rigging & Role Mapping -->
+                    <div class="tab-content" id="tab-animations">
+                        <div class="prop-section">
+                            <div class="prop-section-title">Locomotion Roles</div>
+                            <div class="prop-row">
+                                <span class="prop-label">Idle Clip</span>
+                                <select class="anim-clip-select" id="role-idle-select"></select>
+                            </div>
+                            <div class="prop-row">
+                                <span class="prop-label">Walk Clip</span>
+                                <select class="anim-clip-select" id="role-walk-select"></select>
+                            </div>
+                            <div class="prop-row">
+                                <span class="prop-label">Run Clip</span>
+                                <select class="anim-clip-select" id="role-run-select"></select>
+                            </div>
+                        </div>
+
+                        <div class="prop-section">
+                            <div class="prop-section-title">Smooth Transition Tester</div>
+                            <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">
+                                Test crossfade blending between locomotion states in real-time:
+                            </p>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="studio-btn" id="test-idle-btn" style="flex: 1; justify-content: center;">🧘 Idle</button>
+                                <button class="studio-btn" id="test-walk-btn" style="flex: 1; justify-content: center;">🚶 Walk</button>
+                                <button class="studio-btn" id="test-run-btn" style="flex: 1; justify-content: center;">🏃 Run</button>
+                            </div>
+                        </div>
+
+                        <div class="prop-section">
+                            <div class="prop-section-title">All Model Clips</div>
+                            <div id="all-clips-list" style="display: flex; flex-direction: column; gap: 4px; max-height: 240px; overflow-y: auto;">
+                                <!-- Dynamically filled with clip names and play buttons -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 3: Materials & Shaders -->
+                    <div class="tab-content" id="tab-materials">
+                        <div class="prop-section">
+                            <div class="prop-section-title">Character Color Palette</div>
+                            <div class="prop-row">
+                                <span class="prop-label">Main Garment / Armor</span>
+                                <div class="prop-control">
+                                    <input type="color" class="prop-color-input" id="color-main-input" value="#1e2029" />
+                                    <span id="color-main-hex" style="font-family: var(--font-mono); font-size: 11px;">#1e2029</span>
+                                </div>
+                            </div>
+                            <div class="prop-row">
+                                <span class="prop-label">Joints / Accents</span>
+                                <div class="prop-control">
+                                    <input type="color" class="prop-color-input" id="color-joints-input" value="#dc2626" />
+                                    <span id="color-joints-hex" style="font-family: var(--font-mono); font-size: 11px;">#dc2626</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="prop-section">
+                            <div class="prop-section-title">Palette Presets</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                                <button class="studio-btn" data-palette="tactical" style="padding: 4px 8px; font-size: 11px;">🥋 Tactical Charcoal</button>
+                                <button class="studio-btn" data-palette="crimson" style="padding: 4px 8px; font-size: 11px;">🔴 Crimson Dragon</button>
+                                <button class="studio-btn" data-palette="shinobi" style="padding: 4px 8px; font-size: 11px;">🌑 Midnight Shinobi</button>
+                                <button class="studio-btn" data-palette="golden" style="padding: 4px 8px; font-size: 11px;">☀️ Golden Sun</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 4: Lighting & Camera Tuning -->
+                    <div class="tab-content" id="tab-environment">
+                        <div class="prop-section">
+                            <div class="prop-section-title">Sun & Atmosphere</div>
+                            <div class="prop-row">
+                                <span class="prop-label">Sun Intensity</span>
+                                <div class="prop-control">
+                                    <input type="range" class="prop-slider" id="sun-intensity-slider" min="0.1" max="3.0" step="0.05" value="1.45" />
+                                    <input type="number" class="prop-number-input" id="sun-intensity-input" min="0.1" max="5.0" step="0.05" value="1.45" />
+                                </div>
+                            </div>
+                            <div class="prop-row">
+                                <span class="prop-label">Sun Color</span>
+                                <div class="prop-control">
+                                    <input type="color" class="prop-color-input" id="sun-color-input" value="#fff2d9" />
+                                </div>
+                            </div>
+                            <div class="prop-row">
+                                <span class="prop-label">Sky Light Color</span>
+                                <div class="prop-control">
+                                    <input type="color" class="prop-color-input" id="sky-color-input" value="#597094" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="prop-section">
+                            <div class="prop-section-title">Game Camera Configuration</div>
+                            <div class="prop-row">
+                                <span class="prop-label">Explore Distance</span>
+                                <div class="prop-control">
+                                    <input type="range" class="prop-slider" id="cam-explore-dist-slider" min="6" max="30" step="1" value="14" />
+                                    <input type="number" class="prop-number-input" id="cam-explore-dist-input" min="4" max="50" step="1" value="14" />
+                                </div>
+                            </div>
+                            <div class="prop-row">
+                                <span class="prop-label">Explore Pitch Angle</span>
+                                <div class="prop-control">
+                                    <input type="range" class="prop-slider" id="cam-explore-pitch-slider" min="15" max="65" step="1" value="30" />
+                                    <input type="number" class="prop-number-input" id="cam-explore-pitch-input" min="10" max="80" step="1" value="30" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAB 5: Technical Diagnostics -->
+                    <div class="tab-content" id="tab-diagnostics">
+                        <div class="prop-section">
+                            <div class="prop-section-title">Asset Diagnostics</div>
+                            <div style="display: flex; flex-direction: column; gap: 8px; font-family: var(--font-mono); font-size: 11px;">
+                                <div class="prop-row"><span class="prop-label">File Size:</span><span id="diag-file-size" style="color: #ffffff;">0 KB</span></div>
+                                <div class="prop-row"><span class="prop-label">Dimensions (W×H×D):</span><span id="diag-dimensions" style="color: #ffffff;">-</span></div>
+                                <div class="prop-row"><span class="prop-label">Meshes / Instances:</span><span id="diag-meshes" style="color: #ffffff;">0</span></div>
+                                <div class="prop-row"><span class="prop-label">Skeletal Joints:</span><span id="diag-joints" style="color: #ffffff;">0</span></div>
+                                <div class="prop-row"><span class="prop-label">Animation Tracks:</span><span id="diag-anims" style="color: #ffffff;">0</span></div>
+                                <div class="prop-row"><span class="prop-label">License:</span><span id="diag-license" style="color: var(--success);">CC0 Public Domain</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </main>
+        </div>
+
+        <!-- Banner Notification -->
+        <div id="studio-banner">Configuration Saved!</div>
+
+        <!-- Full Farm Live Preview Modal -->
+        <div id="game-preview-modal">
+            <div class="preview-modal-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-weight: 700; color: #ffffff;">🎮 Live Farm Gameplay Preview</span>
+                    <span class="brand-badge">Real-Time Context</span>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button id="btn-close-preview" class="studio-btn">
+                        ✕ Return to Studio
+                    </button>
+                </div>
+            </div>
+            <div class="preview-frame-container" id="preview-frame-container">
+                <iframe id="game-preview-iframe" src="./index.html"></iframe>
+            </div>
+        </div>
+
+        <script type="module" src="/src/studio/main.ts"></script>
+    </body>
+</html>
