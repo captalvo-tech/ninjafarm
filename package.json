@@ -13,7 +13,7 @@
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "start": "vite preview",
-        "test": "vitest run",
+        "test": "vitest run --reporter=default --reporter=json --outputFile=public/test-results.json",
         "test:watch": "vitest",
         "typecheck": "tsc --noEmit"
     },

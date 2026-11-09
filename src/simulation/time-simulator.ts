@@ -35,6 +35,7 @@
 import { FarmGrid } from '../core/grid';
 import type { ResourceInventory } from '../core/types';
 import { FarmDroid } from '../rendering/droid';
+import { FaunaManager } from '../rendering/fauna';
 
 import { SimulationClock } from './clock';
 import { CropSystem } from './crops';
@@ -147,20 +148,28 @@ export class TimeSimulator {
             );
         }
 
+        // Cria FaunaManager para simulação biológica real
+        const fauna = new FaunaManager(grid);
+
         // Variáveis de auditoria
         let tasksCompleted = 0;
         let totalSolarGen = 0;
         let totalEnergyConsumed = 0;
         let totalWaterConsumed = 0;
+        let totalEggsProduced = 0;
+        let totalDroidWorkSeconds = 0;
+        let totalDroidRechargeSeconds = 0;
         const bottlenecks: string[] = [];
 
         // Roda a simulação determinística em passos de 30 segundos
         const stepSec = 30;
         let remaining = totalSeconds;
+        let secondsSinceLastAnimalCare = 0;
 
         while (remaining > 0) {
             const dt = Math.min(stepSec, remaining);
             remaining -= dt;
+            secondsSinceLastAnimalCare += dt;
 
             // Ciclo solar e produção
             clock.tick(dt);
@@ -172,9 +181,36 @@ export class TimeSimulator {
             const wMetrics = water.tick(dt);
             totalWaterConsumed += wMetrics.consumptionRate * dt;
 
+            // Fauna e animais (crescimento da fome e postura de ovos determinística)
+            const faunaStep = fauna.simulateOfflineSeconds(dt);
+            totalEggsProduced += faunaStep.eggsProduced;
+
+            // Coleta de ovos e alimentação periódica a cada 4 horas de simulação
+            if (secondsSinceLastAnimalCare >= 14400) {
+                secondsSinceLastAnimalCare = 0;
+                const collected = fauna.collectEggs();
+                if (collected.success) {
+                    inv.add('food', collected.amount);
+                }
+                for (const animal of fauna.getAnimals()) {
+                    if (animal.hunger > 50 && inv.get('food') >= 1) {
+                        inv.consume('food', 1);
+                        fauna.feedAnimal(animal.id);
+                    }
+                }
+            }
+
             // Agendador e Droid
-            const completedInStep = scheduler.simulateOfflineSeconds(dt, droid, eMetrics.productionRate);
-            tasksCompleted += completedInStep;
+            const dStep = scheduler.simulateOfflineDetailed(dt, droid, eMetrics.productionRate);
+            tasksCompleted += dStep.completedCount;
+            totalDroidWorkSeconds += dStep.workSeconds;
+            totalDroidRechargeSeconds += dStep.rechargeSeconds;
+        }
+
+        // Coleta final de ovos pendentes
+        const finalCollected = fauna.collectEggs();
+        if (finalCollected.success) {
+            inv.add('food', finalCollected.amount);
         }
 
         // Catchup final das colheitas
@@ -196,12 +232,12 @@ export class TimeSimulator {
             simulatedDays: Math.round((durationHours / 24) * 10) / 10,
             tasksCompleted,
             cropsMatured: cropRes.maturedCount,
-            eggsProduced: Math.floor(durationHours / 4), // 1 coleta a cada 4 horas
+            eggsProduced: totalEggsProduced,
             totalSolarEnergyGenerated: Math.round(totalSolarGen),
             totalEnergyConsumed: Math.round(totalEnergyConsumed),
             totalWaterConsumed: Math.round(totalWaterConsumed),
-            droidWorkSeconds: tasksCompleted * 15,
-            droidRechargeSeconds: Math.round((totalSeconds / 3600) * 120),
+            droidWorkSeconds: Math.round(totalDroidWorkSeconds),
+            droidRechargeSeconds: Math.round(totalDroidRechargeSeconds),
             finalResources: inv.getAll(),
             bottlenecks
         };

@@ -351,7 +351,7 @@ export class FaunaManager {
             a.hunger = Math.min(100, a.hunger + hungerIncrease);
 
             if (a.type === 'chicken') {
-                if (a.hunger < 70) {
+                if (a.hunger < 70 && !a.readyToCollect) {
                     // Galinha bem alimentada botou ovos durante a ausência
                     const prodHours = elapsedSeconds / 3600;
                     a.productionProgress = Math.min(1.0, a.productionProgress + prodHours * 0.5);

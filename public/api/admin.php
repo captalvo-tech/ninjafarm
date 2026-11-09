@@ -368,6 +368,30 @@ if ($action === 'dashboard') {
         }
     }
 
+    $validSessions = 0;
+    foreach (glob($sessionsDir . '/*.json') ?: [] as $sf) {
+        $sd = json_decode(file_get_contents($sf), true);
+        if ($sd && isset($sd['expiresAt']) && $sd['expiresAt'] > $now) {
+            $validSessions++;
+        }
+    }
+
+    $testResultsFile = __DIR__ . '/../test-results.json';
+    if (!file_exists($testResultsFile)) $testResultsFile = __DIR__ . '/test-results.json';
+    $testSummary = null;
+    if (file_exists($testResultsFile)) {
+        $rawTr = json_decode(file_get_contents($testResultsFile), true);
+        if ($rawTr) {
+            $testSummary = [
+                'success' => $rawTr['success'] ?? false,
+                'numTotalTests' => $rawTr['numTotalTests'] ?? 0,
+                'numPassedTests' => $rawTr['numPassedTests'] ?? 0,
+                'numFailedTests' => $rawTr['numFailedTests'] ?? 0,
+                'lastRun' => (int)(($rawTr['startTime'] ?? filemtime($testResultsFile) * 1000) / 1000)
+            ];
+        }
+    }
+
     echo json_encode([
         'success' => true,
         'serverTime' => $now,
@@ -375,13 +399,17 @@ if ($action === 'dashboard') {
             'phpVersion' => PHP_VERSION,
             'deployedVersion' => 'Alpha 0.1.0',
             'apiStatus' => 'OPERATIONAL',
-            'databaseStatus' => 'OPERATIONAL (File-based atomic SQLite/JSON)'
+            'databaseStatus' => 'OPERATIONAL (File-based atomic SQLite/JSON)',
+            'storageWritable' => is_writable($dataDir),
+            'activeSessionsCount' => $validSessions,
+            'testSummary' => $testSummary
         ],
         'players' => [
             'totalAccounts' => $totalAccounts,
             'activeToday' => $activeToday,
             'active7d' => $active7d,
-            'active30d' => $active30d
+            'active30d' => $active30d,
+            'activeSessions' => $validSessions
         ],
         'farms' => [
             'totalFarms' => $totalFarms,
@@ -402,6 +430,32 @@ if ($action === 'dashboard') {
             'completed' => $tasksCompleted,
             'waitingResources' => $tasksWaitingResources
         ]
+    ]);
+    exit;
+}
+
+// 5.1 Relatório Real de Testes Automatizados
+if ($action === 'quality') {
+    $testResultsFile = __DIR__ . '/../test-results.json';
+    if (!file_exists($testResultsFile)) $testResultsFile = __DIR__ . '/test-results.json';
+
+    if (file_exists($testResultsFile)) {
+        $data = json_decode(file_get_contents($testResultsFile), true);
+        if ($data) {
+            echo json_encode([
+                'success' => true,
+                'verified' => true,
+                'results' => $data,
+                'fileTimestamp' => filemtime($testResultsFile)
+            ]);
+            exit;
+        }
+    }
+
+    echo json_encode([
+        'success' => true,
+        'verified' => false,
+        'message' => 'Nenhum relatório de testes automatizados encontrado.'
     ]);
     exit;
 }

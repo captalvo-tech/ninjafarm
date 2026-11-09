@@ -258,9 +258,19 @@ export class TaskScheduler {
      * Reconciliação AFK / Offline: simula o progresso determinístico ocorrido enquanto o jogador esteve desconectado.
      */
     public simulateOfflineSeconds(elapsedSeconds: number, droid: FarmDroid, solarGenPerSecond: number): number {
-        if (elapsedSeconds <= 0) return 0;
+        return this.simulateOfflineDetailed(elapsedSeconds, droid, solarGenPerSecond).completedCount;
+    }
+
+    public simulateOfflineDetailed(
+        elapsedSeconds: number,
+        droid: FarmDroid,
+        solarGenPerSecond: number
+    ): { completedCount: number; workSeconds: number; rechargeSeconds: number } {
+        if (elapsedSeconds <= 0) return { completedCount: 0, workSeconds: 0, rechargeSeconds: 0 };
 
         let completedCount = 0;
+        let totalWorkSeconds = 0;
+        let totalRechargeSeconds = 0;
         let remainingSeconds = elapsedSeconds;
 
         while (remainingSeconds > 0) {
@@ -279,6 +289,7 @@ export class TaskScheduler {
             task.progressSeconds += effectiveWorkSeconds;
             droid.consumeBattery(effectiveWorkSeconds * 0.15);
             remainingSeconds -= effectiveWorkSeconds;
+            totalWorkSeconds += effectiveWorkSeconds;
 
             if (task.progressSeconds >= task.totalDurationSeconds) {
                 this.completeTask(task, droid);
@@ -289,12 +300,17 @@ export class TaskScheduler {
                 const rechargedPct = (solarGenPerSecond > 0 ? 1.5 : 0.2) * rechargeSeconds;
                 droid.recharge(rechargedPct);
                 remainingSeconds -= rechargeSeconds;
+                totalRechargeSeconds += rechargeSeconds;
             } else {
                 break;
             }
         }
 
-        return completedCount;
+        return {
+            completedCount,
+            workSeconds: totalWorkSeconds,
+            rechargeSeconds: totalRechargeSeconds
+        };
     }
 
     public getTasks(): readonly FarmTask[] {

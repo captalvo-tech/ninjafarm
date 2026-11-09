@@ -58,12 +58,20 @@ async function loadDashboardData(container: HTMLElement): Promise<void> {
                             <div style="font-size: 15px;">PHP ${data.system?.phpVersion || '8.x'} / PlayCanvas 2.23</div>
                         </div>
                         <div>
-                            <div class="kpi-label">Banco de Dados</div>
-                            <div style="font-size: 14px; color: var(--text-secondary);">${data.system?.databaseStatus || 'SQLite / JSON Atômico'}</div>
+                            <div class="kpi-label">Persistência & Armazenamento</div>
+                            <div style="font-size: 14px; color: ${data.system?.storageWritable ? 'var(--accent-green)' : 'var(--accent-red)'}; font-weight: 600;">
+                                ${data.system?.storageWritable ? '✓ Gravável (data/ OK)' : '✕ Não gravável'}
+                            </div>
                         </div>
                         <div>
-                            <div class="kpi-label">Horário do Servidor</div>
-                            <div style="font-size: 14px; font-family: var(--font-mono);">${new Date((data.serverTime || Date.now() / 1000) * 1000).toLocaleString('pt-BR')}</div>
+                            <div class="kpi-label">Testes Automatizados</div>
+                            <div style="font-size: 14px; color: ${data.system?.testSummary?.success ? 'var(--accent-green)' : 'var(--accent-yellow)'}; font-weight: 600;">
+                                ${
+                                    data.system?.testSummary
+                                        ? `${data.system.testSummary.numPassedTests}/${data.system.testSummary.numTotalTests} aprovados`
+                                        : '⚠️ Não verificado'
+                                }
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -76,19 +84,19 @@ async function loadDashboardData(container: HTMLElement): Promise<void> {
                         <div class="kpi-subtext">Google Identity autêntico</div>
                     </div>
                     <div class="kpi-card">
-                        <div class="kpi-label">Jogadores Ativos Hoje</div>
+                        <div class="kpi-label">Sessões Ativas Agora</div>
+                        <div class="kpi-value" style="color: var(--accent-cyan);">${data.players?.activeSessions ?? 0}</div>
+                        <div class="kpi-subtext">Sessões válidas em memória</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Ativos (24 horas)</div>
                         <div class="kpi-value" style="color: var(--accent-green);">${data.players?.activeToday ?? 0}</div>
                         <div class="kpi-subtext">Últimas 24 horas</div>
                     </div>
                     <div class="kpi-card">
-                        <div class="kpi-label">Ativos (7 dias)</div>
-                        <div class="kpi-value" style="color: var(--accent-blue);">${data.players?.active7d ?? 0}</div>
-                        <div class="kpi-subtext">Retenção semanal</div>
-                    </div>
-                    <div class="kpi-card">
-                        <div class="kpi-label">Fazendas Ativas</div>
+                        <div class="kpi-label">Fazendas Persistidas</div>
                         <div class="kpi-value">${data.farms?.totalFarms ?? 0}</div>
-                        <div class="kpi-subtext">${data.farms?.farmsWithActiveCrops ?? 0} com lavouras em cultivo</div>
+                        <div class="kpi-subtext">${data.farms?.farmsWithActiveCrops ?? 0} com lavouras ativas</div>
                     </div>
                 </div>
 
