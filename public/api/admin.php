@@ -556,13 +556,37 @@ if ($action === 'economy') {
 
 // 9. Roadmap Vivo (Consulta dos arquivos de governança permanente)
 if ($action === 'roadmap') {
-    $roadmapFeaturesFile = dirname(__DIR__, 2) . '/project/roadmap/features.json';
-    $roadmapHistoryFile = dirname(__DIR__, 2) . '/project/roadmap/history.jsonl';
+    $candidateFeatures = [
+        __DIR__ . '/../project/roadmap/features.json',
+        dirname(__DIR__, 1) . '/project/roadmap/features.json',
+        dirname(__DIR__, 2) . '/project/roadmap/features.json'
+    ];
+    $candidateHistory = [
+        __DIR__ . '/../project/roadmap/history.jsonl',
+        dirname(__DIR__, 1) . '/project/roadmap/history.jsonl',
+        dirname(__DIR__, 2) . '/project/roadmap/history.jsonl'
+    ];
 
-    $features = file_exists($roadmapFeaturesFile) ? json_decode(file_get_contents($roadmapFeaturesFile), true) : [];
+    $roadmapFeaturesFile = null;
+    foreach ($candidateFeatures as $path) {
+        if (file_exists($path)) {
+            $roadmapFeaturesFile = $path;
+            break;
+        }
+    }
+
+    $roadmapHistoryFile = null;
+    foreach ($candidateHistory as $path) {
+        if (file_exists($path)) {
+            $roadmapHistoryFile = $path;
+            break;
+        }
+    }
+
+    $features = ($roadmapFeaturesFile && file_exists($roadmapFeaturesFile)) ? json_decode(file_get_contents($roadmapFeaturesFile), true) : [];
     $historyLines = [];
 
-    if (file_exists($roadmapHistoryFile)) {
+    if ($roadmapHistoryFile && file_exists($roadmapHistoryFile)) {
         $lines = file($roadmapHistoryFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         foreach ($lines as $line) {
             $parsed = json_decode($line, true);
