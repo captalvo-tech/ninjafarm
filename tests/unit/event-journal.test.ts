@@ -54,3 +54,4 @@ describe('EventJournal & Histórico Operacional do Droid', () => {
         expect(journal2.getRecentEvents(1)[0].title).toBe('Painel Fotovoltaico Construído');
     });
 });
+

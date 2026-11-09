@@ -1,3 +1,31 @@
+/**
+ * ============================================================================
+ * NINJA FARM — CONTRATO OBRIGATÓRIO DO ROADMAP
+ * ============================================================================
+ *
+ * O ROADMAP É O REGISTRO OFICIAL DA EVOLUÇÃO DESTE PROJETO.
+ *
+ * Qualquer alteração funcional relevante neste módulo exige:
+ *
+ * 1. Atualizar o registro de funcionalidades do roadmap.
+ * 2. Registrar a alteração no histórico permanente.
+ * 3. Atualizar a documentação técnica relacionada.
+ * 4. Registrar funcionalidades adicionadas, modificadas ou removidas.
+ * 5. Relacionar a mudança ao commit e aos testes realizados.
+ *
+ * Funcionalidades removidas DEVEM permanecer no histórico com
+ * status REMOVIDO. Nunca apagar seu registro histórico.
+ *
+ * Documentação:
+ * - docs/02-ROADMAP.md
+ * - docs/19-LOG-IMPLEMENTACAO.md
+ * - Registro estruturado de funcionalidades do projeto
+ *
+ * IMPORTANTE: Código, roadmap e documentação devem permanecer
+ * sincronizados durante todo o desenvolvimento.
+ * ============================================================================
+ */
+
 import { Color, Entity } from 'playcanvas';
 import type { FarmMaterials } from './materials';
 import type { BuildingType, CropStage, CropType } from '../core/types';

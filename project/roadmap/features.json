@@ -1,0 +1,440 @@
+[
+  {
+    "id": "feat_grid_system",
+    "name": "Grade Modular 64x36 e Ocupação Espacial",
+    "description": "Sistema de grade 64x36 com células de 2m, detecção de colisões, footprints de construções e consulta espacial para pathfinding.",
+    "category": "core",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-08",
+    "implementedAt": "2026-11-08",
+    "validatedAt": "2026-11-08",
+    "modules": [
+      "src/core/grid.ts",
+      "src/core/types.ts"
+    ],
+    "tests": [
+      "tests/unit/grid.test.ts"
+    ]
+  },
+  {
+    "id": "feat_clock_cycle",
+    "name": "Ciclo Diurno-Noturno e Tempo da Fazenda",
+    "description": "Relógio determinístico do jogo com avanço de horas, ciclo dia/noite sincronizado com Sol, Lua e iluminação dinâmica dos postes.",
+    "category": "simulation",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-08",
+    "implementedAt": "2026-11-08",
+    "validatedAt": "2026-11-08",
+    "modules": [
+      "src/simulation/clock.ts",
+      "src/rendering/celestial.ts"
+    ],
+    "tests": [
+      "tests/unit/simulation.test.ts"
+    ]
+  },
+  {
+    "id": "feat_energy_system",
+    "name": "Rede Elétrica Solar, Baterias e Consumidores",
+    "description": "Geração solar fotovoltaica variável pela hora do dia, armazenamento em baterias e consumo por edifícios e postes noturnos.",
+    "category": "simulation",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-08",
+    "implementedAt": "2026-11-08",
+    "validatedAt": "2026-11-08",
+    "modules": [
+      "src/simulation/energy.ts"
+    ],
+    "tests": [
+      "tests/unit/simulation.test.ts"
+    ]
+  },
+  {
+    "id": "feat_water_system",
+    "name": "Tanques Hídricos, Poços e Irrigação",
+    "description": "Gestão de recurso hídrico, bombas d'água mecânicas e abastecimento contínuo de canteiros agrícolas.",
+    "category": "simulation",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-08",
+    "implementedAt": "2026-11-08",
+    "validatedAt": "2026-11-08",
+    "modules": [
+      "src/simulation/water.ts"
+    ],
+    "tests": [
+      "tests/unit/simulation.test.ts"
+    ]
+  },
+  {
+    "id": "feat_crops_lifecycle",
+    "name": "Ciclo Agrícola e Reconciliação AFK Determinística",
+    "description": "Estágios de semente, broto, maturação e colheita (arroz, chá, trigo, cenoura), com consumo de água e reconciliação temporal offline determinística.",
+    "category": "simulation",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-08",
+    "implementedAt": "2026-11-09",
+    "validatedAt": "2026-11-09",
+    "modules": [
+      "src/simulation/crops.ts"
+    ],
+    "tests": [
+      "tests/unit/crops-afk.test.ts",
+      "tests/unit/time-simulator.test.ts"
+    ]
+  },
+  {
+    "id": "feat_fauna_system",
+    "name": "Ciclo Biológico da Fauna, Fome e Produção Animal",
+    "description": "Galinhas caipiras com movimentação autônoma, ciclo de fome/saciedade, ninhos e produção periódica de ovos integrados ao inventário.",
+    "category": "simulation",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-08",
+    "implementedAt": "2026-11-09",
+    "validatedAt": "2026-11-09",
+    "modules": [
+      "src/rendering/fauna.ts"
+    ],
+    "tests": [
+      "tests/unit/fauna-lifecycle.test.ts"
+    ]
+  },
+  {
+    "id": "feat_inventory_system",
+    "name": "Gestão de Estoque, Recursos e Capacidade",
+    "description": "Armazenamento consolidado de madeira, metal, peças, alimentos, água e energia com limites e transações atômicas de despesa e colheita.",
+    "category": "simulation",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-08",
+    "implementedAt": "2026-11-08",
+    "validatedAt": "2026-11-08",
+    "modules": [
+      "src/simulation/inventory.ts"
+    ],
+    "tests": [
+      "tests/unit/simulation.test.ts"
+    ]
+  },
+  {
+    "id": "feat_droid_single",
+    "name": "Unidade Única Droid Humanoide com Bateria e IA",
+    "description": "Único robô operacional por fazenda com telemetria de bateria, recarga na base solar e máquina de estados para execução física das tarefas.",
+    "category": "gameplay",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-09",
+    "implementedAt": "2026-11-09",
+    "validatedAt": "2026-11-09",
+    "modules": [
+      "src/rendering/droid.ts"
+    ],
+    "tests": [
+      "tests/unit/droid-scheduler.test.ts"
+    ]
+  },
+  {
+    "id": "feat_task_scheduler",
+    "name": "Agendador Central de Tarefas com Verificação de Recursos",
+    "description": "Fila sequencial de tarefas físicas com priorização dinâmica, bloqueio por falta de recursos e persistência no save.",
+    "category": "simulation",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-09",
+    "implementedAt": "2026-11-09",
+    "validatedAt": "2026-11-09",
+    "modules": [
+      "src/simulation/task-scheduler.ts"
+    ],
+    "tests": [
+      "tests/unit/droid-scheduler.test.ts"
+    ]
+  },
+  {
+    "id": "feat_blueprints",
+    "name": "Sistema de Blueprints Holográficos e Construção Física",
+    "description": "Posicionamento imediato de planos translúcidos na grade com agendamento da construção física pelo Droid.",
+    "category": "gameplay",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-09",
+    "implementedAt": "2026-11-09",
+    "validatedAt": "2026-11-09",
+    "modules": [
+      "src/ui/scheduler-ui.ts",
+      "src/rendering/models.ts"
+    ],
+    "tests": [
+      "tests/unit/droid-scheduler.test.ts"
+    ]
+  },
+  {
+    "id": "feat_character_ninja",
+    "name": "Personagem Ninja Humano Autêntico (Sem Magia)",
+    "description": "Ninja arquiteto e estrategista sem poderes sobrenaturais, focado em ferramentas shinobi, agricultura e administração.",
+    "category": "rendering",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-08",
+    "implementedAt": "2026-11-09",
+    "validatedAt": "2026-11-09",
+    "modules": [
+      "src/rendering/character.ts"
+    ],
+    "tests": [
+      "tests/unit/integrity-guards.test.ts"
+    ]
+  },
+  {
+    "id": "feat_audio_procedural",
+    "name": "Áudio Procedural Web Audio API",
+    "description": "Efeitos sonoros gerados por síntese de áudio nativa para passos, construção, colheita e alertas, sem assets pesados.",
+    "category": "core",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-08",
+    "implementedAt": "2026-11-08",
+    "validatedAt": "2026-11-08",
+    "modules": [
+      "src/audio/sound.ts"
+    ],
+    "tests": []
+  },
+  {
+    "id": "feat_touch_controls",
+    "name": "Controles Mobile com Joystick Virtual e Botões Touch",
+    "description": "Analógico virtual translúcido responsivo e botões de ação e corrida para dispositivos móveis com suporte a rotação de tela.",
+    "category": "core",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-08",
+    "implementedAt": "2026-11-08",
+    "validatedAt": "2026-11-08",
+    "modules": [
+      "src/input/touch-joystick.ts"
+    ],
+    "tests": []
+  },
+  {
+    "id": "feat_hud_interface",
+    "name": "HUD Adaptativo com Barra de Recursos e Ações Contextuais",
+    "description": "Interface limpa com contadores de recursos, botão contextual único no rodapé, atalhos de ferramentas e indicador AFK.",
+    "category": "ui",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-08",
+    "implementedAt": "2026-11-09",
+    "validatedAt": "2026-11-09",
+    "modules": [
+      "src/ui/hud.ts",
+      "src/gameplay/interaction.ts"
+    ],
+    "tests": []
+  },
+  {
+    "id": "feat_event_journal",
+    "name": "Diário de Eventos Auditável da Propriedade",
+    "description": "Ring-buffer cronológico das ações da fazenda (colheitas, construções, recargas, faltas de insumos e tempo offline).",
+    "category": "simulation",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-09",
+    "implementedAt": "2026-11-09",
+    "validatedAt": "2026-11-09",
+    "modules": [
+      "src/simulation/event-journal.ts"
+    ],
+    "tests": [
+      "tests/unit/event-journal.test.ts"
+    ]
+  },
+  {
+    "id": "feat_interactive_tutorial",
+    "name": "Tutorial Interativo em 8 Passos Guiado pelo Droid",
+    "description": "Onboarding prático sem manuais extensos ensinando seleção, botão contextual, agendamento de tarefas e simulação offline.",
+    "category": "ui",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-09",
+    "implementedAt": "2026-11-09",
+    "validatedAt": "2026-11-09",
+    "modules": [
+      "src/ui/tutorial.ts"
+    ],
+    "tests": []
+  },
+  {
+    "id": "feat_time_simulator",
+    "name": "Simulador Temporal Acelerado de Economia e Autossuficiência",
+    "description": "Motor isolado para testes rápidos de 1h, 12h, 24h, 7d, 30d e 365d comprovando equivalência determinística e gargalos de produção.",
+    "category": "simulation",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-09",
+    "implementedAt": "2026-11-09",
+    "validatedAt": "2026-11-09",
+    "modules": [
+      "src/simulation/time-simulator.ts"
+    ],
+    "tests": [
+      "tests/unit/time-simulator.test.ts"
+    ]
+  },
+  {
+    "id": "feat_bug_report",
+    "name": "Canal Integrado de Relato de Bugs para Testadores",
+    "description": "Modal técnico com diagnóstico do sistema, navegador e logs sanitizados enviado diretamente à administração.",
+    "category": "observability",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-09",
+    "implementedAt": "2026-11-09",
+    "validatedAt": "2026-11-09",
+    "modules": [
+      "src/ui/bug-report.ts",
+      "public/api/report.php"
+    ],
+    "tests": []
+  },
+  {
+    "id": "feat_telemetry_service",
+    "name": "Telemetria Mínima Anônima de Ciclo de Vida e Estabilidade",
+    "description": "Coleta anônima e despersonalizada de checkpoints essenciais de jogo, integridade de salvamento e erros não tratados.",
+    "category": "observability",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-09",
+    "implementedAt": "2026-11-09",
+    "validatedAt": "2026-11-09",
+    "modules": [
+      "src/core/telemetry.ts"
+    ],
+    "tests": []
+  },
+  {
+    "id": "feat_google_auth",
+    "name": "Autenticação Segura Google Identity Services (GIS)",
+    "description": "Login obrigatório com validação autoritativa do Google sub no servidor, emissão de cookie de sessão HttpOnly e controle de acesso.",
+    "category": "persistence",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-09",
+    "implementedAt": "2026-11-09",
+    "validatedAt": "2026-11-09",
+    "modules": [
+      "src/persistence/auth.ts",
+      "public/api/auth.php"
+    ],
+    "tests": [
+      "tests/unit/auth-persistence.test.ts"
+    ]
+  },
+  {
+    "id": "feat_cloud_save",
+    "name": "Persistência Autoritativa em Nuvem com Versionamento Otimista",
+    "description": "Salvamento centralizado com detecção de concorrência e rejeição 409 Conflict para prevenção contra perda de progresso.",
+    "category": "persistence",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-09",
+    "implementedAt": "2026-11-09",
+    "validatedAt": "2026-11-09",
+    "modules": [
+      "src/persistence/cloud-save.ts",
+      "public/api/save.php"
+    ],
+    "tests": [
+      "tests/unit/auth-persistence.test.ts"
+    ]
+  },
+  {
+    "id": "feat_gemini_read_only",
+    "name": "Assistente Droid com Gemini 2.0 Flash e Modo Robótico",
+    "description": "IA estritamente read-only para orientação estratégica ao jogador, relatórios predefinidos e penalidade disciplinar de 30s.",
+    "category": "ai",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-09",
+    "implementedAt": "2026-11-09",
+    "validatedAt": "2026-11-09",
+    "modules": [
+      "src/ai/gemini-service.ts",
+      "public/api/ai.php",
+      "src/ui/droid-chat.ts"
+    ],
+    "tests": [
+      "tests/unit/gemini-ai.test.ts"
+    ]
+  },
+  {
+    "id": "feat_studio_3d",
+    "name": "Ninja Farm Studio — Editor Visual 3D Integrado",
+    "description": "Ambiente de desenvolvimento e configuração visual 3D com biblioteca de modelos GLB, inspetor de transformações e câmera de órbita.",
+    "category": "tools",
+    "phase": 1,
+    "status": "VALIDADO",
+    "addedAt": "2026-11-09",
+    "implementedAt": "2026-11-09",
+    "validatedAt": "2026-11-09",
+    "modules": [
+      "studio.html",
+      "src/studio/main.ts"
+    ],
+    "tests": []
+  },
+  {
+    "id": "feat_admin_portal",
+    "name": "Painel Administrativo /admin com Observabilidade, Economia e Roadmap",
+    "description": "Central de comando operacional, gestão de incidentes, análise de escassez da economia, monitoramento de Droids/Gemini e Roadmap Vivo.",
+    "category": "observability",
+    "phase": 1,
+    "status": "IMPLEMENTADO",
+    "addedAt": "2026-11-09",
+    "implementedAt": "2026-11-09",
+    "validatedAt": null,
+    "modules": [
+      "admin.html",
+      "src/admin/main.ts",
+      "src/admin/auth.ts",
+      "public/api/admin.php"
+    ],
+    "tests": [
+      "tests/unit/admin-auth.test.ts"
+    ]
+  },
+  {
+    "id": "feat_kage_bunshin",
+    "name": "Clones das Sombras Mágicos (Jutsu)",
+    "description": "Clones que colhiam recursos magicamente.",
+    "category": "gameplay",
+    "phase": 1,
+    "status": "REMOVIDO",
+    "addedAt": "2026-11-08",
+    "implementedAt": "2026-11-08",
+    "validatedAt": null,
+    "modules": [],
+    "tests": [],
+    "removalReason": "Substituído pela arquitetura Droid Único realista sem poderes mágicos e sem violação de direitos autorais de Naruto.",
+    "removalCommit": "69a478b"
+  },
+  {
+    "id": "feat_suiton_jutsu",
+    "name": "Jutsu de Liberação de Água Mágica (Suiton)",
+    "description": "Onda mágica invocada pelo ninja para regar canteiros instantaneamente.",
+    "category": "gameplay",
+    "phase": 1,
+    "status": "REMOVIDO",
+    "addedAt": "2026-11-08",
+    "implementedAt": "2026-11-08",
+    "validatedAt": null,
+    "modules": [],
+    "tests": [],
+    "removalReason": "Removido conforme diretriz anti-magia. Toda irrigação é operada fisicamente pelo Droid e tanques/poços hidráulicos autossustentáveis.",
+    "removalCommit": "69a478b"
+  }
+]

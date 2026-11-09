@@ -17,5 +17,7 @@ Thumbs.db
 .idea/
 .vscode/
 
+# Backend Data & Sessions (NEVER COMMIT SENSITIVE DATA OR SAVES)
+public/api/data/
 
 downloads/

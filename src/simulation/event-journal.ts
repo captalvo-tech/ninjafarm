@@ -1,4 +1,32 @@
 /**
+ * ============================================================================
+ * NINJA FARM — CONTRATO OBRIGATÓRIO DO ROADMAP
+ * ============================================================================
+ *
+ * O ROADMAP É O REGISTRO OFICIAL DA EVOLUÇÃO DESTE PROJETO.
+ *
+ * Qualquer alteração funcional relevante neste módulo exige:
+ *
+ * 1. Atualizar o registro de funcionalidades do roadmap.
+ * 2. Registrar a alteração no histórico permanente.
+ * 3. Atualizar a documentação técnica relacionada.
+ * 4. Registrar funcionalidades adicionadas, modificadas ou removidas.
+ * 5. Relacionar a mudança ao commit e aos testes realizados.
+ *
+ * Funcionalidades removidas DEVEM permanecer no histórico com
+ * status REMOVIDO. Nunca apagar seu registro histórico.
+ *
+ * Documentação:
+ * - docs/02-ROADMAP.md
+ * - docs/19-LOG-IMPLEMENTACAO.md
+ * - Registro estruturado de funcionalidades do projeto
+ *
+ * IMPORTANTE: Código, roadmap e documentação devem permanecer
+ * sincronizados durante todo o desenvolvimento.
+ * ============================================================================
+ */
+
+/**
  * Ninja Farm - Event Journal System
  * Persistent audit log of operational and biological farm events.
  * Consulted by the Droid during status reports and AI dialogue.
@@ -75,3 +103,4 @@ export class EventJournal {
         this.entries = savedEntries.slice(0, this.maxEntries);
     }
 }
+

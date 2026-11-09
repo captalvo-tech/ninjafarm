@@ -1,4 +1,6 @@
 import { defineConfig } from 'vite';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -12,7 +14,8 @@ export default defineConfig({
         rollupOptions: {
             input: {
                 main: 'index.html',
-                studio: 'studio.html'
+                studio: 'studio.html',
+                admin: 'admin.html'
             }
         }
     },
@@ -39,6 +42,27 @@ export default defineConfig({
                 };
                 let devRevision = 1;
                 let devSaveData: any = null;
+                let devAdminSession: { email: string; role: string; csrfToken: string } | null = {
+                    email: 'mvioli7@gmail.com',
+                    role: 'superadmin',
+                    csrfToken: 'dev_admin_csrf_12345'
+                };
+                let devAlertsList = [
+                    {
+                        id: 'rep_dev_001',
+                        type: 'tester_bug_report',
+                        severity: 'Médio',
+                        title: 'Relato de Testador: Teste de carregamento inicial...',
+                        description: 'O Droid iniciou com 100% de bateria e executou as tarefas normalmente.',
+                        firstOccurrence: Math.floor(Date.now() / 1000) - 3600,
+                        lastOccurrence: Math.floor(Date.now() / 1000) - 1800,
+                        occurrences: 1,
+                        version: 'alpha-0.1',
+                        module: 'gameplay',
+                        status: 'Novo',
+                        details: { browser: 'Chrome 131', platform: 'Windows', activeTask: 'plow_tile' }
+                    }
+                ];
 
                 server.middlewares.use((req: any, res: any, next: any) => {
                     const url = req.url || '';
@@ -159,6 +183,127 @@ export default defineConfig({
                             return;
                         }
                         res.end(JSON.stringify({ success: true, mode: 'limited' }));
+                        return;
+                    }
+
+                    if (url === '/admin' || url === '/admin/') {
+                        req.url = '/admin.html';
+                        next();
+                        return;
+                    }
+
+                    if (url.startsWith('/api/admin.php')) {
+                        res.setHeader('Content-Type', 'application/json');
+                        const urlObj = new URL(url, 'http://localhost');
+                        const action = urlObj.searchParams.get('action') || '';
+
+                        if (action === 'check') {
+                            if (devAdminSession) {
+                                res.end(JSON.stringify({ authenticated: true, email: devAdminSession.email, role: devAdminSession.role, csrfToken: devAdminSession.csrfToken }));
+                            } else {
+                                res.statusCode = 401;
+                                res.end(JSON.stringify({ authenticated: false, need_setup: false }));
+                            }
+                            return;
+                        }
+
+                        if (action === 'logout') {
+                            devAdminSession = null;
+                            res.end(JSON.stringify({ success: true }));
+                            return;
+                        }
+
+                        if (action === 'dashboard') {
+                            res.end(JSON.stringify({
+                                success: true,
+                                serverTime: Math.floor(Date.now() / 1000),
+                                system: {
+                                    phpVersion: '8.3-dev',
+                                    deployedVersion: 'Alpha 0.1.0',
+                                    apiStatus: 'OPERATIONAL',
+                                    databaseStatus: 'OPERATIONAL (Dev Mock / SQLite)'
+                                },
+                                players: { totalAccounts: 14, activeToday: 6, active7d: 11, active30d: 14 },
+                                farms: { totalFarms: 14, farmsWithActiveCrops: 9, farmsHaltedEnergy: 1 },
+                                droid: { totalDroids: 14, working: 8, recharging: 3, idle: 3, lowBattery: 1, operationalUtilization: 57.1 },
+                                scheduler: { totalTasks: 42, scheduled: 18, completed: 21, waitingResources: 3 }
+                            }));
+                            return;
+                        }
+
+                        if (action === 'alerts') {
+                            res.end(JSON.stringify({ success: true, alerts: devAlertsList, unresolvedCount: devAlertsList.filter(a => a.status !== 'Resolvido').length }));
+                            return;
+                        }
+
+                        if (action === 'economy') {
+                            res.end(JSON.stringify({
+                                success: true,
+                                aggregateResources: { wood: 1250, metal: 680, parts: 340, food: 920, water: 1150, energy: 1420 },
+                                scarcityFarmsCount: { water: 1, energy: 2, wood: 0, metal: 1, parts: 3, food: 0 },
+                                solarInfrastructure: { solarPanelsActiveCapacity: '324 W (pico solar)', farmsCount: 14 }
+                            }));
+                            return;
+                        }
+
+                        if (action === 'roadmap') {
+                            const featuresPath = path.resolve(process.cwd(), 'project/roadmap/features.json');
+                            const historyPath = path.resolve(process.cwd(), 'project/roadmap/history.jsonl');
+                            const features = fs.existsSync(featuresPath) ? JSON.parse(fs.readFileSync(featuresPath, 'utf-8')) : [];
+                            const historyLines = fs.existsSync(historyPath)
+                                ? fs.readFileSync(historyPath, 'utf-8').split('\n').filter((l: string) => !!l.trim()).map((l: string) => JSON.parse(l))
+                                : [];
+                            res.end(JSON.stringify({ success: true, features, history: historyLines.reverse() }));
+                            return;
+                        }
+
+                        if (action === 'audit_logs') {
+                            res.end(JSON.stringify({
+                                success: true,
+                                logs: [
+                                    { timestamp: Math.floor(Date.now() / 1000) - 120, date: new Date().toISOString(), admin: 'mvioli7@gmail.com', action: 'login', ip: '127.0.0.1' },
+                                    { timestamp: Math.floor(Date.now() / 1000) - 3600, date: new Date(Date.now() - 3600000).toISOString(), admin: 'mvioli7@gmail.com', action: 'alert_status_updated', ip: '127.0.0.1', details: { alertId: 'rep_dev_001', status: 'Em análise' } }
+                                ]
+                            }));
+                            return;
+                        }
+
+                        if (req.method === 'POST') {
+                            let body = '';
+                            req.on('data', (chunk: any) => { body += chunk; });
+                            req.on('end', () => {
+                                try {
+                                    const parsed = JSON.parse(body);
+                                    if (parsed.action === 'login') {
+                                        devAdminSession = {
+                                            email: parsed.email || 'mvioli7@gmail.com',
+                                            role: 'superadmin',
+                                            csrfToken: 'dev_admin_csrf_12345'
+                                        };
+                                        res.end(JSON.stringify({
+                                            success: true,
+                                            adminToken: 'dev_admin_bearer_token',
+                                            csrfToken: 'dev_admin_csrf_12345',
+                                            email: devAdminSession.email
+                                        }));
+                                        return;
+                                    }
+                                    if (parsed.action === 'alerts_update_status') {
+                                        const alert = devAlertsList.find(a => a.id === parsed.alertId);
+                                        if (alert) alert.status = parsed.status;
+                                        res.end(JSON.stringify({ success: true }));
+                                        return;
+                                    }
+                                    res.end(JSON.stringify({ success: true }));
+                                } catch (e) {
+                                    res.statusCode = 400;
+                                    res.end(JSON.stringify({ success: false, error: 'JSON inválido' }));
+                                }
+                            });
+                            return;
+                        }
+
+                        res.end(JSON.stringify({ success: true }));
                         return;
                     }
 

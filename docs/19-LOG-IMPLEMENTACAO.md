@@ -386,3 +386,41 @@
   - `npm run typecheck`: 0 erros (TypeScript estrito).
   - `npm run test`: **76/76 testes unitários aprovados no Vitest** (12 suítes incluindo novos testes de fauna, simulação AFK de culturas, `EventJournal`, `TimeSimulator` e testes não-negociáveis de integridade).
   - `npm run build`: bundle de produção gerado com sucesso em 377ms.
+
+### 2026-11-09 — Implementação Completa do /admin, Observabilidade, Economia e Roadmap Vivo
+- **Status:** Implementado, testado e validado.
+- **Entregas Realizadas:**
+  1. **Autenticação Administrativa Exclusiva e Segura ([`public/api/admin.php`](file:///Z:/AI/Ninja_Farm_Project/public/api/admin.php), [`src/admin/auth.ts`](file:///Z:/AI/Ninja_Farm_Project/src/admin/auth.ts)):**
+     - Isolamento total do login de jogadores (Google GIS). O acesso administrativo utiliza e-mail e senha gerenciados pelo servidor.
+     - Administrador primário: `mvioli7@gmail.com`.
+     - Senha protegida via `password_hash(..., PASSWORD_DEFAULT)` em arquivo restrito `0600` (`public/api/data/admin_credentials.json`), nunca commitada no Git.
+     - Rate limiting ativo: 5 tentativas incorretas bloqueiam o IP por 15 minutos (900s).
+     - Tokens de sessão de 4h, cookies HttpOnly seguros, proteção CSRF e trilha de auditoria permanente em `admin_audit/`.
+     - Script CLI seguro para provisionamento e redefinição: `scripts/provision-admin.php`.
+  2. **Dashboard Operacional Central ([`src/admin/views/dashboard-view.ts`](file:///Z:/AI/Ninja_Farm_Project/src/admin/views/dashboard-view.ts)):**
+     - Visão consolidada em tempo real de contas de jogadores, retenção ativa (24h, 7d, 30d), lavouras ativas e bases com energia paralisada.
+     - Telemetria da frota de Droids (trabalhando, recarregando, ociosos, bateria crítica) e agendador central de tarefas.
+  3. **Central de Alertas e Incidentes ([`src/admin/views/alerts-view.ts`](file:///Z:/AI/Ninja_Farm_Project/src/admin/views/alerts-view.ts)):**
+     - Agrupamento de incidentes técnicos e integração automática dos relatos dos testadores enviados via `BugReportModal`.
+     - Ciclo de vida completo: `Novo` → `Em análise` → `Em correção` → `Aguardando validação` → `Resolvido`.
+     - Filtros por status, severidade e modal de inspeção de metadados técnicos sanitizados.
+  4. **Economia, Escassez e Simulador Temporal ([`src/admin/views/economy-view.ts`](file:///Z:/AI/Ninja_Farm_Project/src/admin/views/economy-view.ts)):**
+     - Consolidação dos recursos estocados em todas as fazendas ativas (madeira, metal, peças, alimentos, água e energia).
+     - Termômetro de escassez crítica e capacidade instalada da rede solar fotovoltaica.
+     - **Simulador Temporal Interativo em Sandbox**: Execução determinística de 1h a 365 dias via `TimeSimulator` diretamente no navegador, permitindo diagnosticar gargalos e sustentabilidade da economia.
+  5. **Roadmap Vivo & Memória Técnica Permanente ([`src/admin/views/roadmap-view.ts`](file:///Z:/AI/Ninja_Farm_Project/src/admin/views/roadmap-view.ts), [`project/roadmap/features.json`](file:///Z:/AI/Ninja_Farm_Project/project/roadmap/features.json), [`project/roadmap/history.jsonl`](file:///Z:/AI/Ninja_Farm_Project/project/roadmap/history.jsonl)):**
+     - Catálogo estruturado de 26 funcionalidades com status (`VALIDADO`, `IMPLEMENTADO`, `REMOVIDO`).
+     - Histórico append-only de 25 marcos técnicos auditáveis com commit, autor e detalhes.
+     - Preservação obrigatória de funcionalidades removidas (ex: jutsus mágicos de Naruto substituídos pelo Droid autônomo), documentadas com motivo e commit de remoção.
+  6. **Contrato Obrigatório de Governança e Validador Contínuo ([`scripts/validate-roadmap.ts`](file:///Z:/AI/Ninja_Farm_Project/scripts/validate-roadmap.ts)):**
+     - Cabeçalho padronizado inserido em 27 módulos core de frontend e backend.
+     - Novo script de checagem no CI/CD: `npm run check:roadmap`.
+  7. **Frota Droid, Gemini AI e Qualidade ([`src/admin/views/droid-view.ts`](file:///Z:/AI/Ninja_Farm_Project/src/admin/views/droid-view.ts), [`gemini-view.ts`](file:///Z:/AI/Ninja_Farm_Project/src/admin/views/gemini-view.ts), [`quality-view.ts`](file:///Z:/AI/Ninja_Farm_Project/src/admin/views/quality-view.ts), [`config-view.ts`](file:///Z:/AI/Ninja_Farm_Project/src/admin/views/config-view.ts)):**
+     - Observabilidade do Droid único, regras anti-magia, Gemini read-only, penalidade de 30s e relatório das 13 suítes automatizadas.
+  8. **Documentação Técnica Consolidada:**
+     - Criado [`docs/23-SISTEMA-ADMIN-ROADMAP.md`](file:///Z:/AI/Ninja_Farm_Project/docs/23-SISTEMA-ADMIN-ROADMAP.md) detalhando toda a arquitetura, segurança e governança.
+- **Testes & Qualidade:**
+  - `npm run check:roadmap`: 26 features validadas, 25 eventos históricos conferidos, 27 módulos confirmados com cabeçalho de governança.
+  - `npm run typecheck`: 0 erros (TypeScript estrito).
+  - `npm run test`: **80/80 testes unitários aprovados no Vitest** (13 suítes incluindo novos testes de autenticação admin, rate limiting e integridade do roadmap).
+  - `npm run build`: bundle multi-page gerado com sucesso em 392ms (`index.html`, `studio.html`, `admin.html`).
