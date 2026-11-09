@@ -150,33 +150,54 @@ export class LoginModal {
 
                 <div class="login-status-msg" id="login-status-msg"></div>
 
-                <button class="dev-login-btn" id="dev-quick-login-btn">
+                ${
+                    import.meta.env.DEV
+                        ? `<button class="dev-login-btn" id="dev-quick-login-btn">
                     ⚡ Entrar como Ninja (Acesso Rápido / Dev)
-                </button>
+                </button>`
+                        : ''
+                }
             </div>
         `;
 
-        const devBtn = this.overlay.querySelector('#dev-quick-login-btn');
-        devBtn?.addEventListener('click', async () => {
-            const statusEl = this.overlay.querySelector('#login-status-msg') as HTMLElement;
-            if (statusEl) statusEl.textContent = 'Autenticando...';
+        if (import.meta.env.DEV) {
+            const devBtn = this.overlay.querySelector('#dev-quick-login-btn');
+            devBtn?.addEventListener('click', async () => {
+                const statusEl = this.overlay.querySelector('#login-status-msg') as HTMLElement;
+                if (statusEl) statusEl.textContent = 'Autenticando...';
 
-            const ok = await this.authManager.loginDevMock();
-            if (ok) {
-                const user = this.authManager.getUser();
-                if (user) {
-                    this.hide();
-                    this.callbacks.onLoginSuccess(user);
+                const ok = await this.authManager.loginDevMock();
+                if (ok) {
+                    const user = this.authManager.getUser();
+                    if (user) {
+                        this.hide();
+                        this.callbacks.onLoginSuccess(user);
+                    }
+                } else {
+                    if (statusEl) statusEl.textContent = 'Erro ao autenticar no modo dev.';
                 }
-            } else {
-                if (statusEl) statusEl.textContent = 'Erro ao autenticar.';
-            }
-        });
+            });
+        }
     }
 
-    private initGoogleIdentity(): void {
-        // Se Google GIS estiver presente ou carregando
-        const clientId = (window as any).GOOGLE_CLIENT_ID || '1029384756-ninjafarm.apps.googleusercontent.com';
+    private async initGoogleIdentity(): Promise<void> {
+        // Obtém Client ID configurado no servidor ou via variável de ambiente
+        let clientId =
+            (import.meta as any).env?.VITE_GOOGLE_CLIENT_ID ||
+            (window as any).GOOGLE_CLIENT_ID ||
+            '1029384756-ninjafarm.apps.googleusercontent.com';
+
+        try {
+            const cfgRes = await fetch('api/auth.php?action=config');
+            if (cfgRes.ok) {
+                const cfg = await cfgRes.json();
+                if (cfg.googleClientId) {
+                    clientId = cfg.googleClientId;
+                }
+            }
+        } catch {
+            // Mantém fallback seguro
+        }
 
         // Carrega SDK oficial do Google se não existir
         if (!document.getElementById('google-gsi-script')) {

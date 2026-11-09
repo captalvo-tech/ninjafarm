@@ -15,7 +15,23 @@ if (php_sapi_name() !== 'cli') {
 }
 
 $rootDir = dirname(__DIR__);
-$dataDir = $rootDir . '/public/api/data';
+$candidateDirs = [
+    $rootDir . '/public_html/api/data',
+    $rootDir . '/public/api/data',
+    __DIR__ . '/../public_html/api/data',
+    __DIR__ . '/../public/api/data'
+];
+$dataDir = null;
+foreach ($candidateDirs as $dir) {
+    if (is_dir($dir)) {
+        $dataDir = $dir;
+        break;
+    }
+}
+if (!$dataDir) {
+    $dataDir = is_dir($rootDir . '/public_html') ? $rootDir . '/public_html/api/data' : $rootDir . '/public/api/data';
+}
+
 $credentialsFile = $dataDir . '/admin_credentials.json';
 $auditDir = $dataDir . '/admin_audit';
 

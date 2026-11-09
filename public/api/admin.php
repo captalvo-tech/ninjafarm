@@ -58,7 +58,8 @@ foreach ([$dataDir, $adminSessionsDir, $adminAuditDir, $savesDir, $usersDir, $re
 // -------------------------------------------------------------
 
 function getClientIP(): string {
-    return $_SERVER['HTTP_CF_CONNECTING_IP'] ?? $_SERVER['HTTP_X_FORWARDED_FOR'] ?? $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
+    // Utiliza estritamente REMOTE_ADDR para impedir que atacantes forjem headers X-Forwarded-For
+    return $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
 }
 
 function checkRateLimit(string $rateLimitFile, string $ip): bool {
@@ -116,10 +117,14 @@ function getAdminBearerToken(): ?string {
     if (isset($_COOKIE['ninja_admin_token'])) {
         return $_COOKIE['ninja_admin_token'];
     }
-    if (isset($_GET['admin_token'])) {
-        return $_GET['admin_token'];
-    }
+    // Autenticacao administrativa via query param de URL removida por seguranca (prevencao de vazamento em logs/referrers)
     return null;
+}
+
+function validateCsrf(array $session): bool {
+    $headers = getallheaders();
+    $csrf = $headers['X-CSRF-Token'] ?? $headers['x-csrf-token'] ?? null;
+    return !empty($csrf) && !empty($session['csrfToken']) && hash_equals($session['csrfToken'], $csrf);
 }
 
 function validateAdminSession(string $adminSessionsDir): ?array {
@@ -151,41 +156,13 @@ $input = json_decode(file_get_contents('php://input'), true) ?? [];
 $action = $_GET['action'] ?? $input['action'] ?? 'check';
 $ip = getClientIP();
 
-// 1. Setup inicial seguro do administrador (executado apenas se não houver credenciais)
+// 1. Provisionamento inicial via API pública estritamente desabilitado (Fase 2)
 if ($action === 'setup_initial_admin') {
-    if (file_exists($credentialsFile)) {
-        http_response_code(403);
-        echo json_encode(['success' => false, 'error' => 'Administrador já provisionado. Acesso negado.']);
-        exit;
-    }
-
-    $email = trim($input['email'] ?? '');
-    $password = $input['password'] ?? '';
-
-    if ($email !== 'mvioli7@gmail.com') {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'E-mail do administrador inicial inválido.']);
-        exit;
-    }
-
-    if (strlen($password) < 8) {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'A senha deve conter no mínimo 8 caracteres.']);
-        exit;
-    }
-
-    $hash = password_hash($password, PASSWORD_DEFAULT);
-    $credentials = [
-        'email' => $email,
-        'password_hash' => $hash,
-        'createdAt' => time(),
-        'role' => 'superadmin'
-    ];
-    file_put_contents($credentialsFile, json_encode($credentials, JSON_PRETTY_PRINT));
-
-    logAdminAudit($adminAuditDir, $email, 'setup_initial_admin', ['status' => 'success']);
-
-    echo json_encode(['success' => true, 'message' => 'Conta de administrador provisionada com segurança!']);
+    http_response_code(403);
+    echo json_encode([
+        'success' => false,
+        'error' => 'O provisionamento inicial de administrador só pode ser realizado via CLI privada do servidor (scripts/provision-admin.php).'
+    ]);
     exit;
 }
 
@@ -202,7 +179,7 @@ if ($action === 'login') {
 
     if (!file_exists($credentialsFile)) {
         http_response_code(400);
-        echo json_encode(['success' => false, 'error' => 'Administrador não provisionado no servidor. Execute o setup inicial.', 'need_setup' => true]);
+        echo json_encode(['success' => false, 'error' => 'Administrador não provisionado no servidor. Execute o setup via CLI privada (scripts/provision-admin.php).', 'need_setup' => true]);
         exit;
     }
 
@@ -230,11 +207,11 @@ if ($action === 'login') {
 
     file_put_contents($adminSessionsDir . '/' . $token . '.json', json_encode($session));
 
-    // Cookie HttpOnly seguro
+    // Cookie HttpOnly seguro e restrito (sem exposição no localStorage)
     setcookie('ninja_admin_token', $token, [
         'expires' => time() + 14400,
         'path' => '/',
-        'secure' => isset($_SERVER['HTTPS']),
+        'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on',
         'httponly' => true,
         'samesite' => 'Strict'
     ]);
@@ -243,7 +220,6 @@ if ($action === 'login') {
 
     echo json_encode([
         'success' => true,
-        'adminToken' => $token,
         'csrfToken' => $csrfToken,
         'email' => $email
     ]);
@@ -269,8 +245,15 @@ if ($action === 'check') {
     exit;
 }
 
-// 4. Logout Administrativo
+// 4. Logout Administrativo (Protegido por CSRF)
 if ($action === 'logout') {
+    $session = validateAdminSession($adminSessionsDir);
+    if ($session && !validateCsrf($session)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'error' => 'Token CSRF inválido para encerramento de sessão.']);
+        exit;
+    }
+
     $token = getAdminBearerToken();
     if ($token) {
         $sanitized = preg_replace('/[^a-f0-9]/', '', $token);
@@ -281,7 +264,12 @@ if ($action === 'logout') {
             @unlink($file);
         }
     }
-    setcookie('ninja_admin_token', '', ['expires' => time() - 3600, 'path' => '/']);
+    setcookie('ninja_admin_token', '', [
+        'expires' => time() - 3600,
+        'path' => '/',
+        'httponly' => true,
+        'samesite' => 'Strict'
+    ]);
     echo json_encode(['success' => true]);
     exit;
 }

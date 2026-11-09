@@ -122,4 +122,36 @@ describe('Painel /admin: Autenticação, Segurança e Governança do Roadmap', (
         expect(validateCsrf('wrong_token')).toBe(false);
         expect(validateCsrf(sessionCsrf)).toBe(true);
     });
+
+    it('5. Garante que setup_initial_admin público e token na URL estão desabilitados em admin.php', () => {
+        const adminPhpPath = path.join(projectRoot, 'public', 'api', 'admin.php');
+        const code = fs.readFileSync(adminPhpPath, 'utf-8');
+
+        // Não aceita token na URL
+        expect(code).not.toContain("$_GET['admin_token']");
+
+        // setup_initial_admin retorna 403 Forbidden
+        expect(code).toContain("if ($action === 'setup_initial_admin') {");
+        expect(code).toContain('http_response_code(403);');
+
+        // Não confia cegamente em X-Forwarded-For sem validação
+        expect(code).not.toContain("$_SERVER['HTTP_X_FORWARDED_FOR']");
+    });
+
+    it('6. Garante que auth.php bloqueia dev_mock em produção e não expõe tokens em URL', () => {
+        const authPhpPath = path.join(projectRoot, 'public', 'api', 'auth.php');
+        const code = fs.readFileSync(authPhpPath, 'utf-8');
+
+        // Não aceita token na URL
+        expect(code).not.toContain("$_GET['token']");
+
+        // Bloqueio rigoroso de dev_mock
+        expect(code).toContain("if ($appEnv !== 'development') {");
+        expect(code).toContain('http_response_code(403);');
+
+        // Validação de claims do Google (aud, iss, exp)
+        expect(code).toContain('$validIssuers');
+        expect(code).toContain('$googleClientId');
+        expect(code).toContain('exp');
+    });
 });

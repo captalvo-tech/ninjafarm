@@ -52,14 +52,41 @@ class AdminApp {
     }
 
     private renderLoginScreen(needSetup?: boolean): void {
+        if (needSetup) {
+            this.appRoot.innerHTML = `
+                <div class="login-screen">
+                    <div class="login-card">
+                        <div class="login-header">
+                            <div style="font-size: 36px;">🔒 🛡️</div>
+                            <h2 class="login-title">Provisionamento Inicial Pendente</h2>
+                            <p style="font-size: 13px; color: var(--text-secondary); margin-top: 6px; line-height: 1.5;">
+                                Por políticas de segurança e integridade (Fase 2), o provisionamento do superadmin não pode ser realizado por requisição web pública.
+                            </p>
+                        </div>
+
+                        <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 14px; margin-bottom: 18px; text-align: left; font-size: 13px; color: #FCA5A5;">
+                            <strong>Instrução para o Administrador:</strong><br>
+                            Conecte-se via SSH ou terminal do servidor e execute:<br>
+                            <code style="display: block; background: #0F172A; padding: 8px 10px; border-radius: 6px; margin-top: 8px; color: #34D399; font-family: monospace;">php scripts/provision-admin.php</code>
+                        </div>
+
+                        <button onclick="window.location.reload()" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px;">
+                            🔄 Verificar Novamente
+                        </button>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+
         this.appRoot.innerHTML = `
             <div class="login-screen">
                 <div class="login-card">
                     <div class="login-header">
                         <div style="font-size: 36px;">🥷 📊</div>
-                        <h2 class="login-title">${needSetup ? 'Provisionamento Inicial do Admin' : 'Ninja Farm — Acesso Administrativo'}</h2>
+                        <h2 class="login-title">Ninja Farm — Acesso Administrativo</h2>
                         <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">
-                            ${needSetup ? 'Defina a senha mestra para mvioli7@gmail.com' : 'Central de Observabilidade, Economia e Roadmap Vivo'}
+                            Central de Observabilidade, Economia e Roadmap Vivo
                         </p>
                     </div>
 
@@ -68,15 +95,15 @@ class AdminApp {
                     <form id="admin-login-form">
                         <div class="form-group">
                             <label class="form-label">E-mail do Administrador</label>
-                            <input type="email" id="login-email" class="form-input" value="mvioli7@gmail.com" ${needSetup ? 'readonly' : 'required'} />
+                            <input type="email" id="login-email" class="form-input" value="mvioli7@gmail.com" required />
                         </div>
                         <div class="form-group">
-                            <label class="form-label">${needSetup ? 'Nova Senha Mestra (mínimo 8 caracteres)' : 'Senha Administrativa'}</label>
+                            <label class="form-label">Senha Administrativa</label>
                             <input type="password" id="login-password" class="form-input" placeholder="••••••••" required />
                         </div>
 
                         <button type="submit" id="btn-submit-auth" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 12px; padding: 12px;">
-                            ${needSetup ? 'Concluir Provisionamento' : 'Acessar Central de Comando'}
+                            Acessar Central de Comando
                         </button>
                     </form>
 
@@ -101,36 +128,24 @@ class AdminApp {
             submitBtn.textContent = 'Autenticando...';
 
             try {
-                if (needSetup) {
-                    const res = await adminAuth.setupInitialAdmin(passInput.value);
-                    if (res.success) {
-                        alert('Administrador provisionado com sucesso! Agora você pode realizar o login.');
-                        this.renderLoginScreen(false);
-                        return;
-                    } else {
-                        errorBox.textContent = res.error || 'Erro no provisionamento.';
-                        errorBox.style.display = 'block';
-                    }
+                const res = await adminAuth.login(emailInput.value, passInput.value);
+                if (res.success) {
+                    this.renderAppLayout();
+                    return;
                 } else {
-                    const res = await adminAuth.login(emailInput.value, passInput.value);
-                    if (res.success) {
-                        this.renderAppLayout();
+                    if (res.need_setup) {
+                        this.renderLoginScreen(true);
                         return;
-                    } else {
-                        if (res.need_setup) {
-                            this.renderLoginScreen(true);
-                            return;
-                        }
-                        errorBox.textContent = res.error || 'Credenciais inválidas.';
-                        errorBox.style.display = 'block';
                     }
+                    errorBox.textContent = res.error || 'Credenciais inválidas.';
+                    errorBox.style.display = 'block';
                 }
             } catch (err: any) {
                 errorBox.textContent = err.message || 'Erro de comunicação.';
                 errorBox.style.display = 'block';
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = needSetup ? 'Concluir Provisionamento' : 'Acessar Central de Comando';
+                submitBtn.textContent = 'Acessar Central de Comando';
             }
         });
     }

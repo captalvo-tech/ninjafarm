@@ -15,20 +15,18 @@ export interface AdminSession {
 }
 
 export class AdminAuthManager {
-    private token: string | null = null;
     private csrfToken: string | null = null;
     private email: string | null = null;
     private role: string | null = null;
 
     constructor() {
-        this.token = localStorage.getItem('ninja_admin_token');
         this.csrfToken = localStorage.getItem('ninja_admin_csrf');
         this.email = localStorage.getItem('ninja_admin_email');
         this.role = localStorage.getItem('ninja_admin_role');
     }
 
     public isAuthenticated(): boolean {
-        return !!this.token;
+        return !!this.csrfToken && !!this.email;
     }
 
     public getEmail(): string {
@@ -81,16 +79,15 @@ export class AdminAuthManager {
             const res = await fetch('/api/admin.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
                 body: JSON.stringify({ action: 'login', email, password })
             });
             const data = await res.json();
-            if (data.success && data.adminToken) {
-                this.token = data.adminToken;
+            if (data.success && data.csrfToken) {
                 this.csrfToken = data.csrfToken;
                 this.email = data.email;
                 this.role = 'superadmin';
 
-                localStorage.setItem('ninja_admin_token', this.token || '');
                 localStorage.setItem('ninja_admin_csrf', this.csrfToken || '');
                 localStorage.setItem('ninja_admin_email', this.email || '');
                 localStorage.setItem('ninja_admin_role', this.role || '');
@@ -103,26 +100,13 @@ export class AdminAuthManager {
         }
     }
 
-    public async setupInitialAdmin(password: string): Promise<{ success: boolean; error?: string }> {
-        try {
-            const res = await fetch('/api/admin.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'setup_initial_admin', email: 'mvioli7@gmail.com', password })
-            });
-            const data = await res.json();
-            if (data.success) {
-                return { success: true };
-            }
-            return { success: false, error: data.error || 'Falha no provisionamento inicial.' };
-        } catch (e: any) {
-            return { success: false, error: e.message || 'Erro de conexão com o servidor.' };
-        }
-    }
-
     public async logout(): Promise<void> {
         try {
-            await this.apiFetch('/api/admin.php?action=logout', { method: 'GET' });
+            await this.apiFetch('/api/admin.php?action=logout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'logout' })
+            });
         } catch (e) {
             console.warn('[AdminAuth] Erro ao deslogar do servidor:', e);
         }
@@ -130,7 +114,6 @@ export class AdminAuthManager {
     }
 
     private clearLocalSession(): void {
-        this.token = null;
         this.csrfToken = null;
         this.email = null;
         this.role = null;
@@ -145,15 +128,13 @@ export class AdminAuthManager {
             ...((options.headers as Record<string, string>) || {})
         };
 
-        if (this.token) {
-            headers['Authorization'] = `Bearer ${this.token}`;
-        }
         if (this.csrfToken && options.method && options.method.toUpperCase() === 'POST') {
             headers['X-CSRF-Token'] = this.csrfToken;
         }
 
         return fetch(url, {
             ...options,
+            credentials: 'same-origin',
             headers
         });
     }

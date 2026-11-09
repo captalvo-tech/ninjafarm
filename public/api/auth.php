@@ -29,6 +29,8 @@
 
 /**
  * Ninja Farm - Google Authentication & Session Endpoint
+ * Strict Production Hardened: Validates Google token aud, iss, exp, and sub.
+ * Disables dev_mock in production environment.
  */
 
 header('Content-Type: application/json; charset=utf-8');
@@ -40,6 +42,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit(0);
 }
+
+$rootDir = dirname(__DIR__, 2);
+$configFile = __DIR__ . '/config.php';
+$serverConfig = file_exists($configFile) ? require $configFile : [];
+
+$appEnv = getenv('APP_ENV') ?: ($serverConfig['app_env'] ?? 'production');
+$googleClientId = getenv('GOOGLE_CLIENT_ID') ?: ($serverConfig['google_client_id'] ?? '1029384756-ninjafarm.apps.googleusercontent.com');
 
 $dataDir = __DIR__ . '/data';
 $usersDir = $dataDir . '/users';
@@ -61,14 +70,20 @@ function getBearerToken(): ?string {
     if (isset($_COOKIE['ninja_session'])) {
         return $_COOKIE['ninja_session'];
     }
-    if (isset($_GET['token'])) {
-        return $_GET['token'];
-    }
     return null;
 }
 
 $input = json_decode(file_get_contents('php://input'), true) ?? [];
 $action = $_GET['action'] ?? $input['action'] ?? 'check';
+
+if ($action === 'config') {
+    echo json_encode([
+        'success' => true,
+        'googleClientId' => $googleClientId,
+        'appEnv' => $appEnv
+    ]);
+    exit;
+}
 
 if ($action === 'login') {
     $idToken = $input['id_token'] ?? '';
@@ -76,13 +91,24 @@ if ($action === 'login') {
 
     $userData = null;
 
-    if ($devMock && (isset($input['dev_user']))) {
-        // Modo de desenvolvimento / testes automatizados
+    if ($devMock) {
+        // Bloqueio rigoroso em ambiente de produção
+        if ($appEnv !== 'development') {
+            http_response_code(403);
+            echo json_encode([
+                'success' => false,
+                'error' => 'Acesso de desenvolvimento proibido em ambiente público de produção.'
+            ]);
+            exit;
+        }
+
+        // Permitido estritamente em ambiente local de desenvolvimento
+        $devSub = 'dev_sub_' . hash('sha256', ($input['dev_user']['email'] ?? 'dev') . '_ninjalocal');
         $userData = [
-            'sub' => $input['dev_user']['sub'] ?? 'dev_sub_12345',
+            'sub' => $devSub,
             'email' => $input['dev_user']['email'] ?? 'ninja.cultivator@example.com',
-            'name' => $input['dev_user']['name'] ?? 'Ninja Agroecológico',
-            'picture' => $input['dev_user']['picture'] ?? ''
+            'name' => $input['dev_user']['name'] ?? 'Ninja Agroecológico (Dev)',
+            'picture' => ''
         ];
     } else {
         if (empty($idToken)) {
@@ -91,7 +117,7 @@ if ($action === 'login') {
             exit;
         }
 
-        // Validação oficial com a API do Google
+        // Validação oficial com a API do Google (Tokeninfo)
         $verifyUrl = 'https://oauth2.googleapis.com/tokeninfo?id_token=' . urlencode($idToken);
         $ctx = stream_context_create([
             'http' => [
@@ -104,7 +130,29 @@ if ($action === 'login') {
 
         if (!$tokenInfo || empty($tokenInfo['sub'])) {
             http_response_code(401);
-            echo json_encode(['success' => false, 'error' => 'Token do Google inválido ou expirado.']);
+            echo json_encode(['success' => false, 'error' => 'Token do Google inválido ou não assinado.']);
+            exit;
+        }
+
+        // 1. Validação de emissor (iss)
+        $validIssuers = ['accounts.google.com', 'https://accounts.google.com'];
+        if (!in_array($tokenInfo['iss'] ?? '', $validIssuers, true)) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Emissor do token inválido.']);
+            exit;
+        }
+
+        // 2. Validação de audiência (aud) - Client ID
+        if (!empty($googleClientId) && ($tokenInfo['aud'] ?? '') !== $googleClientId) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Audiência do token (Client ID) incompatível.']);
+            exit;
+        }
+
+        // 3. Validação de expiração (exp)
+        if (isset($tokenInfo['exp']) && (int)$tokenInfo['exp'] < time()) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'error' => 'Token do Google expirado.']);
             exit;
         }
 
