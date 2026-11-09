@@ -80,7 +80,7 @@ export class VisualEffectsManager {
     }
 
     unregisterTarget(id: string): void {
-        this.targets = this.targets.filter(t => t.id !== id);
+        this.targets = this.targets.filter((t) => t.id !== id);
     }
 
     // Lança um Shuriken 3D na direção em que o Ninja está olhando
@@ -239,7 +239,7 @@ export class VisualEffectsManager {
         });
     }
 
-    setSelectionHighlight(pos: { x: number; y: number; z: number } | null, radius: number = 2.0): void {
+    setSelectionHighlight(pos: { x: number; y: number; z: number } | null, radius = 2.0): void {
         if (!pos) {
             if (this.selectionRing) {
                 this.selectionRing.enabled = false;
@@ -262,14 +262,14 @@ export class VisualEffectsManager {
     }
 
     // Exibe número flutuante na tela ("+25 Alimento", etc.)
-    showFloatingText(text: string, screenX?: number, screenY?: number, color: string = '#34D399'): void {
+    showFloatingText(text: string, screenX?: number, screenY?: number, color = '#34D399'): void {
         const floater = document.createElement('div');
         floater.className = 'floating-vfx-text';
         floater.textContent = text;
         floater.style.cssText = `
             position: fixed;
-            left: ${screenX ?? (window.innerWidth / 2 + (Math.random() - 0.5) * 100)}px;
-            top: ${screenY ?? (window.innerHeight / 2 - 40 + (Math.random() - 0.5) * 40)}px;
+            left: ${screenX ?? window.innerWidth / 2 + (Math.random() - 0.5) * 100}px;
+            top: ${screenY ?? window.innerHeight / 2 - 40 + (Math.random() - 0.5) * 40}px;
             color: ${color};
             font-family: 'DM Sans', sans-serif;
             font-size: 20px;

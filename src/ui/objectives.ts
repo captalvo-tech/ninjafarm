@@ -1,7 +1,8 @@
-import { t } from './i18n';
 import { sound } from '../audio/sound';
-import { triggerHaptic } from '../input/haptics';
 import type { BuildingType, CropType } from '../core/types';
+import { triggerHaptic } from '../input/haptics';
+
+import { t } from './i18n';
 
 export interface TrialReward {
     xp: number;
@@ -766,8 +767,8 @@ export class ObjectiveManager {
         }
     }
 
-    recordProgress(id: string, amount: number = 1): void {
-        const trial = this.trials.find(t => t.id === id);
+    recordProgress(id: string, amount = 1): void {
+        const trial = this.trials.find((t) => t.id === id);
         if (!trial || trial.completed) return;
 
         trial.currentCount = Math.min(trial.targetCount, trial.currentCount + amount);
@@ -836,7 +837,7 @@ export class ObjectiveManager {
     }
 
     completeObjective(id: string): void {
-        const trial = this.trials.find(t => t.id === id);
+        const trial = this.trials.find((t) => t.id === id);
         if (trial && !trial.completed) {
             trial.currentCount = trial.targetCount;
             trial.completed = true;
@@ -850,7 +851,7 @@ export class ObjectiveManager {
     }
 
     claimReward(id: string): void {
-        const trial = this.trials.find(t => t.id === id);
+        const trial = this.trials.find((t) => t.id === id);
         if (!trial || !trial.completed || trial.claimed) return;
 
         trial.claimed = true;
@@ -866,11 +867,11 @@ export class ObjectiveManager {
     }
 
     getCompletedCount(): number {
-        return this.trials.filter(t => t.completed).length;
+        return this.trials.filter((t) => t.completed).length;
     }
 
     getUnclaimedCount(): number {
-        return this.trials.filter(t => t.completed && !t.claimed).length;
+        return this.trials.filter((t) => t.completed && !t.claimed).length;
     }
 
     getTrials(): ShinobiTrial[] {
@@ -924,25 +925,27 @@ export class ObjectiveManager {
         }
 
         const chapterOrder = [1, 2, 3, 4, 5];
-        return chapterOrder.map(chNum => {
-            const trialsInChapter = chapterGroups[chNum];
-            if (!trialsInChapter || trialsInChapter.length === 0) return '';
+        return chapterOrder
+            .map((chNum) => {
+                const trialsInChapter = chapterGroups[chNum];
+                if (!trialsInChapter || trialsInChapter.length === 0) return '';
 
-            const chapterTitle = t(`chapter.${chNum}`);
-            const cardsHtml = trialsInChapter.map(trial => {
-                const pct = Math.min(100, Math.round((trial.currentCount / trial.targetCount) * 100));
-                const rewardLabel = this.formatReward(trial.reward);
+                const chapterTitle = t(`chapter.${chNum}`);
+                const cardsHtml = trialsInChapter
+                    .map((trial) => {
+                        const pct = Math.min(100, Math.round((trial.currentCount / trial.targetCount) * 100));
+                        const rewardLabel = this.formatReward(trial.reward);
 
-                let actionHtml = '';
-                if (trial.claimed) {
-                    actionHtml = `<span class="trial-claimed-badge">✓ ${t('trials.claimed')}</span>`;
-                } else if (trial.completed) {
-                    actionHtml = `<button class="trial-claim-btn" data-claim="${trial.id}">🎁 ${t('trials.claim')}</button>`;
-                } else {
-                    actionHtml = `<span class="trial-pending-badge">${trial.currentCount}/${trial.targetCount}</span>`;
-                }
+                        let actionHtml = '';
+                        if (trial.claimed) {
+                            actionHtml = `<span class="trial-claimed-badge">✓ ${t('trials.claimed')}</span>`;
+                        } else if (trial.completed) {
+                            actionHtml = `<button class="trial-claim-btn" data-claim="${trial.id}">🎁 ${t('trials.claim')}</button>`;
+                        } else {
+                            actionHtml = `<span class="trial-pending-badge">${trial.currentCount}/${trial.targetCount}</span>`;
+                        }
 
-                return `
+                        return `
                     <div class="trial-row ${trial.completed ? 'completed' : ''} ${trial.claimed ? 'claimed' : ''}">
                         <div class="trial-top">
                             <div class="trial-info">
@@ -962,9 +965,10 @@ export class ObjectiveManager {
                         </div>
                     </div>
                 `;
-            }).join('');
+                    })
+                    .join('');
 
-            return `
+                return `
                 <div class="chapter-section">
                     <div class="chapter-banner">🌱 ${chapterTitle}</div>
                     <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
@@ -972,7 +976,8 @@ export class ObjectiveManager {
                     </div>
                 </div>
             `;
-        }).join('');
+            })
+            .join('');
     }
 
     private renderModal(): void {
@@ -1001,7 +1006,7 @@ export class ObjectiveManager {
 
         // Event listener para botões de resgate
         const claimBtns = this.modalElement.querySelectorAll('[data-claim]');
-        claimBtns.forEach(btn => {
+        claimBtns.forEach((btn) => {
             btn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const id = (btn as HTMLElement).dataset.claim;

@@ -3,9 +3,9 @@
  * Account status, progress reset, and Gemini AI configuration.
  */
 
+import type { UserProfile, FarmSaveState } from '../core/types';
 import type { AuthManager } from '../persistence/auth';
 import type { CloudSaveManager } from '../persistence/cloud-save';
-import type { UserProfile, FarmSaveState } from '../core/types';
 
 export interface SettingsModalCallbacks {
     onLogout: () => void;
@@ -22,11 +22,7 @@ export class SettingsModal {
     private callbacks: SettingsModalCallbacks;
     private isOpen = false;
 
-    constructor(
-        authManager: AuthManager,
-        cloudSaveManager: CloudSaveManager,
-        callbacks: SettingsModalCallbacks
-    ) {
+    constructor(authManager: AuthManager, cloudSaveManager: CloudSaveManager, callbacks: SettingsModalCallbacks) {
         this.authManager = authManager;
         this.cloudSaveManager = cloudSaveManager;
         this.callbacks = callbacks;
@@ -293,17 +289,21 @@ export class SettingsModal {
                         <input type="password" class="gemini-input" id="gemini-key-input" placeholder="${hasKey ? '••••••••••••••••••••••••' : 'Insira sua chave do Google AI Studio...'}" />
                         <button class="settings-btn-secondary" id="save-gemini-key-btn">Salvar</button>
                     </div>
-                    ${hasKey ? `
+                    ${
+                        hasKey
+                            ? `
                         <button class="settings-btn-secondary" id="disconnect-gemini-key-btn" style="width:100%;margin-top:8px;font-size:12px;color:#FCA5A5;">
                             Desconectar Chave Pessoal
                         </button>
-                    ` : ''}
+                    `
+                            : ''
+                    }
                     <div id="gemini-test-result" style="font-size:12px;margin-top:6px;min-height:16px;"></div>
                 </div>
 
                 <!-- 3. Seção Suporte & Diagnóstico -->
                 <div class="settings-section">
-                    <div class="settings-section-title">🛠️ Suporte & Aprendizado</div>
+                    <div class="settings-section-title">🛠️ Suporte & Ferramentas</div>
                     <div style="display:flex;gap:10px;margin-top:8px;">
                         <button class="settings-btn-secondary" id="settings-tutorial-btn" style="flex:1;">
                             📖 Rever Tutorial
@@ -311,6 +311,14 @@ export class SettingsModal {
                         <button class="settings-btn-secondary" id="settings-bugreport-btn" style="flex:1;color:#f87171;border-color:rgba(239,68,68,0.4);">
                             🐛 Reportar Bug
                         </button>
+                    </div>
+                    <div style="display:flex;gap:10px;margin-top:8px;">
+                        <a href="studio.html" target="_blank" class="settings-btn-secondary" style="flex:1;text-decoration:none;text-align:center;font-size:12px;">
+                            🎨 Studio 3D
+                        </a>
+                        <a href="admin.html" target="_blank" class="settings-btn-secondary" style="flex:1;text-decoration:none;text-align:center;font-size:12px;">
+                            📊 Painel /admin
+                        </a>
                     </div>
                 </div>
 
@@ -343,7 +351,9 @@ export class SettingsModal {
             if (val) {
                 localStorage.setItem('ninja_gemini_api_key', val);
                 const resultEl = this.overlay.querySelector('#gemini-test-result');
-                if (resultEl) resultEl.innerHTML = '<span style="color:#34D399;">✓ Chave salva com segurança! Modo Inteligente habilitado.</span>';
+                if (resultEl)
+                    resultEl.innerHTML =
+                        '<span style="color:#34D399;">✓ Chave salva com segurança! Modo Inteligente habilitado.</span>';
                 this.callbacks.onGeminiConfigChange?.({ mode: 'smart', hasKey: true });
                 setTimeout(() => this.render(), 1200);
             }
@@ -368,7 +378,7 @@ export class SettingsModal {
         this.overlay.querySelector('#settings-reset-farm-btn')?.addEventListener('click', async () => {
             const confirmed = window.confirm(
                 'ATENÇÃO: Você tem certeza de que deseja apagar todo o progresso da fazenda e começar do zero?\n\n' +
-                'Todas as construções, safras, inventário e tarefas do Droid serão restauradas ao estado inicial.'
+                    'Todas as construções, safras, inventário e tarefas do Droid serão restauradas ao estado inicial.'
             );
 
             if (confirmed) {
@@ -383,4 +393,3 @@ export class SettingsModal {
         });
     }
 }
-

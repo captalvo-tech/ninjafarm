@@ -82,7 +82,12 @@ export class FarmGrid {
         return { width: footprint.width, height: footprint.height };
     }
 
-    getCellsInFootprint(originX: number, originY: number, footprint: Footprint, orientation: BuildingOrientation): GridCell[] {
+    getCellsInFootprint(
+        originX: number,
+        originY: number,
+        footprint: Footprint,
+        orientation: BuildingOrientation
+    ): GridCell[] {
         const rotated = this.getRotatedFootprint(footprint, orientation);
         const result: GridCell[] = [];
 
@@ -112,12 +117,7 @@ export class FarmGrid {
         const rotated = this.getRotatedFootprint(def.footprint, orientation);
 
         // Verifica se todo o footprint cabe dentro dos limites da fazenda
-        if (
-            gridX < 0 ||
-            gridY < 0 ||
-            gridX + rotated.width > this.width ||
-            gridY + rotated.height > this.height
-        ) {
+        if (gridX < 0 || gridY < 0 || gridX + rotated.width > this.width || gridY + rotated.height > this.height) {
             return { valid: false, reason: 'Fora dos limites da grade da fazenda (64x36).' };
         }
 

@@ -26,13 +26,14 @@
  * ============================================================================
  */
 
-import { t, setLanguage, getLanguage } from './i18n';
 import { sound } from '../audio/sound';
-import { setHapticsEnabled, isHapticsEnabled, triggerHaptic } from '../input/haptics';
 import type { BuildingType, ResourceInventory } from '../core/types';
+import { setHapticsEnabled, isHapticsEnabled, triggerHaptic } from '../input/haptics';
 import type { CameraMode } from '../rendering/camera-controller';
 import type { EnergyMetrics } from '../simulation/energy';
 import type { WaterMetrics } from '../simulation/water';
+
+import { t, setLanguage, getLanguage } from './i18n';
 
 export interface HUDCallbacks {
     onModeChange: (mode: CameraMode) => void;
@@ -970,7 +971,7 @@ export class FarmHUD {
 
         const setMode = (mode: CameraMode) => {
             this.activeCameraMode = mode;
-            [btnExplore, btnBuild, btnOverview].forEach(b => b.classList.remove('active'));
+            [btnExplore, btnBuild, btnOverview].forEach((b) => b.classList.remove('active'));
             if (mode === 'explore') btnExplore.classList.add('active');
             if (mode === 'build') btnBuild.classList.add('active');
             if (mode === 'overview') btnOverview.classList.add('active');
@@ -1054,19 +1055,19 @@ export class FarmHUD {
         const codexTabs = codexModal.querySelectorAll('.codex-tab');
         const codexPanels = codexModal.querySelectorAll('.codex-panel');
 
-        codexTabs.forEach(tab => {
+        codexTabs.forEach((tab) => {
             tab.addEventListener('click', () => {
                 sound.playClick();
                 triggerHaptic('light');
                 const targetTab = (tab as HTMLElement).dataset.tab;
-                codexTabs.forEach(t => t.classList.remove('active'));
+                codexTabs.forEach((t) => t.classList.remove('active'));
                 tab.classList.add('active');
 
                 if (targetTab === 'trials') {
                     this.updateCodexTrials();
                 }
 
-                codexPanels.forEach(p => {
+                codexPanels.forEach((p) => {
                     if (p.id === `codex-panel-${targetTab}`) {
                         p.classList.add('active');
                     } else {
@@ -1112,7 +1113,7 @@ export class FarmHUD {
 
         // Botões da toolbar de construção
         const itemBtns = this.buildBarElement.querySelectorAll('.build-item-btn');
-        itemBtns.forEach(btn => {
+        itemBtns.forEach((btn) => {
             btn.addEventListener('click', () => {
                 const bType = btn.getAttribute('data-type') as BuildingType;
                 if (this.selectedBuilding === bType) {
@@ -1136,7 +1137,7 @@ export class FarmHUD {
     selectBuilding(type: BuildingType): void {
         this.selectedBuilding = type;
         const itemBtns = this.buildBarElement.querySelectorAll('.build-item-btn');
-        itemBtns.forEach(b => {
+        itemBtns.forEach((b) => {
             if (b.getAttribute('data-type') === type) {
                 b.classList.add('selected');
             } else {
@@ -1150,7 +1151,7 @@ export class FarmHUD {
 
     clearSelection(): void {
         this.selectedBuilding = null;
-        this.buildBarElement.querySelectorAll('.build-item-btn').forEach(b => b.classList.remove('selected'));
+        this.buildBarElement.querySelectorAll('.build-item-btn').forEach((b) => b.classList.remove('selected'));
         this.ghostBarElement.classList.remove('active');
         this.callbacks.onSelectBuilding(null);
     }
@@ -1174,7 +1175,13 @@ export class FarmHUD {
         }
     }
 
-    updateProgression(level: number, title: string, currentInTier: number, totalInTier: number, percentage: number): void {
+    updateProgression(
+        level: number,
+        title: string,
+        currentInTier: number,
+        totalInTier: number,
+        percentage: number
+    ): void {
         if (this.rankLevelElement) {
             this.rankLevelElement.textContent = `LV.${level}`;
         }
@@ -1241,7 +1248,7 @@ export class FarmHUD {
         if (container && this.trialsHtmlProvider) {
             container.innerHTML = this.trialsHtmlProvider();
             const claimBtns = container.querySelectorAll('[data-claim]');
-            claimBtns.forEach(btn => {
+            claimBtns.forEach((btn) => {
                 btn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const id = (btn as HTMLElement).dataset.claim;

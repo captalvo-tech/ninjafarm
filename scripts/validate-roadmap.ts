@@ -109,11 +109,20 @@ function runRoadmapValidation() {
     }
 
     const featureIds = new Set<string>();
-    const validStatuses = new Set(['PLANEJADO', 'EM_DESENVOLVIMENTO', 'IMPLEMENTADO', 'VALIDADO', 'DEPRECIADO', 'REMOVIDO']);
+    const validStatuses = new Set([
+        'PLANEJADO',
+        'EM_DESENVOLVIMENTO',
+        'IMPLEMENTADO',
+        'VALIDADO',
+        'DEPRECIADO',
+        'REMOVIDO'
+    ]);
 
     for (const f of features) {
         if (!f.id || !/^feat_[a-z0-9_]+$/.test(f.id)) {
-            console.error(`❌ [ERRO] ID de funcionalidade inválido: "${f.id}". Padrão esperado: feat_<nome_snake_case>`);
+            console.error(
+                `❌ [ERRO] ID de funcionalidade inválido: "${f.id}". Padrão esperado: feat_<nome_snake_case>`
+            );
             hasErrors = true;
         }
         if (featureIds.has(f.id)) {
@@ -134,17 +143,19 @@ function runRoadmapValidation() {
 
         if (f.status === 'REMOVIDO') {
             if (!f.removalReason || !f.removalCommit) {
-                console.error(`❌ [ERRO] Funcionalidade "${f.id}" está marcada como REMOVIDO mas não possui 'removalReason' ou 'removalCommit' obrigatórios.`);
+                console.error(
+                    `❌ [ERRO] Funcionalidade "${f.id}" está marcada como REMOVIDO mas não possui 'removalReason' ou 'removalCommit' obrigatórios.`
+                );
                 hasErrors = true;
             }
         }
     }
 
     // 3. Parse e validação de history.jsonl
-    let historyEntries: HistoryRecord[] = [];
+    const historyEntries: HistoryRecord[] = [];
     try {
         const rawHistory = fs.readFileSync(HISTORY_PATH, 'utf-8');
-        const lines = rawHistory.split('\n').filter(l => l.trim().length > 0);
+        const lines = rawHistory.split('\n').filter((l) => l.trim().length > 0);
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             const entry = JSON.parse(line) as HistoryRecord;
@@ -153,7 +164,9 @@ function runRoadmapValidation() {
                 hasErrors = true;
             }
             if (!featureIds.has(entry.featureId)) {
-                console.error(`❌ [ERRO] Linha ${i + 1} de histórico referencia feature inexistente no catálogo: "${entry.featureId}". Funcionalidades nunca devem ser apagadas do catálogo!`);
+                console.error(
+                    `❌ [ERRO] Linha ${i + 1} de histórico referencia feature inexistente no catálogo: "${entry.featureId}". Funcionalidades nunca devem ser apagadas do catálogo!`
+                );
                 hasErrors = true;
             }
             historyEntries.push(entry);
@@ -165,7 +178,9 @@ function runRoadmapValidation() {
     }
 
     // 4. Verificação dos cabeçalhos obrigatórios de contrato em módulos core
-    console.log(`\n📋 [CONTRATO DE CÓDIGO] Verificando cabeçalhos de governança em ${CORE_MODULES_TO_CHECK.length} módulos essenciais...`);
+    console.log(
+        `\n📋 [CONTRATO DE CÓDIGO] Verificando cabeçalhos de governança em ${CORE_MODULES_TO_CHECK.length} módulos essenciais...`
+    );
     let checkedModules = 0;
     for (const relPath of CORE_MODULES_TO_CHECK) {
         const fullPath = path.join(ROOT_DIR, relPath);

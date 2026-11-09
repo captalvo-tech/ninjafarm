@@ -6,16 +6,16 @@ Aprovação depende de **aplicação real** no navegador. Imagem gerada por IA, 
 
 ## M1: qualidade gráfica e adaptabilidade
 
-| ID | Cenário | Resultado esperado |
-| --- | --- | --- |
-| V01 | Abrir PC em 1920×1080 | Cena 3D detalhada, material PBR, sombras, terreno e ninja real |
-| V02 | Emular 390×844 portrait | Cena não distorcida, sem HUD cortado, câmera adapta yaw/FOV/distância |
-| V03 | Emular 844×390 landscape | Sem stretch, controls acessíveis, sem scroll lateral |
-| V04 | Alternar orientação/resize durante jogo | Não muda posições, não perde recursos nem quebra input |
-| V05 | Orbit/zoom e modo follow | Horizonte correto, colisão de câmera, sem visão superior 2D como padrão |
-| V06 | Reproduzir ninja idle/walk/run | Transições suaves, nenhuma malha “sem ossos”, sem sliding grosseiro |
-| V07 | Inspecionar assets | Sem 404, modelo licenciado e texturas corretas, ausência de cubos finais |
-| V08 | WebGPU indisponível | Fallback funcional em WebGL 2 (testado quando disponível) |
+| ID  | Cenário                                 | Resultado esperado                                                       |
+| --- | --------------------------------------- | ------------------------------------------------------------------------ |
+| V01 | Abrir PC em 1920×1080                   | Cena 3D detalhada, material PBR, sombras, terreno e ninja real           |
+| V02 | Emular 390×844 portrait                 | Cena não distorcida, sem HUD cortado, câmera adapta yaw/FOV/distância    |
+| V03 | Emular 844×390 landscape                | Sem stretch, controls acessíveis, sem scroll lateral                     |
+| V04 | Alternar orientação/resize durante jogo | Não muda posições, não perde recursos nem quebra input                   |
+| V05 | Orbit/zoom e modo follow                | Horizonte correto, colisão de câmera, sem visão superior 2D como padrão  |
+| V06 | Reproduzir ninja idle/walk/run          | Transições suaves, nenhuma malha “sem ossos”, sem sliding grosseiro      |
+| V07 | Inspecionar assets                      | Sem 404, modelo licenciado e texturas corretas, ausência de cubos finais |
+| V08 | WebGPU indisponível                     | Fallback funcional em WebGL 2 (testado quando disponível)                |
 
 ## M2: grid e construção
 
@@ -42,12 +42,12 @@ Aprovação depende de **aplicação real** no navegador. Imagem gerada por IA, 
 
 ## Metas iniciais de performance — **hipóteses de engenharia**
 
-| Perfil | Meta inicial para avaliar | Observação |
-| --- | --- | --- |
-| PC comum | 60 FPS típico em cena M1 | medir dispositivo e resolução reais |
-| Celular intermediário | >=30 FPS típico | sem prometer em todos aparelhos |
-| Primeiro carregamento | orçamento de MB definido após medir assets | reduzir tamanho antes de lançar |
-| Memória | monitorar uso aproximado e context loss | registrar resultados, não assumir limites |
+| Perfil                | Meta inicial para avaliar                  | Observação                                |
+| --------------------- | ------------------------------------------ | ----------------------------------------- |
+| PC comum              | 60 FPS típico em cena M1                   | medir dispositivo e resolução reais       |
+| Celular intermediário | >=30 FPS típico                            | sem prometer em todos aparelhos           |
+| Primeiro carregamento | orçamento de MB definido após medir assets | reduzir tamanho antes de lançar           |
+| Memória               | monitorar uso aproximado e context loss    | registrar resultados, não assumir limites |
 
 Se não tiver dispositivo físico, usar emulação e **escrever que teste físico permanece pendente**. Não inventar métricas. Antes de adicionar mais conteúdo à cena, fazer perfil de render/CPU/GPU.
 

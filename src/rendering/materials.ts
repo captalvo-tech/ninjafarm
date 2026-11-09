@@ -1,4 +1,5 @@
-import { AppBase, Asset, Color, StandardMaterial, Vec2 } from 'playcanvas';
+import type { AppBase } from 'playcanvas';
+import { Asset, Color, StandardMaterial, Vec2 } from 'playcanvas';
 
 export interface FarmMaterials {
     grass: StandardMaterial;
@@ -50,7 +51,7 @@ export function createFarmMaterials(): FarmMaterials {
 
     // Telhado de ardósia / estilo oriental
     const roof = new StandardMaterial();
-    roof.diffuse = new Color(0.16, 0.20, 0.28);
+    roof.diffuse = new Color(0.16, 0.2, 0.28);
     roof.gloss = 0.45;
     roof.useMetalness = true;
     roof.metalness = 0.2;
@@ -103,13 +104,13 @@ export function createFarmMaterials(): FarmMaterials {
 
     // Tronco de árvore
     const trunk = new StandardMaterial();
-    trunk.diffuse = new Color(0.32, 0.20, 0.12);
+    trunk.diffuse = new Color(0.32, 0.2, 0.12);
     trunk.gloss = 0.1;
     trunk.update();
 
     // Traje do Ninja (charcoal)
     const ninjaCharcoal = new StandardMaterial();
-    ninjaCharcoal.diffuse = new Color(0.10, 0.11, 0.15);
+    ninjaCharcoal.diffuse = new Color(0.1, 0.11, 0.15);
     ninjaCharcoal.gloss = 0.35;
     ninjaCharcoal.useMetalness = true;
     ninjaCharcoal.metalness = 0.1;
@@ -165,7 +166,7 @@ export function createFarmMaterials(): FarmMaterials {
     // Flor de Lótus Sagrada Shinobi (Pétalas Rosa com brilho suave)
     const lotusPink = new StandardMaterial();
     lotusPink.diffuse = new Color(0.96, 0.48, 0.72);
-    lotusPink.emissive = new Color(0.35, 0.10, 0.22);
+    lotusPink.emissive = new Color(0.35, 0.1, 0.22);
     lotusPink.gloss = 0.5;
     lotusPink.update();
 

@@ -1,5 +1,6 @@
 import { Color, Entity, StandardMaterial } from 'playcanvas';
-import { SimulationClock } from '../simulation/clock';
+
+import type { SimulationClock } from '../simulation/clock';
 
 export class CelestialSkyManager {
     readonly entity: Entity;
@@ -91,7 +92,7 @@ export class CelestialSkyManager {
         }
     }
 
-    registerLantern(entity: Entity, hasPointLight: boolean = true): void {
+    registerLantern(entity: Entity, hasPointLight = true): void {
         let lightEnt: Entity | undefined = entity.findByName('lantern_point_light') as Entity;
         if (!lightEnt && hasPointLight) {
             lightEnt = new Entity('lantern_point_light');
@@ -108,7 +109,7 @@ export class CelestialSkyManager {
     }
 
     unregisterLantern(entity: Entity): void {
-        this.lanterns = this.lanterns.filter(l => l.entity !== entity);
+        this.lanterns = this.lanterns.filter((l) => l.entity !== entity);
     }
 
     registerBonfire(entity: Entity): void {
@@ -118,7 +119,7 @@ export class CelestialSkyManager {
     }
 
     unregisterBonfire(entity: Entity): void {
-        this.bonfires = this.bonfires.filter(b => b.entity !== entity);
+        this.bonfires = this.bonfires.filter((b) => b.entity !== entity);
     }
 
     update(): void {
@@ -159,9 +160,14 @@ export class CelestialSkyManager {
         // Animação de pulso e labareda viva nas fogueiras (dia e noite, com brilho intensificado ao anoitecer)
         for (let i = 0; i < this.bonfires.length; i++) {
             const bf = this.bonfires[i];
-            const flamePulse = 0.85 + Math.sin(timeSec * 5.5 + i * 2.1) * 0.12 + Math.cos(timeSec * 9.0 + i * 3.1) * 0.06;
+            const flamePulse =
+                0.85 + Math.sin(timeSec * 5.5 + i * 2.1) * 0.12 + Math.cos(timeSec * 9.0 + i * 3.1) * 0.06;
             if (bf.flame) {
-                bf.flame.setLocalScale(0.5 * (1 + (flamePulse - 0.85) * 0.4), flamePulse, 0.5 * (1 + (flamePulse - 0.85) * 0.4));
+                bf.flame.setLocalScale(
+                    0.5 * (1 + (flamePulse - 0.85) * 0.4),
+                    flamePulse,
+                    0.5 * (1 + (flamePulse - 0.85) * 0.4)
+                );
             }
             if (bf.light?.light) {
                 const baseInt = isNight ? 1.8 : 1.2;

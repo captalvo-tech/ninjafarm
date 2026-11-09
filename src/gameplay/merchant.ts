@@ -2,10 +2,10 @@
 // NINJA FARM - WANDERING SHINOBI MERCHANT
 // ==========================================
 
-import type { ResourceType } from '../core/types';
-import { InventorySystem } from '../simulation/inventory';
 import { sound } from '../audio/sound';
+import type { ResourceType } from '../core/types';
 import { triggerHaptic } from '../input/haptics';
+import type { InventorySystem } from '../simulation/inventory';
 import { t } from '../ui/i18n';
 
 export interface TradeOffer {
@@ -276,13 +276,21 @@ export class ShinobiMerchantManager {
         if (!list) return;
 
         list.innerHTML = '';
-        MERCHANT_TRADES.forEach(trade => {
+        MERCHANT_TRADES.forEach((trade) => {
             const hasResource = this.inventory.has({ [trade.costType]: trade.costAmount });
             const card = document.createElement('div');
             card.className = 'trade-card';
 
-            const costName = trade.costType === 'food' ? 'Alimento 🍙' : trade.costType === 'wood' ? 'Madeira 🪵' : trade.costType;
-            const giveName = trade.giveType === 'wood' ? 'Madeira 🪵' : trade.giveType === 'metal' ? 'Metal ⚙️' : trade.giveType === 'parts' ? 'Peças 🔩' : 'Energia ⚡';
+            const costName =
+                trade.costType === 'food' ? 'Alimento 🍙' : trade.costType === 'wood' ? 'Madeira 🪵' : trade.costType;
+            const giveName =
+                trade.giveType === 'wood'
+                    ? 'Madeira 🪵'
+                    : trade.giveType === 'metal'
+                      ? 'Metal ⚙️'
+                      : trade.giveType === 'parts'
+                        ? 'Peças 🔩'
+                        : 'Energia ⚡';
 
             card.innerHTML = `
                 <div class="trade-info">
@@ -353,4 +361,3 @@ export class ShinobiMerchantManager {
         return this.isOpen;
     }
 }
-

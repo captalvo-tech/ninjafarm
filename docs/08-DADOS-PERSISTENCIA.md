@@ -45,15 +45,15 @@
 
 ```json
 {
-  "schemaVersion": 1,
-  "saveId": "test-save-001",
-  "createdAt": "2026-11-08T00:00:00.000Z",
-  "lastSimulatedAt": "2026-11-08T00:05:00.000Z",
-  "seed": 12345,
-  "farm": {"width": 64, "height": 36, "buildings": []},
-  "inventory": {"wood": 50, "metal": 10},
-  "resources": {"waterLiters": 100, "storedEnergyWh": 200},
-  "clock": {"elapsedGameSeconds": 300}
+    "schemaVersion": 1,
+    "saveId": "test-save-001",
+    "createdAt": "2026-11-08T00:00:00.000Z",
+    "lastSimulatedAt": "2026-11-08T00:05:00.000Z",
+    "seed": 12345,
+    "farm": { "width": 64, "height": 36, "buildings": [] },
+    "inventory": { "wood": 50, "metal": 10 },
+    "resources": { "waterLiters": 100, "storedEnergyWh": 200 },
+    "clock": { "elapsedGameSeconds": 300 }
 }
 ```
 

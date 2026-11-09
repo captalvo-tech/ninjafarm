@@ -1,9 +1,9 @@
+import { sound } from '../audio/sound';
 import type { FarmGrid } from '../core/grid';
+import type { CropType } from '../core/types';
+import type { FaunaManager } from '../rendering/fauna';
 import type { CropSystem } from '../simulation/crops';
 import type { InventorySystem } from '../simulation/inventory';
-import type { FaunaManager } from '../rendering/fauna';
-import type { CropType } from '../core/types';
-import { sound } from '../audio/sound';
 
 export interface InteractionPrompt {
     id: string;
@@ -115,7 +115,12 @@ export class ProximityInteractionManager {
             if (dist < minDistance) {
                 minDistance = dist;
                 if (crop.stage === 'ready') {
-                    const cropLabel = crop.cropType === 'lotus' ? '🪷 Lótus Sagrada' : crop.cropType === 'vegetable' ? '🥕 Cenoura Orgânica' : '🌾 Arroz';
+                    const cropLabel =
+                        crop.cropType === 'lotus'
+                            ? '🪷 Lótus Sagrada'
+                            : crop.cropType === 'vegetable'
+                              ? '🥕 Cenoura Orgânica'
+                              : '🌾 Arroz';
                     const yieldAmt = crop.cropType === 'lotus' ? 50 : crop.cropType === 'vegetable' ? 15 : 25;
                     bestPrompt = {
                         id: crop.instanceId,
@@ -126,7 +131,12 @@ export class ProximityInteractionManager {
                     };
                 } else if (crop.stage === 'growing' || crop.stage === 'planted') {
                     const pct = Math.floor(crop.growthProgress * 100);
-                    const cropLabel = crop.cropType === 'lotus' ? '🪷 Lótus Sagrada' : crop.cropType === 'vegetable' ? '🥕 Cenoura Orgânica' : '🌾 Arroz';
+                    const cropLabel =
+                        crop.cropType === 'lotus'
+                            ? '🪷 Lótus Sagrada'
+                            : crop.cropType === 'vegetable'
+                              ? '🥕 Cenoura Orgânica'
+                              : '🌾 Arroz';
                     const moisture = crop.waterSupplied ? '💧 Solo Fértil Irrigado' : '⚠️ Solo Seco (Sem Água!)';
                     bestPrompt = {
                         id: crop.instanceId,
@@ -197,10 +207,12 @@ export class ProximityInteractionManager {
                 if (dist < 4.8) {
                     if (b.type === 'fish_pond') {
                         const now = performance.now();
-                        const canFish = (now - this.lastFishingTime) >= 20000;
+                        const canFish = now - this.lastFishingTime >= 20000;
                         bestPrompt = {
                             id: b.instanceId,
-                            label: canFish ? 'Pescar Carpa Koi (+30 Alimento, +20 XP)' : 'Aguardando cardume de carpas...',
+                            label: canFish
+                                ? 'Pescar Carpa Koi (+30 Alimento, +20 XP)'
+                                : 'Aguardando cardume de carpas...',
                             actionType: 'fish',
                             targetId: b.instanceId,
                             distance: dist
@@ -208,7 +220,7 @@ export class ProximityInteractionManager {
                         break;
                     } else if (b.type === 'bonfire') {
                         const now = performance.now();
-                        const canRest = (now - this.lastRestingTime) >= 15000;
+                        const canRest = now - this.lastRestingTime >= 15000;
                         bestPrompt = {
                             id: b.instanceId,
                             label: canRest ? 'Descansar na Fogueira (+15 Energia, +15 XP)' : 'Fogueira em rescaldo...',
@@ -245,38 +257,78 @@ export class ProximityInteractionManager {
         return this.currentPrompt;
     }
 
-    executeAction(chosenCrop: CropType = 'rice'): { executed: boolean; message?: string; xpReward?: number; isPet?: boolean; isTrade?: boolean; cropType?: CropType } {
+    executeAction(chosenCrop: CropType = 'rice'): {
+        executed: boolean;
+        message?: string;
+        xpReward?: number;
+        isPet?: boolean;
+        isTrade?: boolean;
+        cropType?: CropType;
+    } {
         if (!this.currentPrompt) return { executed: false };
 
         if (this.currentPrompt.actionType === 'harvest') {
             const res = this.cropSystem.harvest(this.currentPrompt.targetId);
             if (res.success) {
                 sound.playHarvest();
-                const cropName = res.cropType === 'lotus' ? '🪷 Flor de Lótus Sagrada' : res.cropType === 'vegetable' ? '🥕 Cenoura Orgânica' : '🌾 Arroz Hidropônico';
+                const cropName =
+                    res.cropType === 'lotus'
+                        ? '🪷 Flor de Lótus Sagrada'
+                        : res.cropType === 'vegetable'
+                          ? '🥕 Cenoura Orgânica'
+                          : '🌾 Arroz Hidropônico';
                 const xp = res.cropType === 'lotus' ? 45 : res.cropType === 'vegetable' ? 18 : 25;
-                return { executed: true, message: `Colheita Realizada: +${res.harvestedAmount} Alimento (${cropName})`, xpReward: xp, cropType: res.cropType };
+                return {
+                    executed: true,
+                    message: `Colheita Realizada: +${res.harvestedAmount} Alimento (${cropName})`,
+                    xpReward: xp,
+                    cropType: res.cropType
+                };
             }
         } else if (this.currentPrompt.actionType === 'plant') {
             if (this.inventory.get('water') < 1.5) {
                 sound.playClick();
-                return { executed: false, message: 'Reserva hídrica insuficiente (Requer 1.5 L de água para semeadura). Ligue a Bomba d\'Água!' };
+                return {
+                    executed: false,
+                    message: "Reserva hídrica insuficiente (Requer 1.5 L de água para semeadura). Ligue a Bomba d'Água!"
+                };
             }
             const planted = this.cropSystem.plantCrop(this.currentPrompt.targetId, chosenCrop);
             if (planted) {
                 this.inventory.consume('water', 1.5);
                 sound.playBuild();
-                const cropName = chosenCrop === 'lotus' ? '🪷 Lótus Sagrada' : chosenCrop === 'vegetable' ? '🥕 Cenoura Orgânica' : '🌾 Arroz Hidropônico';
-                return { executed: true, message: `${cropName} semeado! (-1.5 L de água no solo). Mantenha a irrigação ativa.`, xpReward: 15, cropType: chosenCrop };
+                const cropName =
+                    chosenCrop === 'lotus'
+                        ? '🪷 Lótus Sagrada'
+                        : chosenCrop === 'vegetable'
+                          ? '🥕 Cenoura Orgânica'
+                          : '🌾 Arroz Hidropônico';
+                return {
+                    executed: true,
+                    message: `${cropName} semeado! (-1.5 L de água no solo). Mantenha a irrigação ativa.`,
+                    xpReward: 15,
+                    cropType: chosenCrop
+                };
             }
         } else if (this.currentPrompt.actionType === 'pet_chicken') {
             sound.playAnimalPet();
             this.inventory.add('food', 10);
             this.faunaManager?.triggerAnimalReaction('chicken');
-            return { executed: true, message: 'Galinha alimentada! Você colheu um ovo fresco (+10 Alimento, +15 XP) ❤️', xpReward: 15, isPet: true };
+            return {
+                executed: true,
+                message: 'Galinha alimentada! Você colheu um ovo fresco (+10 Alimento, +15 XP) ❤️',
+                xpReward: 15,
+                isPet: true
+            };
         } else if (this.currentPrompt.actionType === 'pet_fox') {
             sound.playAnimalPet();
             this.faunaManager?.triggerAnimalReaction('fox');
-            return { executed: true, message: 'Vínculo com a fauna! A raposa kitsune abanou a cauda (+35 XP) 🦊', xpReward: 35, isPet: true };
+            return {
+                executed: true,
+                message: 'Vínculo com a fauna! A raposa kitsune abanou a cauda (+35 XP) 🦊',
+                xpReward: 35,
+                isPet: true
+            };
         } else if (this.currentPrompt.actionType === 'fish') {
             const now = performance.now();
             if (now - this.lastFishingTime < 20000) {
@@ -285,7 +337,11 @@ export class ProximityInteractionManager {
             this.lastFishingTime = now;
             sound.playWaterSplash();
             this.inventory.add('food', 30);
-            return { executed: true, message: 'Pesca Realizada! Você fisgou uma Carpa Koi Dourada (+30 Alimento, +20 XP) 🐟', xpReward: 20 };
+            return {
+                executed: true,
+                message: 'Pesca Realizada! Você fisgou uma Carpa Koi Dourada (+30 Alimento, +20 XP) 🐟',
+                xpReward: 20
+            };
         } else if (this.currentPrompt.actionType === 'rest') {
             const now = performance.now();
             if (now - this.lastRestingTime < 15000) {
@@ -294,7 +350,11 @@ export class ProximityInteractionManager {
             this.lastRestingTime = now;
             sound.playClick();
             this.inventory.add('energy', 15);
-            return { executed: true, message: 'Repouso da Fogueira! Vitalidade e energia restaurados (+15 Energia, +15 XP) 🔥', xpReward: 15 };
+            return {
+                executed: true,
+                message: 'Repouso da Fogueira! Vitalidade e energia restaurados (+15 Energia, +15 XP) 🔥',
+                xpReward: 15
+            };
         } else if (this.currentPrompt.actionType === 'trade') {
             sound.playClick();
             return { executed: true, isTrade: true };
@@ -303,8 +363,15 @@ export class ProximityInteractionManager {
             const crop = this.cropSystem.getCrop(this.currentPrompt.targetId);
             if (crop) {
                 const pct = Math.floor(crop.growthProgress * 100);
-                const status = crop.waterSupplied ? 'Solo bem irrigado e fértil' : 'Crescimento estagnado por falta de água!';
-                const cropName = crop.cropType === 'lotus' ? '🪷 Flor de Lótus' : crop.cropType === 'vegetable' ? '🥕 Cenoura' : '🌾 Arroz';
+                const status = crop.waterSupplied
+                    ? 'Solo bem irrigado e fértil'
+                    : 'Crescimento estagnado por falta de água!';
+                const cropName =
+                    crop.cropType === 'lotus'
+                        ? '🪷 Flor de Lótus'
+                        : crop.cropType === 'vegetable'
+                          ? '🥕 Cenoura'
+                          : '🌾 Arroz';
                 return { executed: true, message: `${cropName}: ${pct}% desenvolvido (${status})` };
             }
             return { executed: true, message: 'Estrutura operacional da fazenda.' };

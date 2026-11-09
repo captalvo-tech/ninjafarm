@@ -1,5 +1,6 @@
-import { triggerHaptic } from './haptics';
 import type { CropType } from '../core/types';
+
+import { triggerHaptic } from './haptics';
 
 export interface JoystickVector {
     x: number; // -1 to 1
@@ -311,25 +312,33 @@ export class VirtualJoystick {
 
     private setupEvents(): void {
         // Joystick Touchstart
-        this.baseElement.addEventListener('touchstart', (e) => {
-            const touch = e.changedTouches[0];
-            this.activeTouchId = touch.identifier;
-            const rect = this.baseElement.getBoundingClientRect();
-            this.startX = rect.left + rect.width / 2;
-            this.startY = rect.top + rect.height / 2;
-            this.handleMove(touch.clientX, touch.clientY);
-        }, { passive: false });
+        this.baseElement.addEventListener(
+            'touchstart',
+            (e) => {
+                const touch = e.changedTouches[0];
+                this.activeTouchId = touch.identifier;
+                const rect = this.baseElement.getBoundingClientRect();
+                this.startX = rect.left + rect.width / 2;
+                this.startY = rect.top + rect.height / 2;
+                this.handleMove(touch.clientX, touch.clientY);
+            },
+            { passive: false }
+        );
 
-        window.addEventListener('touchmove', (e) => {
-            if (this.activeTouchId === null) return;
-            for (let i = 0; i < e.changedTouches.length; i++) {
-                const touch = e.changedTouches[i];
-                if (touch.identifier === this.activeTouchId) {
-                    this.handleMove(touch.clientX, touch.clientY);
-                    break;
+        window.addEventListener(
+            'touchmove',
+            (e) => {
+                if (this.activeTouchId === null) return;
+                for (let i = 0; i < e.changedTouches.length; i++) {
+                    const touch = e.changedTouches[i];
+                    if (touch.identifier === this.activeTouchId) {
+                        this.handleMove(touch.clientX, touch.clientY);
+                        break;
+                    }
                 }
-            }
-        }, { passive: false });
+            },
+            { passive: false }
+        );
 
         const resetJoystick = (e: TouchEvent) => {
             if (this.activeTouchId === null) return;
@@ -347,34 +356,46 @@ export class VirtualJoystick {
         window.addEventListener('touchcancel', resetJoystick);
 
         // Ação Principal (Toque rápido com feedback tátil)
-        this.actionBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            this.actionBtn.style.transform = 'scale(0.9)';
-            triggerHaptic('light');
-            this.callbacks.onAction?.();
-        }, { passive: false });
+        this.actionBtn.addEventListener(
+            'touchstart',
+            (e) => {
+                e.preventDefault();
+                this.actionBtn.style.transform = 'scale(0.9)';
+                triggerHaptic('light');
+                this.callbacks.onAction?.();
+            },
+            { passive: false }
+        );
 
         this.actionBtn.addEventListener('touchend', () => {
             this.actionBtn.style.transform = 'scale(1)';
         });
 
         // Ferramentas Ninjas
-        this.shurikenBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            this.shurikenBtn.style.transform = 'scale(0.88)';
-            triggerHaptic('medium');
-            this.callbacks.onShuriken?.();
-        }, { passive: false });
+        this.shurikenBtn.addEventListener(
+            'touchstart',
+            (e) => {
+                e.preventDefault();
+                this.shurikenBtn.style.transform = 'scale(0.88)';
+                triggerHaptic('medium');
+                this.callbacks.onShuriken?.();
+            },
+            { passive: false }
+        );
         this.shurikenBtn.addEventListener('touchend', () => {
             this.shurikenBtn.style.transform = 'scale(1)';
         });
 
-        this.dashBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            this.dashBtn.style.transform = 'scale(0.88)';
-            triggerHaptic('light');
-            this.callbacks.onDash?.();
-        }, { passive: false });
+        this.dashBtn.addEventListener(
+            'touchstart',
+            (e) => {
+                e.preventDefault();
+                this.dashBtn.style.transform = 'scale(0.88)';
+                triggerHaptic('light');
+                this.callbacks.onDash?.();
+            },
+            { passive: false }
+        );
         this.dashBtn.addEventListener('touchend', () => {
             this.dashBtn.style.transform = 'scale(1)';
         });
@@ -382,15 +403,19 @@ export class VirtualJoystick {
         // Seletor de sementes
         const seedButtons = this.seedPickerElement.querySelectorAll('.seed-option');
         seedButtons.forEach((btn) => {
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                const crop = (btn as HTMLElement).dataset.crop as CropType;
-                if (crop) {
-                    triggerHaptic('light');
-                    this.setSelectedCrop(crop);
-                    this.callbacks.onSelectCrop?.(crop);
-                }
-            }, { passive: false });
+            btn.addEventListener(
+                'touchstart',
+                (e) => {
+                    e.preventDefault();
+                    const crop = (btn as HTMLElement).dataset.crop as CropType;
+                    if (crop) {
+                        triggerHaptic('light');
+                        this.setSelectedCrop(crop);
+                        this.callbacks.onSelectCrop?.(crop);
+                    }
+                },
+                { passive: false }
+            );
         });
     }
 

@@ -3,13 +3,14 @@
  * Interactive persistent task queue drawer and Droid status monitor.
  */
 
-import { t } from './i18n';
-import type { TaskScheduler } from '../simulation/task-scheduler';
 import type { FarmDroid } from '../rendering/droid';
+import type { TaskScheduler } from '../simulation/task-scheduler';
+
+import { t } from './i18n';
 
 export class SchedulerUI {
     private container: HTMLElement;
-    private isOpenState: boolean = false;
+    private isOpenState = false;
     private scheduler: TaskScheduler;
     private droid: FarmDroid;
 
@@ -476,7 +477,7 @@ export class SchedulerUI {
 
         // 3. Fila de Tarefas
         const tasks = this.scheduler.getTasks();
-        const queuedTasks = tasks.filter(t => t.id !== activeTask?.id);
+        const queuedTasks = tasks.filter((t) => t.id !== activeTask?.id);
 
         if (queuedTasks.length === 0) {
             this.emptyStateEl.style.display = activeTask ? 'none' : 'block';
@@ -489,8 +490,18 @@ export class SchedulerUI {
                 const item = document.createElement('div');
                 item.className = 'queue-item';
 
-                const statusColor = task.status === 'WAITING_RESOURCES' ? '#F59E0B' : task.status === 'WAITING_ENERGY' ? '#EF4444' : '#9CA3AF';
-                const statusText = task.status === 'WAITING_RESOURCES' ? 'Aguardando Materiais' : task.status === 'WAITING_ENERGY' ? 'Aguardando Energia' : 'Agendada';
+                const statusColor =
+                    task.status === 'WAITING_RESOURCES'
+                        ? '#F59E0B'
+                        : task.status === 'WAITING_ENERGY'
+                          ? '#EF4444'
+                          : '#9CA3AF';
+                const statusText =
+                    task.status === 'WAITING_RESOURCES'
+                        ? 'Aguardando Materiais'
+                        : task.status === 'WAITING_ENERGY'
+                          ? 'Aguardando Energia'
+                          : 'Agendada';
 
                 item.innerHTML = `
                     <div class="queue-item-info">

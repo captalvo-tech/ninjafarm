@@ -55,7 +55,7 @@ export async function renderDroidView(container: HTMLElement): Promise<void> {
                 <div class="panel-body" style="display: flex; flex-direction: column; gap: 12px; font-size: 13px;">
                     <div><strong>1. Unicidade Absoluta:</strong> É estritamente proibido instanciar mais de um Droid por propriedade (sem clones, sem compra de segundo robô).</div>
                     <div><strong>2. Autonomia Física:</strong> O Droid é o único executor físico de arar, plantar, colher, alimentar galinhas, recolher ovos e construir. O ninja humano apenas planeja.</div>
-                    <div><strong>3. Reconciliação AFK Determinística:</strong> Quando o jogador sai do jogo, o tempo decorrido ($\Delta t$) é processado respeitando a velocidade do Droid, sua bateria e o ciclo de geração solar.</div>
+                    <div><strong>3. Reconciliação AFK Determinística:</strong> Quando o jogador sai do jogo, o tempo decorrido (Δt) é processado respeitando a velocidade do Droid, sua bateria e o ciclo de geração solar.</div>
                     <div><strong>4. Retorno de Emergência:</strong> Ao atingir 15% de carga, o Droid cancela temporariamente o deslocamento da tarefa atual e retorna à estação solar mais próxima.</div>
                 </div>
             </div>

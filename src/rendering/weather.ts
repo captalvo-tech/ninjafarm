@@ -1,4 +1,5 @@
 import { Color, Entity, StandardMaterial } from 'playcanvas';
+
 import { FARM_CONFIG } from '../core/config';
 
 interface SakuraPetal {
@@ -28,9 +29,9 @@ export class WeatherSystem {
     private fireflies: Firefly[] = [];
     private petalMat: StandardMaterial;
     private fireflyMat: StandardMaterial;
-    private windTimer: number = 0;
+    private windTimer = 0;
 
-    constructor(petalCount: number = 45, fireflyCount: number = 25) {
+    constructor(petalCount = 45, fireflyCount = 25) {
         this.entity = new Entity('weather_system_root');
 
         // Material rosa cerejeira translúcido e suave
@@ -120,7 +121,7 @@ export class WeatherSystem {
         }
     }
 
-    update(dt: number, isNight: boolean = false): void {
+    update(dt: number, isNight = false): void {
         this.windTimer += dt;
         const windX = Math.sin(this.windTimer * 0.4) * 1.5;
         const windZ = Math.cos(this.windTimer * 0.3) * 0.8;
@@ -167,4 +168,3 @@ export class WeatherSystem {
         }
     }
 }
-

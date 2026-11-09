@@ -5,4 +5,3 @@ const buf = Buffer.from(await res.arrayBuffer());
 import fs from 'node:fs';
 fs.writeFileSync(outPath, buf);
 console.log('Saved Cow.glb, size:', buf.length);
-

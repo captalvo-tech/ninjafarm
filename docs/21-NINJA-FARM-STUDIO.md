@@ -16,34 +16,37 @@ O **Ninja Farm Studio** é o ambiente integrado de desenvolvimento e autoria vis
 
 ## 2. Recursos do Ninja Farm Studio
 
-| Módulo | Descrição |
-| :--- | :--- |
-| **Biblioteca de Assets** | Painel lateral esquerdo com categorização (`Characters`, `Animals`, `Buildings`, `Crops & Nature`), busca em tempo real, tamanho do arquivo e licença. |
-| **Viewport 3D com Órbita** | Renderização com PlayCanvas: botão esquerdo para orbitar, botão direito/dois dedos para deslocar (pan), roda do mouse para zoom. Atalhos de câmera rápida (Frontal, Lateral, Topo, Isométrica). |
-| **Inspetor de Transformações** | Controle numérico e por slider para escala uniforme, rotação em Y, elevação em Y e velocidade de caminhada/corrida. |
-| **Prévia de Animações** | Barra de tempo inferior com seleção de clipes, reprodução contínua, pausa, scrub temporal e multiplicador de velocidade (0.5x, 1x, 1.5x). Testador de transições suaves com crossfade entre *Idle*, *Walk* e *Run*. |
-| **Inspetor de Materiais PBR** | Paletas de cores para vestimenta principal e juntas/detalhes cibernéticos, controle de rugosidade e metalicidade. |
-| **Editor de Luz e Câmera** | Intensidade do sol, intensidade do céu, tom de cor ambiente e distância de exploração da câmera. |
-| **Prévia Responsiva** | Alternância instantânea entre visualização `🖥️ Desktop`, `📱 Mobile Retrato` e `📱 Mobile Paisagem` com moldura simulada de smartphone. |
-| **Diagnóstico de Performance** | Leitura contínua de FPS, contagem de triângulos, draw calls, dimensões do bounding box e contagem de joints do esqueleto. |
-| **Presets Versionados** | Botões para **Salvar no Jogo** (`localStorage`), **Exportar JSON**, **Importar JSON** e **Restaurar Padrões**. |
-| **Alternância Jogo / Studio** | Botão `🎮 Test in Farm` abre o jogo; dentro da fazenda, o botão `🛠️ Studio [F1]` no canto inferior esquerdo abre o Studio. |
+| Módulo                         | Descrição                                                                                                                                                                                                           |
+| :----------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Biblioteca de Assets**       | Painel lateral esquerdo com categorização (`Characters`, `Animals`, `Buildings`, `Crops & Nature`), busca em tempo real, tamanho do arquivo e licença.                                                              |
+| **Viewport 3D com Órbita**     | Renderização com PlayCanvas: botão esquerdo para orbitar, botão direito/dois dedos para deslocar (pan), roda do mouse para zoom. Atalhos de câmera rápida (Frontal, Lateral, Topo, Isométrica).                     |
+| **Inspetor de Transformações** | Controle numérico e por slider para escala uniforme, rotação em Y, elevação em Y e velocidade de caminhada/corrida.                                                                                                 |
+| **Prévia de Animações**        | Barra de tempo inferior com seleção de clipes, reprodução contínua, pausa, scrub temporal e multiplicador de velocidade (0.5x, 1x, 1.5x). Testador de transições suaves com crossfade entre _Idle_, _Walk_ e _Run_. |
+| **Inspetor de Materiais PBR**  | Paletas de cores para vestimenta principal e juntas/detalhes cibernéticos, controle de rugosidade e metalicidade.                                                                                                   |
+| **Editor de Luz e Câmera**     | Intensidade do sol, intensidade do céu, tom de cor ambiente e distância de exploração da câmera.                                                                                                                    |
+| **Prévia Responsiva**          | Alternância instantânea entre visualização `🖥️ Desktop`, `📱 Mobile Retrato` e `📱 Mobile Paisagem` com moldura simulada de smartphone.                                                                             |
+| **Diagnóstico de Performance** | Leitura contínua de FPS, contagem de triângulos, draw calls, dimensões do bounding box e contagem de joints do esqueleto.                                                                                           |
+| **Presets Versionados**        | Botões para **Salvar no Jogo** (`localStorage`), **Exportar JSON**, **Importar JSON** e **Restaurar Padrões**.                                                                                                      |
+| **Alternância Jogo / Studio**  | Botão `🎮 Test in Farm` abre o jogo; dentro da fazenda, o botão `🛠️ Studio [F1]` no canto inferior esquerdo abre o Studio.                                                                                          |
 
 ---
 
 ## 3. Instruções de Execução
 
 ### Execução Local com Vite Dev Server
+
 ```bash
 npm run dev
 ```
+
 - Acesse o Jogo Principal: `http://localhost:5173/` (ou porta indicada no terminal).
 - Acesse o Ninja Farm Studio: `http://localhost:5173/studio.html`.
 - Atalho dentro do jogo: Pressione `F1` ou clique no botão `🛠️ Studio [F1]` no canto inferior esquerdo.
 
 ### Compilação de Produção
+
 ```bash
 npm run build
 ```
-Os arquivos otimizados são gerados em `dist/index.html` e `dist/studio.html`.
 
+Os arquivos otimizados são gerados em `dist/index.html` e `dist/studio.html`.

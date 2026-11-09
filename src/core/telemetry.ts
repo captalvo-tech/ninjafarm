@@ -98,10 +98,13 @@ export class TelemetryService {
     private persist(): void {
         try {
             if (typeof localStorage !== 'undefined') {
-                localStorage.setItem(this.storageKey, JSON.stringify({
-                    counts: this.counts,
-                    milestones: this.milestones
-                }));
+                localStorage.setItem(
+                    this.storageKey,
+                    JSON.stringify({
+                        counts: this.counts,
+                        milestones: this.milestones
+                    })
+                );
             }
         } catch {
             // Ignore quota errors
@@ -125,4 +128,3 @@ export class TelemetryService {
 }
 
 export const telemetry = new TelemetryService();
-

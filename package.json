@@ -5,17 +5,17 @@
     "description": "Ninja Farm - 3D Browser Game (PlayCanvas standalone + TypeScript + Vite)",
     "type": "module",
     "scripts": {
-        "dev": "vite",
         "build": "vite build",
-        "start": "vite preview",
-        "typecheck": "tsc --noEmit",
         "check:roadmap": "tsx scripts/validate-roadmap.ts",
-        "test": "vitest run",
-        "test:watch": "vitest",
+        "dev": "vite",
+        "fmt": "prettier --check .",
+        "fmt:fix": "prettier --write .",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
-        "fmt": "prettier --check .",
-        "fmt:fix": "prettier --write ."
+        "start": "vite preview",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "typecheck": "tsc --noEmit"
     },
     "dependencies": {
         "playcanvas": "^2.23.3"

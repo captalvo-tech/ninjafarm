@@ -1,9 +1,10 @@
 import { Color, Entity, StandardMaterial } from 'playcanvas';
+
 import { FARM_CONFIG } from '../core/config';
 
 export class HolographicGridOverlay {
     readonly entity: Entity;
-    private isVisible: boolean = false;
+    private isVisible = false;
     private gridMat: StandardMaterial;
 
     constructor() {
@@ -28,7 +29,8 @@ export class HolographicGridOverlay {
         const cell = FARM_CONFIG.CELL_SIZE_METERS;
 
         // Linhas verticais (ao longo de Z)
-        for (let x = 0; x <= FARM_CONFIG.GRID_WIDTH; x += 4) { // a cada 4 células para manter performance limpa
+        for (let x = 0; x <= FARM_CONFIG.GRID_WIDTH; x += 4) {
+            // a cada 4 células para manter performance limpa
             const posX = x * cell - halfW;
             const line = new Entity(`grid_line_v_${x}`);
             line.addComponent('render', {
@@ -64,4 +66,3 @@ export class HolographicGridOverlay {
         return this.isVisible;
     }
 }
-

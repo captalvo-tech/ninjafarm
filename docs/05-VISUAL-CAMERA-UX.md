@@ -22,14 +22,14 @@ O criador rejeitou expressamente o protótipo com gráficos 2D/pixel art/top-dow
 
 ## Controles
 
-| Ação | Desktop | Mobile |
-| --- | --- | --- |
-| Andar/correr (exploração) | WASD / teclas conforme implementação | joystick virtual ou tap-to-move com feedback claro |
-| Olhar/orbitar | arrastar botão apropriado; scroll para zoom | arraste 1 dedo para orbit/pan, pinça para zoom |
-| Selecionar/interagir | click e raycast | toque e raycast com hit area ampliada |
-| Construir | selecionar ferramenta, preview, confirmar/cancelar | botão contextual, preview com deslocamento sem ocultar sob dedo |
-| Alternar câmera | tecla/botão | botão de HUD acessível |
-| Ver estado de infraestrutura | painel compacto | painel deslizante que não cobre cena |
+| Ação                         | Desktop                                            | Mobile                                                          |
+| ---------------------------- | -------------------------------------------------- | --------------------------------------------------------------- |
+| Andar/correr (exploração)    | WASD / teclas conforme implementação               | joystick virtual ou tap-to-move com feedback claro              |
+| Olhar/orbitar                | arrastar botão apropriado; scroll para zoom        | arraste 1 dedo para orbit/pan, pinça para zoom                  |
+| Selecionar/interagir         | click e raycast                                    | toque e raycast com hit area ampliada                           |
+| Construir                    | selecionar ferramenta, preview, confirmar/cancelar | botão contextual, preview com deslocamento sem ocultar sob dedo |
+| Alternar câmera              | tecla/botão                                        | botão de HUD acessível                                          |
+| Ver estado de infraestrutura | painel compacto                                    | painel deslizante que não cobre cena                            |
 
 Gestos exatos e sensibilidades são **propostas a ajustar em testes com usuários**.
 

@@ -27,9 +27,12 @@
  */
 
 import { Color, Entity, StandardMaterial } from 'playcanvas';
-import type { FarmMaterials } from './materials';
+
+import { getVisualConfig } from '../core/visual-config';
+import type { CharacterVisualConfig } from '../core/visual-config';
+
 import type { GlbAssetLoader, LoadedGLB } from './asset-loader';
-import { type CharacterVisualConfig, getVisualConfig } from '../core/visual-config';
+import type { FarmMaterials } from './materials';
 
 export type NinjaLocomotionState = 'idle' | 'walk' | 'run';
 
@@ -61,9 +64,9 @@ export class NinjaCharacter {
     private customJointsMat: StandardMaterial | null = null;
 
     private state: NinjaLocomotionState = 'idle';
-    private targetRotation: number = 0;
-    private currentRotation: number = 0;
-    private isLoaded: boolean = false;
+    private targetRotation = 0;
+    private currentRotation = 0;
+    private isLoaded = false;
 
     constructor(materials: FarmMaterials, assetLoader?: GlbAssetLoader, config?: CharacterVisualConfig) {
         this.materials = materials;
@@ -194,8 +197,22 @@ export class NinjaCharacter {
                 const runTrack = this.currentGlb?.getTrack(this.config.animations?.run || 'Jog_Fwd_Loop');
 
                 if (idleTrack) this.modelRoot.anim.assignAnimation('idle', idleTrack, undefined, 1.0, true);
-                if (walkTrack) this.modelRoot.anim.assignAnimation('walk', walkTrack, undefined, this.config.walkAnimSpeed || 1.25, true);
-                if (runTrack) this.modelRoot.anim.assignAnimation('run', runTrack, undefined, this.config.runAnimSpeed || 1.35, true);
+                if (walkTrack)
+                    this.modelRoot.anim.assignAnimation(
+                        'walk',
+                        walkTrack,
+                        undefined,
+                        this.config.walkAnimSpeed || 1.25,
+                        true
+                    );
+                if (runTrack)
+                    this.modelRoot.anim.assignAnimation(
+                        'run',
+                        runTrack,
+                        undefined,
+                        this.config.runAnimSpeed || 1.35,
+                        true
+                    );
             }
         }
     }

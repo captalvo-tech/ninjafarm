@@ -15,11 +15,11 @@ export const NINJA_RANKS: NinjaRank[] = [
 ];
 
 export class NinjaProgressionSystem {
-    private currentXp: number = 0;
-    private currentLevel: number = 1;
+    private currentXp = 0;
+    private currentLevel = 1;
     private onLevelUpCallback?: (level: number, title: string) => void;
 
-    constructor(initialXp: number = 0, onLevelUp?: (level: number, title: string) => void) {
+    constructor(initialXp = 0, onLevelUp?: (level: number, title: string) => void) {
         this.onLevelUpCallback = onLevelUp;
         this.setXp(initialXp);
     }
@@ -95,4 +95,3 @@ export class NinjaProgressionSystem {
         };
     }
 }
-

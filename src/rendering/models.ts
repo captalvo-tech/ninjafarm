@@ -27,9 +27,11 @@
  */
 
 import { Color, Entity } from 'playcanvas';
-import type { FarmMaterials } from './materials';
+
 import type { BuildingType, CropStage, CropType } from '../core/types';
+
 import type { GlbAssetLoader, LoadedGLB } from './asset-loader';
+import type { FarmMaterials } from './materials';
 
 export class BuildingModelFactory {
     private materials: FarmMaterials;
@@ -654,8 +656,10 @@ export class BuildingModelFactory {
             // FLOR DE LÓTUS SAGRADA SHINOBI (Canteiro com água e flores místicas)
             // 4 almofadas de vitória-régia distribuídas
             const positions = [
-                [-0.6, -0.6], [0.6, -0.6],
-                [-0.6, 0.6], [0.6, 0.6]
+                [-0.6, -0.6],
+                [0.6, -0.6],
+                [-0.6, 0.6],
+                [0.6, 0.6]
             ];
 
             for (let i = 0; i < positions.length; i++) {
@@ -725,8 +729,10 @@ export class BuildingModelFactory {
 
         // Estacas de sustentação
         const stiltPositions = [
-            [-2.4, -1.4], [2.4, -1.4],
-            [-2.4, 1.4], [2.4, 1.4]
+            [-2.4, -1.4],
+            [2.4, -1.4],
+            [-2.4, 1.4],
+            [2.4, 1.4]
         ];
         for (const [sx, sz] of stiltPositions) {
             const stilt = new Entity('coop_stilt');

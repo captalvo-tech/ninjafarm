@@ -5,12 +5,14 @@
 
 class SoundManager {
     private ctx: AudioContext | null = null;
-    private isMuted: boolean = false;
-    private ambientTimer: number = 0;
+    private isMuted = false;
+    private ambientTimer = 0;
 
     private getContext(): AudioContext | null {
         if (!this.ctx && typeof window !== 'undefined') {
-            const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+            const AudioCtx =
+                window.AudioContext ||
+                (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
             if (AudioCtx) {
                 this.ctx = new AudioCtx();
             }
@@ -117,7 +119,7 @@ class SoundManager {
         const ctx = this.getContext();
         if (!ctx) return;
 
-        const notes = [523.25, 659.25, 783.99, 1046.50];
+        const notes = [523.25, 659.25, 783.99, 1046.5];
         notes.forEach((freq, idx) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
@@ -275,13 +277,13 @@ class SoundManager {
         if (!ctx) return;
 
         const melody = [
-            { freq: 440.00, time: 0.00, dur: 0.12 }, // A4
-            { freq: 554.37, time: 0.10, dur: 0.12 }, // C#5
-            { freq: 659.25, time: 0.20, dur: 0.14 }, // E5
-            { freq: 880.00, time: 0.32, dur: 0.35 }  // A5
+            { freq: 440.0, time: 0.0, dur: 0.12 }, // A4
+            { freq: 554.37, time: 0.1, dur: 0.12 }, // C#5
+            { freq: 659.25, time: 0.2, dur: 0.14 }, // E5
+            { freq: 880.0, time: 0.32, dur: 0.35 } // A5
         ];
 
-        melody.forEach(note => {
+        melody.forEach((note) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             osc.type = 'sine';
@@ -342,7 +344,7 @@ class SoundManager {
         const gain = ctx.createGain();
         osc.type = 'sine';
         osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-        osc.frequency.setValueAtTime(880.00, ctx.currentTime + 0.08); // A5
+        osc.frequency.setValueAtTime(880.0, ctx.currentTime + 0.08); // A5
         gain.gain.setValueAtTime(0.18, ctx.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
 
@@ -380,7 +382,7 @@ class SoundManager {
         const ctx = this.getContext();
         if (!ctx) return;
 
-        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
         notes.forEach((freq, idx) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
@@ -396,7 +398,7 @@ class SoundManager {
         });
     }
 
-    private cricketTimer: number = 0;
+    private cricketTimer = 0;
 
     // Música ambiental meditativa sutil (pentatônica zen estilo koto japonês) e grilos noturnos
     updateAmbientMusic(dt: number, isNight: boolean): void {
@@ -429,8 +431,8 @@ class SoundManager {
             if (!ctx) return;
 
             // Escala pentatônica clássica (Insen / Yo)
-            const dayNotes = [293.66, 329.63, 392.00, 440.00, 523.25, 587.33]; // D, E, G, A, C, D
-            const nightNotes = [220.00, 246.94, 293.66, 329.63, 370.00, 440.00]; // A, B, D, E, F#, A
+            const dayNotes = [293.66, 329.63, 392.0, 440.0, 523.25, 587.33]; // D, E, G, A, C, D
+            const nightNotes = [220.0, 246.94, 293.66, 329.63, 370.0, 440.0]; // A, B, D, E, F#, A
 
             const scale = isNight ? nightNotes : dayNotes;
             const note = scale[Math.floor(Math.random() * scale.length)];

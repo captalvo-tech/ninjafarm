@@ -36,12 +36,12 @@ export class SimulationClock {
     // 0.50 = Meio-dia solar (12:00)
     // 0.75 = Pôr do sol (18:00)
     // 1.0 = Meia-noite seguinte
-    private timeOfDay: number = 0.35; // Começa pelas 08:24 da manhã
-    private totalGameDays: number = 0;
-    private isPaused: boolean = false;
-    private timeScale: number = 1.0;
+    private timeOfDay = 0.35; // Começa pelas 08:24 da manhã
+    private totalGameDays = 0;
+    private isPaused = false;
+    private timeScale = 1.0;
 
-    constructor(initialTimeOfDay: number = 0.35, initialDays: number = 0) {
+    constructor(initialTimeOfDay = 0.35, initialDays = 0) {
         this.timeOfDay = initialTimeOfDay;
         this.totalGameDays = initialDays;
     }
@@ -116,4 +116,3 @@ export class SimulationClock {
         this.timeScale = Math.max(0.1, Math.min(10.0, scale));
     }
 }
-

@@ -41,7 +41,8 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
         'hud.water.status': 'Water Reserves',
         'hud.controls.pc': 'WASD: Move | Shift: Sprint | Drag: Orbit | Scroll: Zoom',
         'hud.controls.mobile': 'Touch/Drag: Move & Orbit | Tap: Interact',
-        'hud.controls.legend': '[WASD] Move | [Shift] Sprint | [E] Action | [F] Shuriken | [Q] Smoke | [C] Water | [B] Clone | [G] Grid',
+        'hud.controls.legend':
+            '[WASD] Move | [Shift] Sprint | [E] Action | [F] Shuriken | [Q] Smoke | [C] Water | [B] Clone | [G] Grid',
         'hud.rank.level': 'Ninja Rank',
         'hud.rank.xp': 'XP',
         'hud.harvest': 'Harvest Crop (+25 Food)',
@@ -159,7 +160,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
         'hud.build.solar_panel': 'Painel Solar',
         'hud.build.battery': 'Banco de Baterias',
         'hud.build.water_tank': 'Cisterna Hídrica',
-        'hud.build.water_pump': 'Bomba D\'Água',
+        'hud.build.water_pump': "Bomba D'Água",
         'hud.build.lamp_post': 'Poste de Luz',
         'hud.build.torii_gate': 'Portal Torii',
         'hud.build.bonfire': 'Fogueira Shinobi',
@@ -178,7 +179,8 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
         'hud.water.status': 'Reserva Hídrica',
         'hud.controls.pc': 'WASD: Mover | Shift: Correr | Arrastar: Orbitar | Scroll: Zoom',
         'hud.controls.mobile': 'Toque: Mover e Olhar | Toque na Célula: Interagir',
-        'hud.controls.legend': '[WASD] Mover | [Shift] Correr | [E] Ação | [F] Shuriken | [Q] Fumaça | [C] Água | [B] Clone | [G] Grade',
+        'hud.controls.legend':
+            '[WASD] Mover | [Shift] Correr | [E] Ação | [F] Shuriken | [Q] Fumaça | [C] Água | [B] Clone | [G] Grade',
         'hud.rank.level': 'Graduação Ninja',
         'hud.rank.xp': 'EXP',
         'hud.harvest': 'Colher Plantação (+25 Alimento)',
@@ -227,7 +229,7 @@ const TRANSLATIONS: Record<Language, Record<string, string>> = {
         'trial.build_battery.title': 'Banco de Baterias Noturno',
         'trial.build_battery.desc': 'Construa um Banco de Baterias para armazenar o excedente solar para a noite.',
         'trial.build_pump.title': 'Bomba Hídrica Contínua',
-        'trial.build_pump.desc': 'Construa uma Bomba d\'Água elétrica para extrair água do lençol freático.',
+        'trial.build_pump.desc': "Construa uma Bomba d'Água elétrica para extrair água do lençol freático.",
         'trial.build_cistern.title': 'Cisterna de Reserva Hídrica',
         'trial.build_cistern.desc': 'Construa uma Cisterna para aumentar a capacidade de água da fazenda.',
         'trial.plant_carrot.title': 'Cenouras Orgânicas de Ciclo Curto',
@@ -291,4 +293,3 @@ export function t(key: string): string {
     const table = TRANSLATIONS[currentLanguage] || TRANSLATIONS.en;
     return table[key] || TRANSLATIONS.en[key] || key;
 }
-

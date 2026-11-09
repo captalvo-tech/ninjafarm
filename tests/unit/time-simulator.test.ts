@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { TimeSimulator } from '../../src/simulation/time-simulator';
 
 describe('TimeSimulator — Simulador Administrativo de Tempo (Seção 13 & 26)', () => {
@@ -67,4 +68,3 @@ describe('TimeSimulator — Simulador Administrativo de Tempo (Seção 13 & 26)'
         expect(rep1.finalResources.water).toBe(rep2.finalResources.water);
     });
 });
-

@@ -1,4 +1,4 @@
-import { FarmGrid } from '../core/grid';
+import type { FarmGrid } from '../core/grid';
 
 export interface PathNode {
     x: number;
@@ -40,7 +40,9 @@ export class NavigationSystem {
             const neighbors = this.getWalkableNeighbors(targetX, targetY);
             if (neighbors.length === 0) return [];
             // Escolhe vizinho mais próximo do início
-            neighbors.sort((a, b) => this.heuristic(a.x, a.y, startX, startY) - this.heuristic(b.x, b.y, startX, startY));
+            neighbors.sort(
+                (a, b) => this.heuristic(a.x, a.y, startX, startY) - this.heuristic(b.x, b.y, startX, startY)
+            );
             actualTargetX = neighbors[0].x;
             actualTargetY = neighbors[0].y;
         }
@@ -94,7 +96,7 @@ export class NavigationSystem {
 
                 const tentativeG = current.g + moveCost;
 
-                let existing = openSet.find(n => n.x === neighbor.x && n.y === neighbor.y);
+                let existing = openSet.find((n) => n.x === neighbor.x && n.y === neighbor.y);
                 if (!existing) {
                     const h = this.heuristic(neighbor.x, neighbor.y, actualTargetX, actualTargetY);
                     existing = {
@@ -127,17 +129,21 @@ export class NavigationSystem {
 
     private getNeighbors(x: number, y: number): PathNode[] {
         const dirs = [
-            { x: 0, y: -1 }, { x: 0, y: 1 }, { x: -1, y: 0 }, { x: 1, y: 0 },
-            { x: -1, y: -1 }, { x: 1, y: -1 }, { x: -1, y: 1 }, { x: 1, y: 1 }
+            { x: 0, y: -1 },
+            { x: 0, y: 1 },
+            { x: -1, y: 0 },
+            { x: 1, y: 0 },
+            { x: -1, y: -1 },
+            { x: 1, y: -1 },
+            { x: -1, y: 1 },
+            { x: 1, y: 1 }
         ];
 
-        return dirs
-            .map(d => ({ x: x + d.x, y: y + d.y }))
-            .filter(pos => this.grid.isInside(pos.x, pos.y));
+        return dirs.map((d) => ({ x: x + d.x, y: y + d.y })).filter((pos) => this.grid.isInside(pos.x, pos.y));
     }
 
     private getWalkableNeighbors(x: number, y: number): PathNode[] {
-        return this.getNeighbors(x, y).filter(pos => {
+        return this.getNeighbors(x, y).filter((pos) => {
             const cell = this.grid.getCell(pos.x, pos.y);
             return cell && cell.walkable;
         });
@@ -153,4 +159,3 @@ export class NavigationSystem {
         return path;
     }
 }
-

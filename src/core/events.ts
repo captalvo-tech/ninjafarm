@@ -33,4 +33,3 @@ export class DomainEventEmitter {
 }
 
 export const domainEvents = new DomainEventEmitter();
-

@@ -264,8 +264,8 @@ export class ContextActionUI {
         this.actionButton.disabled = !action.enabled;
 
         const subText = action.enabled
-            ? (action.subtitle || '')
-            : (action.blockedReason || action.subtitle || 'Indisponível no momento');
+            ? action.subtitle || ''
+            : action.blockedReason || action.subtitle || 'Indisponível no momento';
 
         this.actionButton.innerHTML = `
             <span class="context-btn-icon">${action.icon}</span>
@@ -301,14 +301,22 @@ export class ContextActionUI {
     private getBadgeLabel(target: SelectedTarget): string {
         if (target.type === 'plot') {
             switch (target.soilStatus) {
-                case 'raw': return 'Solo Bruto';
-                case 'tilled': return 'Pronto para Plantar';
-                case 'planted': return 'Recém-Plantado';
-                case 'growing': return `${Math.floor((target.growthProgress ?? 0) * 100)}% Crescendo`;
-                case 'thirsty': return 'Sem Água';
-                case 'ready': return 'Pronto para Colher';
-                case 'exhausted': return 'Solo Esgotado';
-                default: return 'Canteiro';
+                case 'raw':
+                    return 'Solo Bruto';
+                case 'tilled':
+                    return 'Pronto para Plantar';
+                case 'planted':
+                    return 'Recém-Plantado';
+                case 'growing':
+                    return `${Math.floor((target.growthProgress ?? 0) * 100)}% Crescendo`;
+                case 'thirsty':
+                    return 'Sem Água';
+                case 'ready':
+                    return 'Pronto para Colher';
+                case 'exhausted':
+                    return 'Solo Esgotado';
+                default:
+                    return 'Canteiro';
             }
         }
         if (target.type === 'animal') {
@@ -316,7 +324,11 @@ export class ContextActionUI {
             if ((target.hunger ?? 0) >= 50) return 'Com Fome';
             return 'Saudável';
         }
-        if (target.buildingHealth !== undefined && target.maxHealth !== undefined && target.buildingHealth < target.maxHealth) {
+        if (
+            target.buildingHealth !== undefined &&
+            target.maxHealth !== undefined &&
+            target.buildingHealth < target.maxHealth
+        ) {
             return 'Requer Reparo';
         }
         return 'Operacional';

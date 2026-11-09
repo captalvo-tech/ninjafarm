@@ -6,12 +6,19 @@ Abaixo há **interfaces de projeto propostas**, não endpoints em execução. Us
 
 ```ts
 type Command =
-  | { type: 'building.place'; commandId: string; catalogId: string; x: number; z: number; rotation: 0|90|180|270 }
-  | { type: 'building.remove'; commandId: string; buildingId: string }
-  | { type: 'crop.plant'; commandId: string; plotId: string; cropId: string }
-  | { type: 'crop.harvest'; commandId: string; plotId: string }
-  | { type: 'animal.feed'; commandId: string; animalId: string; amount: number }
-  | { type: 'simulation.advance'; commandId: string; elapsedSeconds: number };
+    | {
+          type: 'building.place';
+          commandId: string;
+          catalogId: string;
+          x: number;
+          z: number;
+          rotation: 0 | 90 | 180 | 270;
+      }
+    | { type: 'building.remove'; commandId: string; buildingId: string }
+    | { type: 'crop.plant'; commandId: string; plotId: string; cropId: string }
+    | { type: 'crop.harvest'; commandId: string; plotId: string }
+    | { type: 'animal.feed'; commandId: string; animalId: string; amount: number }
+    | { type: 'simulation.advance'; commandId: string; elapsedSeconds: number };
 ```
 
 `simulation.advance` é comando interno do modo local, não endpoint público futuro. Em servidor, tempo é controlado pelo próprio backend.

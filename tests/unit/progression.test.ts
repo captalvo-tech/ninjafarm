@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { NinjaProgressionSystem, NINJA_RANKS } from '../../src/gameplay/progression';
 
 describe('NinjaProgressionSystem', () => {
@@ -36,4 +37,3 @@ describe('NinjaProgressionSystem', () => {
         expect(prog.getXpProgress().percentage).toBe(100);
     });
 });
-

@@ -1,6 +1,7 @@
-import { defineConfig } from 'vite';
 import * as fs from 'fs';
 import * as path from 'path';
+
+import { defineConfig } from 'vite';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -47,7 +48,7 @@ export default defineConfig({
                     role: 'superadmin',
                     csrfToken: 'dev_admin_csrf_12345'
                 };
-                let devAlertsList = [
+                const devAlertsList = [
                     {
                         id: 'rep_dev_001',
                         type: 'tester_bug_report',
@@ -80,7 +81,9 @@ export default defineConfig({
                                 name: 'Mestre Ninja Dev',
                                 picture: ''
                             };
-                            res.end(JSON.stringify({ success: true, user: devCurrentUser, sessionToken: 'dev_sess_token' }));
+                            res.end(
+                                JSON.stringify({ success: true, user: devCurrentUser, sessionToken: 'dev_sess_token' })
+                            );
                             return;
                         }
                         if (devCurrentUser) {
@@ -108,15 +111,19 @@ export default defineConfig({
 
                         if (req.method === 'POST') {
                             let body = '';
-                            req.on('data', (chunk: any) => { body += chunk; });
+                            req.on('data', (chunk: any) => {
+                                body += chunk;
+                            });
                             req.on('end', () => {
                                 try {
                                     const parsed = JSON.parse(body);
                                     devRevision++;
                                     devSaveData = parsed.save;
                                     devSaveData.revision = devRevision;
-                                    res.end(JSON.stringify({ success: true, revision: devRevision, savedAt: Date.now() }));
-                                } catch (e) {
+                                    res.end(
+                                        JSON.stringify({ success: true, revision: devRevision, savedAt: Date.now() })
+                                    );
+                                } catch (_e) {
                                     res.statusCode = 400;
                                     res.end(JSON.stringify({ success: false, error: 'JSON inválido' }));
                                 }
@@ -132,24 +139,90 @@ export default defineConfig({
                                 savedAt: Date.now(),
                                 resources: { wood: 50, metal: 20, parts: 10, food: 30, water: 40, energy: 50 },
                                 buildings: [
-                                    { instanceId: 'hq_main', type: 'hq', gridX: 16, gridY: 12, orientation: 0, createdAt: Date.now(), health: 500 },
-                                    { instanceId: 'crop_plot_init_1', type: 'crop_field', gridX: 16, gridY: 18, orientation: 0, createdAt: Date.now(), health: 100, customData: { soilStatus: 'raw' } },
-                                    { instanceId: 'solar_panel_init_1', type: 'solar_panel', gridX: 12, gridY: 14, orientation: 0, createdAt: Date.now(), health: 80 },
-                                    { instanceId: 'water_pump_init_1', type: 'water_pump', gridX: 22, gridY: 14, orientation: 0, createdAt: Date.now(), health: 100 },
-                                    { instanceId: 'bonfire_init_1', type: 'bonfire', gridX: 20, gridY: 16, orientation: 0, createdAt: Date.now(), health: 60 }
+                                    {
+                                        instanceId: 'hq_main',
+                                        type: 'hq',
+                                        gridX: 16,
+                                        gridY: 12,
+                                        orientation: 0,
+                                        createdAt: Date.now(),
+                                        health: 500
+                                    },
+                                    {
+                                        instanceId: 'crop_plot_init_1',
+                                        type: 'crop_field',
+                                        gridX: 16,
+                                        gridY: 18,
+                                        orientation: 0,
+                                        createdAt: Date.now(),
+                                        health: 100,
+                                        customData: { soilStatus: 'raw' }
+                                    },
+                                    {
+                                        instanceId: 'solar_panel_init_1',
+                                        type: 'solar_panel',
+                                        gridX: 12,
+                                        gridY: 14,
+                                        orientation: 0,
+                                        createdAt: Date.now(),
+                                        health: 80
+                                    },
+                                    {
+                                        instanceId: 'water_pump_init_1',
+                                        type: 'water_pump',
+                                        gridX: 22,
+                                        gridY: 14,
+                                        orientation: 0,
+                                        createdAt: Date.now(),
+                                        health: 100
+                                    },
+                                    {
+                                        instanceId: 'bonfire_init_1',
+                                        type: 'bonfire',
+                                        gridX: 20,
+                                        gridY: 16,
+                                        orientation: 0,
+                                        createdAt: Date.now(),
+                                        health: 60
+                                    }
                                 ],
                                 crops: [],
                                 animals: [],
                                 dayTime: 0.35,
                                 elapsedGameDays: 1,
                                 ninjaPosition: { x: 0, y: 0, z: 0 },
-                                droid: { id: 'farm_droid_01', battery: 100, maxBattery: 100, state: 'idle', position: { x: -2, y: 0, z: 2 }, workSpeedMultiplier: 1.0 },
-                                scheduler: { tasks: [], activeTaskId: null, lastProcessedTimestamp: Math.floor(Date.now() / 1000) },
-                                geminiConfig: { mode: 'limited', hasCustomKey: false, model: 'gemini-1.5-flash' },
-                                eventsLog: [{ id: 'evt_init', timestamp: Date.now(), type: 'welcome', title: 'Fundação da Propriedade', description: 'Fazenda iniciada com Droid.' }]
+                                droid: {
+                                    id: 'farm_droid_01',
+                                    battery: 100,
+                                    maxBattery: 100,
+                                    state: 'idle',
+                                    position: { x: -2, y: 0, z: 2 },
+                                    workSpeedMultiplier: 1.0
+                                },
+                                scheduler: {
+                                    tasks: [],
+                                    activeTaskId: null,
+                                    lastProcessedTimestamp: Math.floor(Date.now() / 1000)
+                                },
+                                geminiConfig: { mode: 'limited', hasCustomKey: false, model: 'gemini-2.0-flash' },
+                                eventsLog: [
+                                    {
+                                        id: 'evt_init',
+                                        timestamp: Date.now(),
+                                        type: 'welcome',
+                                        title: 'Fundação da Propriedade',
+                                        description: 'Fazenda iniciada com Droid.'
+                                    }
+                                ]
                             };
                         }
-                        res.end(JSON.stringify({ success: true, save: devSaveData, serverTime: Math.floor(Date.now() / 1000) }));
+                        res.end(
+                            JSON.stringify({
+                                success: true,
+                                save: devSaveData,
+                                serverTime: Math.floor(Date.now() / 1000)
+                            })
+                        );
                         return;
                     }
 
@@ -161,21 +234,27 @@ export default defineConfig({
                         }
                         if (req.method === 'POST') {
                             let body = '';
-                            req.on('data', (chunk: any) => { body += chunk; });
+                            req.on('data', (chunk: any) => {
+                                body += chunk;
+                            });
                             req.on('end', () => {
                                 try {
                                     const parsed = JSON.parse(body);
                                     const q = (parsed.question || '').toLowerCase();
-                                    let reply = 'Mestre Shinobi, analisei a propriedade. A bateria do Droid está estável e o agendador está monitorando os canteiros.';
+                                    let reply =
+                                        'Mestre Shinobi, analisei a propriedade. A bateria do Droid está estável e o agendador está monitorando os canteiros.';
                                     if (q.includes('energia') || q.includes('bateria')) {
-                                        reply = '⚡ Diagnóstico Energético: A rede solar opera conforme o ciclo diurno. Mantenha os painéis limpos e baterias recarregadas.';
+                                        reply =
+                                            '⚡ Diagnóstico Energético: A rede solar opera conforme o ciclo diurno. Mantenha os painéis limpos e baterias recarregadas.';
                                     } else if (q.includes('plantar') || q.includes('arroz') || q.includes('cultura')) {
-                                        reply = '🌾 Diagnóstico Agrícola: Recomendo arar o solo antes de semear. O arroz tradicional oferece excelente retorno de alimento.';
+                                        reply =
+                                            '🌾 Diagnóstico Agrícola: Recomendo arar o solo antes de semear. O arroz tradicional oferece excelente retorno de alimento.';
                                     } else if (q.includes('fazer') || q.includes('próximo')) {
-                                        reply = '💡 Sugestão Shinobi: Verifique se há canteiros sedentos e agende a irrigação ou planeje um novo blueprint na grade!';
+                                        reply =
+                                            '💡 Sugestão Shinobi: Verifique se há canteiros sedentos e agende a irrigação ou planeje um novo blueprint na grade!';
                                     }
                                     res.end(JSON.stringify({ success: true, reply }));
-                                } catch (e) {
+                                } catch (_e) {
                                     res.statusCode = 400;
                                     res.end(JSON.stringify({ success: false, error: 'JSON inválido' }));
                                 }
@@ -199,7 +278,14 @@ export default defineConfig({
 
                         if (action === 'check') {
                             if (devAdminSession) {
-                                res.end(JSON.stringify({ authenticated: true, email: devAdminSession.email, role: devAdminSession.role, csrfToken: devAdminSession.csrfToken }));
+                                res.end(
+                                    JSON.stringify({
+                                        authenticated: true,
+                                        email: devAdminSession.email,
+                                        role: devAdminSession.role,
+                                        csrfToken: devAdminSession.csrfToken
+                                    })
+                                );
                             } else {
                                 res.statusCode = 401;
                                 res.end(JSON.stringify({ authenticated: false, need_setup: false }));
@@ -214,63 +300,113 @@ export default defineConfig({
                         }
 
                         if (action === 'dashboard') {
-                            res.end(JSON.stringify({
-                                success: true,
-                                serverTime: Math.floor(Date.now() / 1000),
-                                system: {
-                                    phpVersion: '8.3-dev',
-                                    deployedVersion: 'Alpha 0.1.0',
-                                    apiStatus: 'OPERATIONAL',
-                                    databaseStatus: 'OPERATIONAL (Dev Mock / SQLite)'
-                                },
-                                players: { totalAccounts: 14, activeToday: 6, active7d: 11, active30d: 14 },
-                                farms: { totalFarms: 14, farmsWithActiveCrops: 9, farmsHaltedEnergy: 1 },
-                                droid: { totalDroids: 14, working: 8, recharging: 3, idle: 3, lowBattery: 1, operationalUtilization: 57.1 },
-                                scheduler: { totalTasks: 42, scheduled: 18, completed: 21, waitingResources: 3 }
-                            }));
+                            res.end(
+                                JSON.stringify({
+                                    success: true,
+                                    serverTime: Math.floor(Date.now() / 1000),
+                                    system: {
+                                        phpVersion: '8.3-dev',
+                                        deployedVersion: 'Alpha 0.1.0',
+                                        apiStatus: 'OPERATIONAL',
+                                        databaseStatus: 'OPERATIONAL (Dev Mock / SQLite)'
+                                    },
+                                    players: { totalAccounts: 14, activeToday: 6, active7d: 11, active30d: 14 },
+                                    farms: { totalFarms: 14, farmsWithActiveCrops: 9, farmsHaltedEnergy: 1 },
+                                    droid: {
+                                        totalDroids: 14,
+                                        working: 8,
+                                        recharging: 3,
+                                        idle: 3,
+                                        lowBattery: 1,
+                                        operationalUtilization: 57.1
+                                    },
+                                    scheduler: { totalTasks: 42, scheduled: 18, completed: 21, waitingResources: 3 }
+                                })
+                            );
                             return;
                         }
 
                         if (action === 'alerts') {
-                            res.end(JSON.stringify({ success: true, alerts: devAlertsList, unresolvedCount: devAlertsList.filter(a => a.status !== 'Resolvido').length }));
+                            res.end(
+                                JSON.stringify({
+                                    success: true,
+                                    alerts: devAlertsList,
+                                    unresolvedCount: devAlertsList.filter((a) => a.status !== 'Resolvido').length
+                                })
+                            );
                             return;
                         }
 
                         if (action === 'economy') {
-                            res.end(JSON.stringify({
-                                success: true,
-                                aggregateResources: { wood: 1250, metal: 680, parts: 340, food: 920, water: 1150, energy: 1420 },
-                                scarcityFarmsCount: { water: 1, energy: 2, wood: 0, metal: 1, parts: 3, food: 0 },
-                                solarInfrastructure: { solarPanelsActiveCapacity: '324 W (pico solar)', farmsCount: 14 }
-                            }));
+                            res.end(
+                                JSON.stringify({
+                                    success: true,
+                                    aggregateResources: {
+                                        wood: 1250,
+                                        metal: 680,
+                                        parts: 340,
+                                        food: 920,
+                                        water: 1150,
+                                        energy: 1420
+                                    },
+                                    scarcityFarmsCount: { water: 1, energy: 2, wood: 0, metal: 1, parts: 3, food: 0 },
+                                    solarInfrastructure: {
+                                        solarPanelsActiveCapacity: '324 W (pico solar)',
+                                        farmsCount: 14
+                                    }
+                                })
+                            );
                             return;
                         }
 
                         if (action === 'roadmap') {
                             const featuresPath = path.resolve(process.cwd(), 'project/roadmap/features.json');
                             const historyPath = path.resolve(process.cwd(), 'project/roadmap/history.jsonl');
-                            const features = fs.existsSync(featuresPath) ? JSON.parse(fs.readFileSync(featuresPath, 'utf-8')) : [];
+                            const features = fs.existsSync(featuresPath)
+                                ? JSON.parse(fs.readFileSync(featuresPath, 'utf-8'))
+                                : [];
                             const historyLines = fs.existsSync(historyPath)
-                                ? fs.readFileSync(historyPath, 'utf-8').split('\n').filter((l: string) => !!l.trim()).map((l: string) => JSON.parse(l))
+                                ? fs
+                                      .readFileSync(historyPath, 'utf-8')
+                                      .split('\n')
+                                      .filter((l: string) => !!l.trim())
+                                      .map((l: string) => JSON.parse(l))
                                 : [];
                             res.end(JSON.stringify({ success: true, features, history: historyLines.reverse() }));
                             return;
                         }
 
                         if (action === 'audit_logs') {
-                            res.end(JSON.stringify({
-                                success: true,
-                                logs: [
-                                    { timestamp: Math.floor(Date.now() / 1000) - 120, date: new Date().toISOString(), admin: 'mvioli7@gmail.com', action: 'login', ip: '127.0.0.1' },
-                                    { timestamp: Math.floor(Date.now() / 1000) - 3600, date: new Date(Date.now() - 3600000).toISOString(), admin: 'mvioli7@gmail.com', action: 'alert_status_updated', ip: '127.0.0.1', details: { alertId: 'rep_dev_001', status: 'Em análise' } }
-                                ]
-                            }));
+                            res.end(
+                                JSON.stringify({
+                                    success: true,
+                                    logs: [
+                                        {
+                                            timestamp: Math.floor(Date.now() / 1000) - 120,
+                                            date: new Date().toISOString(),
+                                            admin: 'mvioli7@gmail.com',
+                                            action: 'login',
+                                            ip: '127.0.0.1'
+                                        },
+                                        {
+                                            timestamp: Math.floor(Date.now() / 1000) - 3600,
+                                            date: new Date(Date.now() - 3600000).toISOString(),
+                                            admin: 'mvioli7@gmail.com',
+                                            action: 'alert_status_updated',
+                                            ip: '127.0.0.1',
+                                            details: { alertId: 'rep_dev_001', status: 'Em análise' }
+                                        }
+                                    ]
+                                })
+                            );
                             return;
                         }
 
                         if (req.method === 'POST') {
                             let body = '';
-                            req.on('data', (chunk: any) => { body += chunk; });
+                            req.on('data', (chunk: any) => {
+                                body += chunk;
+                            });
                             req.on('end', () => {
                                 try {
                                     const parsed = JSON.parse(body);
@@ -280,22 +416,24 @@ export default defineConfig({
                                             role: 'superadmin',
                                             csrfToken: 'dev_admin_csrf_12345'
                                         };
-                                        res.end(JSON.stringify({
-                                            success: true,
-                                            adminToken: 'dev_admin_bearer_token',
-                                            csrfToken: 'dev_admin_csrf_12345',
-                                            email: devAdminSession.email
-                                        }));
+                                        res.end(
+                                            JSON.stringify({
+                                                success: true,
+                                                adminToken: 'dev_admin_bearer_token',
+                                                csrfToken: 'dev_admin_csrf_12345',
+                                                email: devAdminSession.email
+                                            })
+                                        );
                                         return;
                                     }
                                     if (parsed.action === 'alerts_update_status') {
-                                        const alert = devAlertsList.find(a => a.id === parsed.alertId);
+                                        const alert = devAlertsList.find((a) => a.id === parsed.alertId);
                                         if (alert) alert.status = parsed.status;
                                         res.end(JSON.stringify({ success: true }));
                                         return;
                                     }
                                     res.end(JSON.stringify({ success: true }));
-                                } catch (e) {
+                                } catch (_e) {
                                     res.statusCode = 400;
                                     res.end(JSON.stringify({ success: false, error: 'JSON inválido' }));
                                 }

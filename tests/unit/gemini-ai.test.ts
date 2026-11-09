@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { GeminiService, type FarmAIContext } from '../../src/ai/gemini-service';
+
+import { GeminiService } from '../../src/ai/gemini-service';
+import type { FarmAIContext } from '../../src/ai/gemini-service';
 
 describe('Fase E & F: Gemini AI Read-Only & Modo Limitado', () => {
     let gemini: GeminiService;
@@ -119,4 +121,3 @@ describe('Fase E & F: Gemini AI Read-Only & Modo Limitado', () => {
         expect(res2.error).toContain('Intervalo de segurança ativo');
     });
 });
-

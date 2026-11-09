@@ -62,7 +62,7 @@ export const FARM_CONFIG = {
 
     // Velocidade do ninja
     NINJA_WALK_SPEED: 4.5, // m/s
-    NINJA_RUN_SPEED: 7.5  // m/s
+    NINJA_RUN_SPEED: 7.5 // m/s
 };
 
 export const BUILDING_CATALOG: Record<BuildingType, BuildingDefinition> = {

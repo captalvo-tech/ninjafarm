@@ -7,9 +7,9 @@ export class CameraController {
     private mode: CameraMode = 'explore';
 
     // Parâmetros de órbita e posição
-    private yaw: number = 45; // graus
-    private pitch: number = 38; // graus
-    private distance: number = 18; // metros
+    private yaw = 45; // graus
+    private pitch = 38; // graus
+    private distance = 18; // metros
     private targetPos = new Vec3(0, 0, 0);
     private currentPos = new Vec3(0, 15, 20);
 
@@ -108,15 +108,10 @@ export class CameraController {
         const offsetY = this.distance * Math.sin(pitchRad);
         const offsetZ = this.distance * Math.cos(yawRad) * Math.cos(pitchRad);
 
-        const desiredPos = new Vec3(
-            this.targetPos.x + offsetX,
-            this.targetPos.y + offsetY,
-            this.targetPos.z + offsetZ
-        );
+        const desiredPos = new Vec3(this.targetPos.x + offsetX, this.targetPos.y + offsetY, this.targetPos.z + offsetZ);
 
         this.currentPos.lerp(this.currentPos, desiredPos, Math.min(1.0, dt * 10.0));
         this.entity.setPosition(this.currentPos);
         this.entity.lookAt(this.targetPos);
     }
 }
-

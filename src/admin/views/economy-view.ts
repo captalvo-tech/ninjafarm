@@ -6,8 +6,9 @@
  * ============================================================================
  */
 
+import { TimeSimulator } from '../../simulation/time-simulator';
+import type { TimeSimulationReport } from '../../simulation/time-simulator';
 import { adminAuth } from '../auth';
-import { TimeSimulator, type TimeSimulationReport } from '../../simulation/time-simulator';
 
 export async function renderEconomyView(container: HTMLElement): Promise<void> {
     container.innerHTML = `
@@ -186,30 +187,34 @@ function renderEconomyMetrics(container: HTMLElement, data: any): void {
         energy: { icon: '⚡', name: 'Energia Armazenada', unit: 'Wh' }
     };
 
-    grid.innerHTML = Object.entries(resourceIcons).map(([key, info]) => {
-        const val = Math.round(agg[key] || 0);
-        return `
+    grid.innerHTML = Object.entries(resourceIcons)
+        .map(([key, info]) => {
+            const val = Math.round(agg[key] || 0);
+            return `
             <div class="kpi-card">
                 <div class="kpi-label">${info.icon} ${info.name}</div>
                 <div class="kpi-value">${val.toLocaleString('pt-BR')}</div>
                 <div class="kpi-subtext">${info.unit}</div>
             </div>
         `;
-    }).join('');
+        })
+        .join('');
 
     // Scarcity list
     const scarcityList = container.querySelector('#scarcity-list') as HTMLElement;
     const scarcity = data.scarcityFarmsCount || {};
-    scarcityList.innerHTML = Object.entries(resourceIcons).map(([key, info]) => {
-        const count = scarcity[key] || 0;
-        const color = count > 0 ? 'var(--accent-amber)' : 'var(--text-muted)';
-        return `
+    scarcityList.innerHTML = Object.entries(resourceIcons)
+        .map(([key, info]) => {
+            const count = scarcity[key] || 0;
+            const color = count > 0 ? 'var(--accent-amber)' : 'var(--text-muted)';
+            return `
             <div style="display: flex; justify-content: space-between; font-size: 13px;">
                 <span>${info.icon} ${info.name}:</span>
                 <strong style="color: ${color};">${count} fazendas</strong>
             </div>
         `;
-    }).join('');
+        })
+        .join('');
 
     // Solar Power
     const solarVal = container.querySelector('#solar-power-val') as HTMLElement;
@@ -254,19 +259,24 @@ function renderSimulationReport(container: HTMLElement, report: TimeSimulationRe
     if (report.bottlenecks.length === 0) {
         bottlenecksEl.innerHTML = `<span style="color: var(--accent-green);">✅ Nenhum gargalo crítico detectado. A fazenda operou em equilíbrio estável.</span>`;
     } else {
-        bottlenecksEl.innerHTML = report.bottlenecks.map(b => `
+        bottlenecksEl.innerHTML = report.bottlenecks
+            .map(
+                (b) => `
             <div style="color: var(--accent-amber); padding: 4px 0;">⚠️ ${escapeHtml(b)}</div>
-        `).join('');
+        `
+            )
+            .join('');
     }
 
-    finalResEl.innerHTML = Object.entries(report.finalResources).map(([k, v]) => `
+    finalResEl.innerHTML = Object.entries(report.finalResources)
+        .map(
+            ([k, v]) => `
         <span class="badge badge-muted">${k}: <strong>${Math.round(v)}</strong></span>
-    `).join('');
+    `
+        )
+        .join('');
 }
 
 function escapeHtml(str: string): string {
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }

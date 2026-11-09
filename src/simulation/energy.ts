@@ -28,9 +28,10 @@
 
 import { BUILDING_CATALOG } from '../core/config';
 import { domainEvents } from '../core/events';
-import { FarmGrid } from '../core/grid';
-import { SimulationClock } from './clock';
-import { InventorySystem } from './inventory';
+import type { FarmGrid } from '../core/grid';
+
+import type { SimulationClock } from './clock';
+import type { InventorySystem } from './inventory';
 
 export interface EnergyMetrics {
     productionRate: number; // Watts / units per second
@@ -143,4 +144,3 @@ export class EnergySystem {
         return this.metrics;
     }
 }
-

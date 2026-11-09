@@ -3,6 +3,5 @@ const html = await res.text();
 const regex = /<a[^>]+href=["']([^"']+)["'][^>]*>(.*?)<\/a>/gi;
 let match;
 while ((match = regex.exec(html)) !== null) {
-  console.log(`Text: ${match[2].replace(/<[^>]+>/g, '').trim()} -> ${match[1]}`);
+    console.log(`Text: ${match[2].replace(/<[^>]+>/g, '').trim()} -> ${match[1]}`);
 }
-

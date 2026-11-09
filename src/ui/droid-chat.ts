@@ -15,7 +15,7 @@ export class DroidChatModal {
     private container: HTMLElement;
     private geminiService: GeminiService;
     private callbacks: DroidChatCallbacks;
-    private isOpenState: boolean = false;
+    private isOpenState = false;
     private lockoutTimer: any = null;
 
     // Elementos internos
@@ -386,13 +386,23 @@ export class DroidChatModal {
 
         this.container.querySelector('#btn-rep-energy')?.addEventListener('click', () => {
             const ctx = this.callbacks.getContext();
-            const rep = this.geminiService.generateEnergyReport(ctx.solarGenerationRate, ctx.farmStoredEnergy, ctx.droidBattery, ctx.droidState);
+            const rep = this.geminiService.generateEnergyReport(
+                ctx.solarGenerationRate,
+                ctx.farmStoredEnergy,
+                ctx.droidBattery,
+                ctx.droidState
+            );
             this.appendMessage('droid', rep);
         });
 
         this.container.querySelector('#btn-rep-advice')?.addEventListener('click', () => {
             const ctx = this.callbacks.getContext();
-            const rep = this.geminiService.generateAdviceReport(ctx.resources, ctx.crops, ctx.queuedTasksCount, ctx.droidBattery);
+            const rep = this.geminiService.generateAdviceReport(
+                ctx.resources,
+                ctx.crops,
+                ctx.queuedTasksCount,
+                ctx.droidBattery
+            );
             this.appendMessage('droid', rep);
         });
 
@@ -503,4 +513,3 @@ export class DroidChatModal {
         this.messagesEl.scrollTop = this.messagesEl.scrollHeight;
     }
 }
-

@@ -1,8 +1,8 @@
+import type { BoundingBox } from 'playcanvas';
 import {
     AnimComponentSystem,
     AppBase,
     AppOptions,
-    BoundingBox,
     CameraComponentSystem,
     Color,
     ContainerHandler,
@@ -17,7 +17,8 @@ import {
     createGraphicsDevice
 } from 'playcanvas';
 
-import { GlbAssetLoader, type LoadedGLB } from '../rendering/asset-loader';
+import { GlbAssetLoader } from '../rendering/asset-loader';
+import type { LoadedGLB } from '../rendering/asset-loader';
 
 export interface StudioModelStats {
     triangles: number;
@@ -40,7 +41,7 @@ export class StudioApp {
     private modelContainer!: Entity;
     private activeModelRoot: Entity | null = null;
     private activeGlb: LoadedGLB | null = null;
-    private currentModelUrl: string = '';
+    private currentModelUrl = '';
 
     // Orbit Camera State
     private camTarget = new Vec3(0, 0.9, 0);
@@ -248,7 +249,9 @@ export class StudioApp {
         const onPointerUp = (e: PointerEvent) => {
             try {
                 canvas.releasePointerCapture(e.pointerId);
-            } catch {}
+            } catch {
+                /* pointer capture release may fail if pointer was not captured */
+            }
             this.isOrbiting = false;
             this.isPanning = false;
         };
@@ -257,12 +260,16 @@ export class StudioApp {
         canvas.addEventListener('pointercancel', onPointerUp);
 
         // Zoom with wheel
-        canvas.addEventListener('wheel', (e: WheelEvent) => {
-            e.preventDefault();
-            const zoomFactor = e.deltaY > 0 ? 1.12 : 0.88;
-            this.camDistance = Math.max(0.4, Math.min(60, this.camDistance * zoomFactor));
-            this.updateCameraTransform();
-        }, { passive: false });
+        canvas.addEventListener(
+            'wheel',
+            (e: WheelEvent) => {
+                e.preventDefault();
+                const zoomFactor = e.deltaY > 0 ? 1.12 : 0.88;
+                this.camDistance = Math.max(0.4, Math.min(60, this.camDistance * zoomFactor));
+                this.updateCameraTransform();
+            },
+            { passive: false }
+        );
     }
 
     private updateCameraTransform(): void {
@@ -475,7 +482,7 @@ export class StudioApp {
         this.isAnimPlaying = true;
     }
 
-    transitionAnimation(clipName: string, duration: number = 0.25): void {
+    transitionAnimation(clipName: string, duration = 0.25): void {
         if (!this.activeModelRoot?.anim?.baseLayer) return;
         this.currentAnimClip = clipName;
         this.activeModelRoot.anim.baseLayer.transition(clipName, duration);

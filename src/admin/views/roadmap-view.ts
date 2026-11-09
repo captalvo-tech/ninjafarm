@@ -139,9 +139,9 @@ export async function renderRoadmapView(container: HTMLElement): Promise<void> {
     });
 
     // Filter wire
-    container.querySelectorAll('.roadmap-filter-btn').forEach(btn => {
+    container.querySelectorAll('.roadmap-filter-btn').forEach((btn) => {
         btn.addEventListener('click', () => {
-            container.querySelectorAll('.roadmap-filter-btn').forEach(b => b.classList.remove('active'));
+            container.querySelectorAll('.roadmap-filter-btn').forEach((b) => b.classList.remove('active'));
             btn.classList.add('active');
             activeFilter = btn.getAttribute('data-status') || 'ALL';
             renderFeaturesTable(container, allFeatures, activeFilter, searchQuery);
@@ -154,9 +154,9 @@ export async function renderRoadmapView(container: HTMLElement): Promise<void> {
 function renderKpis(container: HTMLElement, features: FeatureItem[]): void {
     const kpiGrid = container.querySelector('#roadmap-kpis') as HTMLElement;
 
-    const validatedCount = features.filter(f => f.status === 'VALIDADO').length;
-    const implementedCount = features.filter(f => f.status === 'IMPLEMENTADO').length;
-    const removedCount = features.filter(f => f.status === 'REMOVIDO').length;
+    const validatedCount = features.filter((f) => f.status === 'VALIDADO').length;
+    const implementedCount = features.filter((f) => f.status === 'IMPLEMENTADO').length;
+    const removedCount = features.filter((f) => f.status === 'REMOVIDO').length;
 
     kpiGrid.innerHTML = `
         <div class="kpi-card">
@@ -182,11 +182,16 @@ function renderKpis(container: HTMLElement, features: FeatureItem[]): void {
     `;
 }
 
-function renderFeaturesTable(container: HTMLElement, features: FeatureItem[], statusFilter: string, search: string): void {
+function renderFeaturesTable(
+    container: HTMLElement,
+    features: FeatureItem[],
+    statusFilter: string,
+    search: string
+): void {
     const tbody = container.querySelector('#features-table-body') as HTMLElement;
     const counter = container.querySelector('#features-counter') as HTMLElement;
 
-    const filtered = features.filter(f => {
+    const filtered = features.filter((f) => {
         if (statusFilter !== 'ALL' && f.status !== statusFilter) return false;
         if (search) {
             const str = `${f.id} ${f.name} ${f.description} ${(f.modules || []).join(' ')}`.toLowerCase();
@@ -202,39 +207,61 @@ function renderFeaturesTable(container: HTMLElement, features: FeatureItem[], st
         return;
     }
 
-    tbody.innerHTML = filtered.map(f => {
-        let badgeClass = 'badge-info';
-        if (f.status === 'VALIDADO') badgeClass = 'badge-success';
-        else if (f.status === 'REMOVIDO') badgeClass = 'badge-removed';
-        else if (f.status === 'EM_DESENVOLVIMENTO') badgeClass = 'badge-warning';
+    tbody.innerHTML = filtered
+        .map((f) => {
+            let badgeClass = 'badge-info';
+            if (f.status === 'VALIDADO') badgeClass = 'badge-success';
+            else if (f.status === 'REMOVIDO') badgeClass = 'badge-removed';
+            else if (f.status === 'EM_DESENVOLVIMENTO') badgeClass = 'badge-warning';
 
-        return `
+            return `
             <tr>
                 <td><span class="badge ${badgeClass}">${f.status}</span></td>
                 <td><code>${escapeHtml(f.id)}</code></td>
                 <td>
                     <div style="font-weight: 600;">${escapeHtml(f.name)}</div>
                     <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">${escapeHtml(f.description)}</div>
-                    ${f.status === 'REMOVIDO' ? `
+                    ${
+                        f.status === 'REMOVIDO'
+                            ? `
                         <div style="margin-top: 6px; padding: 6px 10px; background: rgba(239, 68, 68, 0.1); border-left: 2px solid var(--accent-red); font-size: 11px; color: #fca5a5;">
                             <strong>Motivo da Remoção:</strong> ${escapeHtml(f.removalReason || '')} (Commit: <code>${f.removalCommit}</code>)
                         </div>
-                    ` : ''}
+                    `
+                            : ''
+                    }
                 </td>
                 <td>Fase ${f.phase}</td>
                 <td>
-                    ${(f.modules && f.modules.length > 0) ? f.modules.map(m => `
+                    ${
+                        f.modules && f.modules.length > 0
+                            ? f.modules
+                                  .map(
+                                      (m) => `
                         <div style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-blue);">${escapeHtml(m)}</div>
-                    `).join('') : '<span style="color: var(--text-muted); font-size: 11px;">Nenhum</span>'}
+                    `
+                                  )
+                                  .join('')
+                            : '<span style="color: var(--text-muted); font-size: 11px;">Nenhum</span>'
+                    }
                 </td>
                 <td>
-                    ${(f.tests && f.tests.length > 0) ? f.tests.map(t => `
+                    ${
+                        f.tests && f.tests.length > 0
+                            ? f.tests
+                                  .map(
+                                      (t) => `
                         <div style="font-family: var(--font-mono); font-size: 11px; color: var(--accent-green);">✓ ${escapeHtml(t)}</div>
-                    `).join('') : '<span style="color: var(--text-muted); font-size: 11px;">-</span>'}
+                    `
+                                  )
+                                  .join('')
+                            : '<span style="color: var(--text-muted); font-size: 11px;">-</span>'
+                    }
                 </td>
             </tr>
         `;
-    }).join('');
+        })
+        .join('');
 }
 
 function renderHistoryFeed(container: HTMLElement, history: HistoryItem[]): void {
@@ -244,12 +271,18 @@ function renderHistoryFeed(container: HTMLElement, history: HistoryItem[]): void
         return;
     }
 
-    feed.innerHTML = history.map(h => {
-        const actionBadge = h.action === 'CRIADO' ? 'badge-info' :
-                            h.action === 'VALIDADO' ? 'badge-success' :
-                            h.action === 'REMOVIDO' ? 'badge-danger' : 'badge-warning';
+    feed.innerHTML = history
+        .map((h) => {
+            const actionBadge =
+                h.action === 'CRIADO'
+                    ? 'badge-info'
+                    : h.action === 'VALIDADO'
+                      ? 'badge-success'
+                      : h.action === 'REMOVIDO'
+                        ? 'badge-danger'
+                        : 'badge-warning';
 
-        return `
+            return `
             <div style="display: flex; gap: 14px; padding: 10px; background: var(--bg-page); border-radius: 6px; border: 1px solid var(--border-color); align-items: flex-start;">
                 <span class="badge ${actionBadge}" style="margin-top: 2px;">${h.action}</span>
                 <div style="flex: 1;">
@@ -264,12 +297,10 @@ function renderHistoryFeed(container: HTMLElement, history: HistoryItem[]): void
                 </div>
             </div>
         `;
-    }).join('');
+        })
+        .join('');
 }
 
 function escapeHtml(str: string): string {
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }

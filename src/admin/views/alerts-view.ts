@@ -106,9 +106,7 @@ export async function renderAlertsView(container: HTMLElement): Promise<void> {
     };
 
     const renderFilteredList = (tbody: HTMLElement, countLabel: HTMLElement) => {
-        const filtered = currentFilter === 'ALL'
-            ? allAlerts
-            : allAlerts.filter(a => a.status === currentFilter);
+        const filtered = currentFilter === 'ALL' ? allAlerts : allAlerts.filter((a) => a.status === currentFilter);
 
         countLabel.textContent = `${filtered.length} incidentes listados (${allAlerts.length} no total)`;
 
@@ -117,12 +115,18 @@ export async function renderAlertsView(container: HTMLElement): Promise<void> {
             return;
         }
 
-        tbody.innerHTML = filtered.map(a => {
-            const sevBadge = a.severity === 'Crítico' ? 'badge-danger' :
-                             a.severity === 'Alto' ? 'badge-warning' :
-                             a.severity === 'Médio' ? 'badge-info' : 'badge-muted';
+        tbody.innerHTML = filtered
+            .map((a) => {
+                const sevBadge =
+                    a.severity === 'Crítico'
+                        ? 'badge-danger'
+                        : a.severity === 'Alto'
+                          ? 'badge-warning'
+                          : a.severity === 'Médio'
+                            ? 'badge-info'
+                            : 'badge-muted';
 
-            return `
+                return `
                 <tr data-alert-id="${a.id}">
                     <td><span class="badge ${sevBadge}">${a.severity}</span></td>
                     <td style="font-weight: 500;">
@@ -134,9 +138,13 @@ export async function renderAlertsView(container: HTMLElement): Promise<void> {
                     <td>${a.occurrences}x</td>
                     <td>
                         <select class="form-input select-status" data-id="${a.id}" style="padding: 4px 8px; font-size: 12px; width: 140px;">
-                            ${['Novo', 'Em análise', 'Em correção', 'Aguardando validação', 'Resolvido', 'Ignorado'].map(s => `
+                            ${['Novo', 'Em análise', 'Em correção', 'Aguardando validação', 'Resolvido', 'Ignorado']
+                                .map(
+                                    (s) => `
                                 <option value="${s}" ${s === a.status ? 'selected' : ''}>${s}</option>
-                            `).join('')}
+                            `
+                                )
+                                .join('')}
                         </select>
                     </td>
                     <td>
@@ -144,19 +152,20 @@ export async function renderAlertsView(container: HTMLElement): Promise<void> {
                     </td>
                 </tr>
             `;
-        }).join('');
+            })
+            .join('');
 
         // Wire inspect buttons
-        tbody.querySelectorAll('.btn-inspect').forEach(btn => {
+        tbody.querySelectorAll('.btn-inspect').forEach((btn) => {
             btn.addEventListener('click', () => {
                 const id = btn.getAttribute('data-id');
-                const alert = allAlerts.find(x => x.id === id);
+                const alert = allAlerts.find((x) => x.id === id);
                 if (alert) openAlertModal(alert);
             });
         });
 
         // Wire status updates
-        tbody.querySelectorAll('.select-status').forEach(sel => {
+        tbody.querySelectorAll('.select-status').forEach((sel) => {
             sel.addEventListener('change', async (e) => {
                 const target = e.target as HTMLSelectElement;
                 const id = target.getAttribute('data-id');
@@ -171,7 +180,7 @@ export async function renderAlertsView(container: HTMLElement): Promise<void> {
                     });
                     const d = await res.json();
                     if (d.success) {
-                        const targetAlert = allAlerts.find(x => x.id === id);
+                        const targetAlert = allAlerts.find((x) => x.id === id);
                         if (targetAlert) targetAlert.status = newStatus as any;
                     } else {
                         alert('Falha ao atualizar status: ' + (d.error || 'Erro desconhecido'));
@@ -216,12 +225,16 @@ export async function renderAlertsView(container: HTMLElement): Promise<void> {
                     <div><span class="badge badge-success">${alert.status}</span></div>
                 </div>
             </div>
-            ${alert.details ? `
+            ${
+                alert.details
+                    ? `
                 <div>
                     <div class="kpi-label">Metadados Técnicos Sanitizados</div>
                     <pre style="background: var(--bg-page); padding: 10px; border-radius: 6px; font-size: 12px; border: 1px solid var(--border-color); overflow-x: auto; font-family: var(--font-mono);">${escapeHtml(JSON.stringify(alert.details, null, 2))}</pre>
                 </div>
-            ` : ''}
+            `
+                    : ''
+            }
         `;
 
         modal.style.display = 'flex';
@@ -236,9 +249,9 @@ export async function renderAlertsView(container: HTMLElement): Promise<void> {
     });
 
     // Wire filters
-    container.querySelectorAll('.alert-filter-status').forEach(btn => {
+    container.querySelectorAll('.alert-filter-status').forEach((btn) => {
         btn.addEventListener('click', () => {
-            container.querySelectorAll('.alert-filter-status').forEach(b => b.classList.remove('active'));
+            container.querySelectorAll('.alert-filter-status').forEach((b) => b.classList.remove('active'));
             btn.classList.add('active');
             currentFilter = btn.getAttribute('data-status') || 'ALL';
             const tbody = container.querySelector('#alerts-table-body') as HTMLElement;

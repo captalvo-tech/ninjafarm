@@ -50,4 +50,3 @@ export function triggerHaptic(pattern: HapticPattern = 'light'): void {
         // Ignora silenciosamente se o navegador rejeitar vibração sem interação direta
     }
 }
-

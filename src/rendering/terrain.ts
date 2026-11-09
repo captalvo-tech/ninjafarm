@@ -1,7 +1,9 @@
 import { Entity } from 'playcanvas';
+
 import { FARM_CONFIG } from '../core/config';
+
 import type { FarmMaterials } from './materials';
-import { BuildingModelFactory } from './models';
+import type { BuildingModelFactory } from './models';
 
 export class FarmTerrain {
     readonly entity: Entity;
@@ -115,10 +117,9 @@ export class FarmTerrain {
         for (let i = 0; i < treePositions.length; i++) {
             const tree = this.modelFactory.createTree();
             tree.setLocalPosition(treePositions[i][0], 0, treePositions[i][1]);
-            const scale = 0.8 + ((i % 3) * 0.2);
+            const scale = 0.8 + (i % 3) * 0.2;
             tree.setLocalScale(scale, scale, scale);
             this.entity.addChild(tree);
         }
     }
 }
-

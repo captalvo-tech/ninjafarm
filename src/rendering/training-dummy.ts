@@ -1,12 +1,14 @@
 import { Color, Entity, StandardMaterial } from 'playcanvas';
+
 import { sound } from '../audio/sound';
+
 import type { VisualEffectsManager } from './vfx';
 
 export class TrainingDummy {
     readonly entity: Entity;
     private targetPost: Entity;
-    private wobbleTime: number = 0;
-    private isWobbling: boolean = false;
+    private wobbleTime = 0;
+    private isWobbling = false;
     private onHitCallback?: () => void;
 
     private woodMat: StandardMaterial;

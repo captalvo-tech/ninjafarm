@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { FarmGrid } from '../../src/core/grid';
 import { SimulationClock } from '../../src/simulation/clock';
 import { CropSystem } from '../../src/simulation/crops';
@@ -218,7 +219,7 @@ describe('Sistemas de Simulação e Recursos', () => {
 
         // Deve conter galinhas no rebanho inicial
         const animals = fauna.getAnimals();
-        const chickens = animals.filter(a => a.type === 'chicken');
+        const chickens = animals.filter((a) => a.type === 'chicken');
         expect(chickens.length).toBeGreaterThanOrEqual(1);
 
         const chicken = chickens[0];
@@ -244,13 +245,12 @@ describe('Sistemas de Simulação e Recursos', () => {
         // Serialização e carregamento fiel
         const serialized = fauna.serialize();
         expect(serialized.length).toBe(animals.length);
-        expect(serialized.some(a => a.type === 'chicken')).toBe(true);
+        expect(serialized.some((a) => a.type === 'chicken')).toBe(true);
 
         // Carrega em nova instância
         const newFauna = new FaunaManager(grid);
         newFauna.load(serialized);
-        const loadedChicken = newFauna.getAnimals().find(a => a.id === chicken.id);
+        const loadedChicken = newFauna.getAnimals().find((a) => a.id === chicken.id);
         expect(loadedChicken?.hunger).toBe(chicken.hunger);
     });
 });
-

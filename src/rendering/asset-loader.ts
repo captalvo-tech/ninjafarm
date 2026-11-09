@@ -1,4 +1,5 @@
-import { AppBase, Asset, ContainerResource, Entity } from 'playcanvas';
+import type { AppBase, ContainerResource, Entity } from 'playcanvas';
+import { Asset } from 'playcanvas';
 
 export interface LoadedGLB {
     asset: Asset;
@@ -38,9 +39,7 @@ export class GlbAssetLoader {
                     animations: (resource.animations || []) as Asset[],
                     getTrack: (nameSub: string) => {
                         const anims = (resource.animations as Asset[]) || [];
-                        const match = anims.find((a) =>
-                            a.name.toLowerCase().includes(nameSub.toLowerCase())
-                        );
+                        const match = anims.find((a) => a.name.toLowerCase().includes(nameSub.toLowerCase()));
                         return match?.resource;
                     }
                 };
@@ -60,4 +59,3 @@ export class GlbAssetLoader {
         return promise;
     }
 }
-

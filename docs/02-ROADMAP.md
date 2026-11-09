@@ -2,15 +2,15 @@
 
 **Não saltar fases.** Um marco posterior pode influenciar a arquitetura de dados de outro, mas não justifica implementar sistemas inteiros antecipadamente.
 
-| Fase | Produto jogável obrigatório | Critério de conclusão |
-| --- | --- | --- |
-| **1. Fazenda autossustentável** | Ambiente 3D de qualidade, construção, animais/plantas, energia solar/bateria, água, save e ciclo temporal | Aceites e evidências em `03`/`09`; celular + desktop |
-| **2. Mapa global** | Mapa terrestre cartográfico com GPS, posições virtuais, deslocamento e entrada em fazendas 3D | Distâncias e trajetos reais, privacidade segura, latência controlada |
-| **3. Treinamento ninja** | Progressão do ninja, 20 gadgets/técnicas e loadout de 4 alterável na base | Persistência e restrições de troca; ações não mágicas |
-| **4. Armadilhas** | Peças, sensores/armadilhas e defesas combinadas, infiltração e saque | Proprietário e outros personagens não atravessam célula bloqueada; contramedidas possíveis |
-| **5. IAs de defesa** | Câmeras, cães, drones e vigias configuráveis funcionando offline | Simulação server-side validada e registros para o dono |
-| **6. Perseguição no mapa** | Alertas, busca, seleção manual de alvo, perseguição automática, retorno | Sem localização grátis, sem teleporte e sem garantia de captura; recuperação limitada ao saque |
-| **7. IAs jogadoras** | Agentes visivelmente identificados que constroem/produzem/invadem | Agentes obedecem às mesmas regras, são auditáveis e não simulam pessoas reais |
+| Fase                            | Produto jogável obrigatório                                                                               | Critério de conclusão                                                                          |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **1. Fazenda autossustentável** | Ambiente 3D de qualidade, construção, animais/plantas, energia solar/bateria, água, save e ciclo temporal | Aceites e evidências em `03`/`09`; celular + desktop                                           |
+| **2. Mapa global**              | Mapa terrestre cartográfico com GPS, posições virtuais, deslocamento e entrada em fazendas 3D             | Distâncias e trajetos reais, privacidade segura, latência controlada                           |
+| **3. Treinamento ninja**        | Progressão do ninja, 20 gadgets/técnicas e loadout de 4 alterável na base                                 | Persistência e restrições de troca; ações não mágicas                                          |
+| **4. Armadilhas**               | Peças, sensores/armadilhas e defesas combinadas, infiltração e saque                                      | Proprietário e outros personagens não atravessam célula bloqueada; contramedidas possíveis     |
+| **5. IAs de defesa**            | Câmeras, cães, drones e vigias configuráveis funcionando offline                                          | Simulação server-side validada e registros para o dono                                         |
+| **6. Perseguição no mapa**      | Alertas, busca, seleção manual de alvo, perseguição automática, retorno                                   | Sem localização grátis, sem teleporte e sem garantia de captura; recuperação limitada ao saque |
+| **7. IAs jogadoras**            | Agentes visivelmente identificados que constroem/produzem/invadem                                         | Agentes obedecem às mesmas regras, são auditáveis e não simulam pessoas reais                  |
 
 ## Submarcos da Fase 1
 

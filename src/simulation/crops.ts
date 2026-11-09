@@ -28,8 +28,9 @@
 
 import { domainEvents } from '../core/events';
 import type { CropState, CropType } from '../core/types';
-import { InventorySystem } from './inventory';
-import { WaterSystem } from './water';
+
+import type { InventorySystem } from './inventory';
+import type { WaterSystem } from './water';
 
 export interface CropDefinition {
     id: CropType;

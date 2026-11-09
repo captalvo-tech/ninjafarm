@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+
 import { FarmGrid } from '../../src/core/grid';
+import { FarmDroid } from '../../src/rendering/droid';
+import type { FarmMaterials } from '../../src/rendering/materials';
 import { InventorySystem } from '../../src/simulation/inventory';
 import { NavigationSystem } from '../../src/simulation/navigation';
 import { TaskScheduler } from '../../src/simulation/task-scheduler';
-import { FarmDroid } from '../../src/rendering/droid';
-import type { FarmMaterials } from '../../src/rendering/materials';
-import type { FarmTask } from '../../src/core/types';
 
 describe('Fase B: Droid Único e Agendador de Tarefas', () => {
     let grid: FarmGrid;
@@ -28,8 +28,8 @@ describe('Fase B: Droid Único e Agendador de Tarefas', () => {
 
         // Mock leve de materiais para teste sem WebGL
         const mockMaterials = {
-            metal: { update: () => {} } as any,
-            glass: { update: () => {} } as any,
+            metal: { update: () => undefined } as any,
+            glass: { update: () => undefined } as any
         } as unknown as FarmMaterials;
 
         droid = new FarmDroid(grid, mockMaterials);
@@ -187,8 +187,20 @@ describe('Fase B: Droid Único e Agendador de Tarefas', () => {
     });
 
     it('8. Suporta pausar, retomar, reordenar e cancelar tarefas da agenda', () => {
-        const t1 = TaskScheduler.createStandardTask({ category: 'general', type: 'a', title: 'T1', targetId: '1', targetPosition: { x: 0, y: 0, z: 0 } });
-        const t2 = TaskScheduler.createStandardTask({ category: 'general', type: 'b', title: 'T2', targetId: '2', targetPosition: { x: 0, y: 0, z: 0 } });
+        const t1 = TaskScheduler.createStandardTask({
+            category: 'general',
+            type: 'a',
+            title: 'T1',
+            targetId: '1',
+            targetPosition: { x: 0, y: 0, z: 0 }
+        });
+        const t2 = TaskScheduler.createStandardTask({
+            category: 'general',
+            type: 'b',
+            title: 'T2',
+            targetId: '2',
+            targetPosition: { x: 0, y: 0, z: 0 }
+        });
 
         scheduler.enqueueTask(t1);
         scheduler.enqueueTask(t2);
@@ -230,4 +242,3 @@ describe('Fase B: Droid Único e Agendador de Tarefas', () => {
         expect(novoScheduler.getTasks()[0].id).toBe(task.id);
     });
 });
-

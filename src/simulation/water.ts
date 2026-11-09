@@ -28,9 +28,10 @@
 
 import { BUILDING_CATALOG } from '../core/config';
 import { domainEvents } from '../core/events';
-import { FarmGrid } from '../core/grid';
-import { EnergySystem } from './energy';
-import { InventorySystem } from './inventory';
+import type { FarmGrid } from '../core/grid';
+
+import type { EnergySystem } from './energy';
+import type { InventorySystem } from './inventory';
 
 export interface WaterMetrics {
     productionRate: number; // L/s
@@ -111,7 +112,13 @@ export class WaterSystem {
             } else {
                 this.inventory.consume('water', currentWater);
                 isDepleted = true;
-                waterSuppliedRatio = totalConsumption > 0 ? Math.min(1.0, (currentWater + totalProduction * deltaSeconds) / (totalConsumption * deltaSeconds)) : 0;
+                waterSuppliedRatio =
+                    totalConsumption > 0
+                        ? Math.min(
+                              1.0,
+                              (currentWater + totalProduction * deltaSeconds) / (totalConsumption * deltaSeconds)
+                          )
+                        : 0;
             }
         }
 
@@ -133,4 +140,3 @@ export class WaterSystem {
         return this.metrics;
     }
 }
-

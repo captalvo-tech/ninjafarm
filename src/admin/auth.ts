@@ -55,7 +55,12 @@ export class AdminAuthManager {
                     if (this.csrfToken) localStorage.setItem('ninja_admin_csrf', this.csrfToken);
                     if (this.email) localStorage.setItem('ninja_admin_email', this.email);
                     if (this.role) localStorage.setItem('ninja_admin_role', this.role);
-                    return { authenticated: true, email: this.email || undefined, role: this.role || undefined, csrfToken: this.csrfToken || undefined };
+                    return {
+                        authenticated: true,
+                        email: this.email || undefined,
+                        role: this.role || undefined,
+                        csrfToken: this.csrfToken || undefined
+                    };
                 }
             } else if (res.status === 401) {
                 const data = await res.json().catch(() => ({}));
@@ -68,7 +73,10 @@ export class AdminAuthManager {
         return { authenticated: false };
     }
 
-    public async login(email: string, password: string): Promise<{ success: boolean; error?: string; need_setup?: boolean }> {
+    public async login(
+        email: string,
+        password: string
+    ): Promise<{ success: boolean; error?: string; need_setup?: boolean }> {
         try {
             const res = await fetch('/api/admin.php', {
                 method: 'POST',
@@ -134,7 +142,7 @@ export class AdminAuthManager {
 
     public async apiFetch(url: string, options: RequestInit = {}): Promise<Response> {
         const headers: Record<string, string> = {
-            ...(options.headers as Record<string, string> || {})
+            ...((options.headers as Record<string, string>) || {})
         };
 
         if (this.token) {

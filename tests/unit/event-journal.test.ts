@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { EventJournal } from '../../src/simulation/event-journal';
 
 describe('EventJournal & Histórico Operacional do Droid', () => {
@@ -54,4 +55,3 @@ describe('EventJournal & Histórico Operacional do Droid', () => {
         expect(journal2.getRecentEvents(1)[0].title).toBe('Painel Fotovoltaico Construído');
     });
 });
-

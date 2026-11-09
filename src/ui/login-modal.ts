@@ -3,8 +3,8 @@
  * Forces authentication before entering the 3D world.
  */
 
-import type { AuthManager } from '../persistence/auth';
 import type { UserProfile } from '../core/types';
+import type { AuthManager } from '../persistence/auth';
 
 export interface LoginModalCallbacks {
     onLoginSuccess: (user: UserProfile) => void;
@@ -239,4 +239,3 @@ export class LoginModal {
         this.overlay.classList.remove('visible');
     }
 }
-

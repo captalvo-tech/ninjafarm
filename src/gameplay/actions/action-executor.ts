@@ -3,13 +3,15 @@
  * Handles atomic execution, validation, pathfinding dispatch and state transitions.
  */
 
+import { domainEvents } from '../../core/events';
 import type { FarmGrid } from '../../core/grid';
 import type { ResourceInventory } from '../../core/types';
 import type { CropSystem } from '../../simulation/crops';
 import type { InventorySystem } from '../../simulation/inventory';
 import type { NavigationSystem, PathNode } from '../../simulation/navigation';
-import { domainEvents } from '../../core/events';
-import { ActionResolver, type ResolverContext } from './action-resolver';
+
+import { ActionResolver } from './action-resolver';
+import type { ResolverContext } from './action-resolver';
 import type { ContextAction, ContextActionId, SelectedTarget, SoilStatus } from './action-types';
 
 export interface ActionExecutionResult {
@@ -36,12 +38,7 @@ export class ActionExecutor {
     private lastExecutionTime = new Map<string, number>();
     private cooldownMs = 300;
 
-    constructor(
-        grid: FarmGrid,
-        cropSystem: CropSystem,
-        inventory: InventorySystem,
-        navigation: NavigationSystem
-    ) {
+    constructor(grid: FarmGrid, cropSystem: CropSystem, inventory: InventorySystem, navigation: NavigationSystem) {
         this.grid = grid;
         this.cropSystem = cropSystem;
         this.inventory = inventory;
@@ -60,7 +57,7 @@ export class ActionExecutor {
         const lastTime = this.lastExecutionTime.get(target.id) ?? 0;
 
         // 1. Prevenção de concorrência / clique duplo acidental (debounce)
-        if (this.activeExecutions.has(target.id) || (now - lastTime < this.cooldownMs)) {
+        if (this.activeExecutions.has(target.id) || now - lastTime < this.cooldownMs) {
             return {
                 success: false,
                 errorReason: 'Ação já em execução ou clique duplo detectado.'
@@ -166,7 +163,8 @@ export class ActionExecutor {
                 target.growthProgress = 0;
                 target.waterSupplied = true;
 
-                const cropName = preferredCrop === 'rice' ? 'Arroz' : preferredCrop === 'vegetable' ? 'Hortaliça' : 'Lótus';
+                const cropName =
+                    preferredCrop === 'rice' ? 'Arroz' : preferredCrop === 'vegetable' ? 'Hortaliça' : 'Lótus';
                 return {
                     success: true,
                     actionId: 'plant_crop',
@@ -239,7 +237,12 @@ export class ActionExecutor {
                 target.soilStatus = newStatus;
                 target.growthProgress = 0;
 
-                const cropLabel = harvestRes.cropType === 'lotus' ? 'Flor de Lótus' : harvestRes.cropType === 'vegetable' ? 'Hortaliça' : 'Arroz';
+                const cropLabel =
+                    harvestRes.cropType === 'lotus'
+                        ? 'Flor de Lótus'
+                        : harvestRes.cropType === 'vegetable'
+                          ? 'Hortaliça'
+                          : 'Arroz';
                 const xp = harvestRes.cropType === 'lotus' ? 45 : harvestRes.cropType === 'vegetable' ? 20 : 25;
 
                 return {

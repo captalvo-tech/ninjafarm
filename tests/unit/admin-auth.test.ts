@@ -7,9 +7,10 @@
  * ============================================================================
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
+
+import { describe, it, expect } from 'vitest';
 
 describe('Painel /admin: Autenticação, Segurança e Governança do Roadmap', () => {
     const projectRoot = path.resolve(__dirname, '../..');
@@ -32,7 +33,9 @@ describe('Painel /admin: Autenticação, Segurança e Governança do Roadmap', (
             expect(typeof f.name).toBe('string');
             expect(typeof f.description).toBe('string');
             expect(typeof f.phase).toBe('number');
-            expect(['PLANEJADO', 'EM_DESENVOLVIMENTO', 'IMPLEMENTADO', 'VALIDADO', 'DEPRECIADO', 'REMOVIDO']).toContain(f.status);
+            expect(['PLANEJADO', 'EM_DESENVOLVIMENTO', 'IMPLEMENTADO', 'VALIDADO', 'DEPRECIADO', 'REMOVIDO']).toContain(
+                f.status
+            );
 
             if (f.status === 'REMOVIDO') {
                 expect(typeof f.removalReason).toBe('string');
@@ -45,7 +48,7 @@ describe('Painel /admin: Autenticação, Segurança e Governança do Roadmap', (
     it('2. Valida integridade do histórico imutável (history.jsonl)', () => {
         expect(fs.existsSync(historyPath)).toBe(true);
         const content = fs.readFileSync(historyPath, 'utf-8');
-        const lines = content.split('\n').filter(l => l.trim().length > 0);
+        const lines = content.split('\n').filter((l) => l.trim().length > 0);
         expect(lines.length).toBeGreaterThanOrEqual(20);
 
         const features = JSON.parse(fs.readFileSync(featuresPath, 'utf-8'));
@@ -74,7 +77,7 @@ describe('Painel /admin: Autenticação, Segurança e Governança do Roadmap', (
         function checkRateLimit(ip: string, now: number): boolean {
             const entry = limits[ip];
             if (!entry) return true;
-            if (entry.attempts >= 5 && (now - entry.lastAttempt) < 900) {
+            if (entry.attempts >= 5 && now - entry.lastAttempt < 900) {
                 return false; // bloqueado
             }
             return true;

@@ -84,7 +84,9 @@ export async function renderConfigView(container: HTMLElement): Promise<void> {
                 return;
             }
 
-            tbody.innerHTML = logs.map(l => `
+            tbody.innerHTML = logs
+                .map(
+                    (l) => `
                 <tr>
                     <td style="font-family: var(--font-mono); font-size: 12px;">${escapeHtml(l.date || new Date(l.timestamp * 1000).toLocaleString('pt-BR'))}</td>
                     <td><code>${escapeHtml(l.admin)}</code></td>
@@ -92,7 +94,9 @@ export async function renderConfigView(container: HTMLElement): Promise<void> {
                     <td><code>${escapeHtml(l.ip)}</code></td>
                     <td style="font-size: 12px; color: var(--text-secondary);">${l.details ? escapeHtml(JSON.stringify(l.details)) : '-'}</td>
                 </tr>
-            `).join('');
+            `
+                )
+                .join('');
         } catch (e: any) {
             loading.innerHTML = `<span style="color: var(--accent-red);">Erro ao carregar auditoria: ${e.message}</span>`;
         }
@@ -103,8 +107,5 @@ export async function renderConfigView(container: HTMLElement): Promise<void> {
 }
 
 function escapeHtml(str: string): string {
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }

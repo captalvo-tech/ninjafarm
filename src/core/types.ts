@@ -15,23 +15,23 @@ export interface ResourceInventory {
 }
 
 export type BuildingType =
-    | 'hq'             // Sede principal
-    | 'shed'           // Galpão de armazenamento
-    | 'crop_field'     // Canteiro de cultivo
-    | 'solar_panel'    // Painel solar fotovoltaico
-    | 'battery'        // Banco de baterias
-    | 'water_tank'     // Cisterna / reservatório hídrico
-    | 'water_pump'     // Bomba de captação
-    | 'chicken_coop'   // Galinheiro
-    | 'fish_pond'      // Tanque de peixes
-    | 'lamp_post'      // Poste de luz / lanterna noturna
-    | 'torii_gate'     // Portal Torii sagrado japonês
-    | 'bonfire';       // Fogueira shinobi com repouso e luz
+    | 'hq' // Sede principal
+    | 'shed' // Galpão de armazenamento
+    | 'crop_field' // Canteiro de cultivo
+    | 'solar_panel' // Painel solar fotovoltaico
+    | 'battery' // Banco de baterias
+    | 'water_tank' // Cisterna / reservatório hídrico
+    | 'water_pump' // Bomba de captação
+    | 'chicken_coop' // Galinheiro
+    | 'fish_pond' // Tanque de peixes
+    | 'lamp_post' // Poste de luz / lanterna noturna
+    | 'torii_gate' // Portal Torii sagrado japonês
+    | 'bonfire'; // Fogueira shinobi com repouso e luz
 
 export type BuildingOrientation = 0 | 90 | 180 | 270;
 
 export interface Footprint {
-    width: number;  // em células
+    width: number; // em células
     height: number; // em células
 }
 
@@ -44,7 +44,7 @@ export interface BuildingDefinition {
     maxHealth: number;
     energyProduction?: number; // Watts / unidades por segundo no pico
     energyConsumption?: number; // Watts / unidades por segundo contínuo
-    waterProduction?: number;  // Litros / unidades por segundo
+    waterProduction?: number; // Litros / unidades por segundo
     waterConsumption?: number; // Litros / unidades por segundo
     storageCapacity?: Partial<ResourceInventory>;
 }
@@ -187,4 +187,3 @@ export interface FarmSaveState {
     geminiConfig?: GeminiSaveConfig;
     eventsLog?: FarmEventEntry[];
 }
-

@@ -44,55 +44,56 @@ import {
 } from 'playcanvas';
 
 import './starter.css';
+import { GeminiService } from './ai/gemini-service';
+import { sound } from './audio/sound';
 import { FARM_CONFIG, BUILDING_CATALOG } from './core/config';
 import { FarmGrid } from './core/grid';
-import { SimulationClock } from './simulation/clock';
-import { InventorySystem } from './simulation/inventory';
-import { EnergySystem } from './simulation/energy';
-import { WaterSystem } from './simulation/water';
-import { CropSystem } from './simulation/crops';
-import { createFarmMaterials, loadPbrTextures } from './rendering/materials';
-import { GlbAssetLoader } from './rendering/asset-loader';
-import { BuildingModelFactory } from './rendering/models';
-import { FarmTerrain } from './rendering/terrain';
-import { NinjaCharacter } from './rendering/character';
-import { CameraController } from './rendering/camera-controller';
-import { FarmHUD } from './ui/hud';
+import { telemetry } from './core/telemetry';
+import type { BuildingOrientation, BuildingType, CropType, FarmSaveState, FarmTask, ResourceType } from './core/types';
+import { getVisualConfig, onVisualConfigChange } from './core/visual-config';
+import { ActionExecutor } from './gameplay/actions/action-executor';
+import { ActionResolver } from './gameplay/actions/action-resolver';
+import type { ResolverContext } from './gameplay/actions/action-resolver';
+import type { ContextAction, SelectedTarget, SoilStatus } from './gameplay/actions/action-types';
+import { ProximityInteractionManager } from './gameplay/interaction';
+import { ShinobiMerchantManager } from './gameplay/merchant';
+import { NinjaProgressionSystem } from './gameplay/progression';
+import { triggerHaptic } from './input/haptics';
+import { VirtualJoystick } from './input/touch-joystick';
 import { AuthManager } from './persistence/auth';
 import { CloudSaveManager } from './persistence/cloud-save';
-import { LoginModal } from './ui/login-modal';
-import { SettingsModal } from './ui/settings-modal';
-import { sound } from './audio/sound';
-import { FaunaManager } from './rendering/fauna';
-import { ProximityInteractionManager } from './gameplay/interaction';
-import { VirtualJoystick } from './input/touch-joystick';
-import { triggerHaptic } from './input/haptics';
-import { ShinobiMerchantManager } from './gameplay/merchant';
-import { ObjectiveManager } from './ui/objectives';
-import { t } from './ui/i18n';
-import { VisualEffectsManager } from './rendering/vfx';
+import { GlbAssetLoader } from './rendering/asset-loader';
+import { CameraController } from './rendering/camera-controller';
 import { CelestialSkyManager } from './rendering/celestial';
-import { HolographicGridOverlay } from './rendering/grid-overlay';
-import { TrainingDummy } from './rendering/training-dummy';
-import { WeatherSystem } from './rendering/weather';
-import { NinjaProgressionSystem } from './gameplay/progression';
-import { getVisualConfig, onVisualConfigChange } from './core/visual-config';
-import type { BuildingOrientation, BuildingType, CropType, FarmSaveState } from './core/types';
-import { NavigationSystem, type PathNode } from './simulation/navigation';
-import { ActionResolver, type ResolverContext } from './gameplay/actions/action-resolver';
-import { ActionExecutor } from './gameplay/actions/action-executor';
-import type { ContextAction, SelectedTarget, SoilStatus } from './gameplay/actions/action-types';
-import { ContextActionUI } from './ui/context-action';
+import { NinjaCharacter } from './rendering/character';
 import { FarmDroid } from './rendering/droid';
-import { TaskScheduler } from './simulation/task-scheduler';
-import { SchedulerUI } from './ui/scheduler-ui';
-import { GeminiService } from './ai/gemini-service';
-import { DroidChatModal } from './ui/droid-chat';
+import { FaunaManager } from './rendering/fauna';
+import { HolographicGridOverlay } from './rendering/grid-overlay';
+import { createFarmMaterials, loadPbrTextures } from './rendering/materials';
+import { BuildingModelFactory } from './rendering/models';
+import { FarmTerrain } from './rendering/terrain';
+import { TrainingDummy } from './rendering/training-dummy';
+import { VisualEffectsManager } from './rendering/vfx';
+import { WeatherSystem } from './rendering/weather';
+import { SimulationClock } from './simulation/clock';
+import { CropSystem } from './simulation/crops';
+import { EnergySystem } from './simulation/energy';
 import { EventJournal } from './simulation/event-journal';
-import { InteractiveTutorial } from './ui/tutorial';
+import { InventorySystem } from './simulation/inventory';
+import { NavigationSystem } from './simulation/navigation';
+import type { PathNode } from './simulation/navigation';
+import { TaskScheduler } from './simulation/task-scheduler';
+import { WaterSystem } from './simulation/water';
 import { BugReportModal } from './ui/bug-report';
-import { telemetry } from './core/telemetry';
-import type { FarmTask, ResourceType } from './core/types';
+import { ContextActionUI } from './ui/context-action';
+import { DroidChatModal } from './ui/droid-chat';
+import { FarmHUD } from './ui/hud';
+import { t } from './ui/i18n';
+import { LoginModal } from './ui/login-modal';
+import { ObjectiveManager } from './ui/objectives';
+import { SchedulerUI } from './ui/scheduler-ui';
+import { SettingsModal } from './ui/settings-modal';
+import { InteractiveTutorial } from './ui/tutorial';
 
 // ==========================================
 // 1. BOOTSTRAP GRAPHICS DEVICE & PLAYCANVAS
@@ -311,7 +312,11 @@ onVisualConfigChange((updatedConfig) => {
 });
 
 // Acesso seguro ao Ninja Farm Studio em ambiente local/desenvolvimento
-const isDev = import.meta.env.DEV || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.search.includes('studio');
+const isDev =
+    import.meta.env.DEV ||
+    window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1' ||
+    window.location.search.includes('studio');
 if (isDev) {
     const studioBtn = document.createElement('a');
     studioBtn.href = './studio.html';
@@ -412,7 +417,11 @@ function updateSelectedAction(): void {
             if (crop.stage === 'ready') {
                 selectedWorldTarget.soilStatus = 'ready';
             } else if (crop.stage === 'growing' || crop.stage === 'planted') {
-                selectedWorldTarget.soilStatus = crop.waterSupplied ? (crop.stage === 'growing' ? 'growing' : 'planted') : 'thirsty';
+                selectedWorldTarget.soilStatus = crop.waterSupplied
+                    ? crop.stage === 'growing'
+                        ? 'growing'
+                        : 'planted'
+                    : 'thirsty';
             }
         } else if (b?.customData?.soilStatus) {
             selectedWorldTarget.soilStatus = b.customData.soilStatus as SoilStatus;
@@ -442,15 +451,41 @@ function executeDirectContextAction(action: ContextAction): void {
         return;
     }
 
-    const physicalLaborActions = ['prepare_soil', 'plant_crop', 'water_crop', 'harvest_crop', 'recover_soil', 'feed_animal', 'collect_eggs'];
+    const physicalLaborActions = [
+        'prepare_soil',
+        'plant_crop',
+        'water_crop',
+        'harvest_crop',
+        'recover_soil',
+        'feed_animal',
+        'collect_eggs'
+    ];
     if (physicalLaborActions.includes(action.actionId)) {
         const targetPos = grid.gridToWorld(action.target.gridX, action.target.gridY);
-        const reqRes = action.actionId === 'water_crop' ? { water: 1 } : action.actionId === 'feed_animal' ? { food: 1 } : undefined;
-        const prodRes = action.actionId === 'harvest_crop' ? { food: 25 } : action.actionId === 'collect_eggs' ? { food: 10 } : undefined;
-        const dur = action.actionId === 'harvest_crop' ? 15 : action.actionId === 'plant_crop' ? 8 : action.actionId === 'water_crop' ? 10 : 12;
+        const reqRes =
+            action.actionId === 'water_crop'
+                ? { water: 1 }
+                : action.actionId === 'feed_animal'
+                  ? { food: 1 }
+                  : undefined;
+        const prodRes =
+            action.actionId === 'harvest_crop'
+                ? { food: 25 }
+                : action.actionId === 'collect_eggs'
+                  ? { food: 10 }
+                  : undefined;
+        const dur =
+            action.actionId === 'harvest_crop'
+                ? 15
+                : action.actionId === 'plant_crop'
+                  ? 8
+                  : action.actionId === 'water_crop'
+                    ? 10
+                    : 12;
 
         const task = TaskScheduler.createStandardTask({
-            category: action.target.type === 'plot' ? 'agriculture' : action.target.type === 'animal' ? 'animals' : 'general',
+            category:
+                action.target.type === 'plot' ? 'agriculture' : action.target.type === 'animal' ? 'animals' : 'general',
             type: action.actionId,
             title: action.title,
             targetId: action.target.id,
@@ -604,7 +639,12 @@ function findNearestSelectableTarget(ninjaX: number, ninjaZ: number, maxDist: nu
                 id: anim.id || `anim_${anim.type}`,
                 type: 'animal',
                 animalType: anim.type,
-                name: anim.type === 'chicken' ? 'Galinha Caipira' : anim.type === 'cow' ? 'Vaca Leiteira' : 'Raposa Guardiã',
+                name:
+                    anim.type === 'chicken'
+                        ? 'Galinha Caipira'
+                        : anim.type === 'cow'
+                          ? 'Vaca Leiteira'
+                          : 'Raposa Guardiã',
                 hunger: anim.hunger ?? 20,
                 readyToCollect: anim.readyToCollect ?? false,
                 gridX: Math.floor(anim.position.x),
@@ -672,7 +712,14 @@ const contextUI = new ContextActionUI({
 // Map de entidades 3D no mundo
 const buildingEntities = new Map<string, Entity>();
 
-function spawnBuilding3D(instanceId: string, type: BuildingType, gridX: number, gridY: number, orientation: BuildingOrientation, isBlueprint: boolean = false): Entity {
+function spawnBuilding3D(
+    instanceId: string,
+    type: BuildingType,
+    gridX: number,
+    gridY: number,
+    orientation: BuildingOrientation,
+    isBlueprint = false
+): Entity {
     const entity = modelFactory.createBuildingEntity(type);
     if (isBlueprint) {
         modelFactory.applyGhostMaterial(entity, true);
@@ -829,7 +876,12 @@ function handleCompletedTask(task: FarmTask): void {
     hud.showToast(`✅ Droid concluiu: ${task.title}`);
 
     eventJournal.recordEvent({
-        type: task.category === 'agriculture' ? 'crop_harvested' : task.category === 'animals' ? 'animal_fed' : 'building_completed',
+        type:
+            task.category === 'agriculture'
+                ? 'crop_harvested'
+                : task.category === 'animals'
+                  ? 'animal_fed'
+                  : 'building_completed',
         title: task.title,
         description: `Concluído com sucesso pelo Droid.`
     });
@@ -1049,7 +1101,14 @@ function commitPlacement(): void {
     if (success) {
         sound.playBuild();
         // Spawna holograma / blueprint translúcido
-        spawnBuilding3D(instanceId, activePlacementType, currentGhostGridX, currentGhostGridY, currentGhostOrientation, true);
+        spawnBuilding3D(
+            instanceId,
+            activePlacementType,
+            currentGhostGridX,
+            currentGhostGridY,
+            currentGhostOrientation,
+            true
+        );
 
         // Enfileira a tarefa de construção física para o Droid
         const pos = grid.gridToWorld(currentGhostGridX, currentGhostGridY);
@@ -1096,7 +1155,7 @@ function handleDemolishAt(gridX: number, gridY: number): void {
 
     if (b.isBlueprint) {
         // Cancela tarefa no agendador
-        const queued = taskScheduler.getTasks().find(t => t.targetId === b.instanceId);
+        const queued = taskScheduler.getTasks().find((t) => t.targetId === b.instanceId);
         if (queued) {
             taskScheduler.cancelTask(queued.id);
             schedulerUI.render();
@@ -1202,15 +1261,18 @@ const tutorial = new InteractiveTutorial(() => {
     telemetry.track('tutorial_started');
 });
 
-const bugReportModal = new BugReportModal(() => ({
-    version: 'Alpha 0.1.0',
-    screen: cameraCtrl.getMode(),
-    activeTask: taskScheduler.getActiveTask()?.title,
-    recentErrors: []
-}), (repId) => {
-    hud.showToast(`Relatório enviado! ID: ${repId}`);
-    sound.playHarvest();
-});
+const bugReportModal = new BugReportModal(
+    () => ({
+        version: 'Alpha 0.1.0',
+        screen: cameraCtrl.getMode(),
+        activeTask: taskScheduler.getActiveTask()?.title,
+        recentErrors: []
+    }),
+    (repId) => {
+        hud.showToast(`Relatório enviado! ID: ${repId}`);
+        sound.playHarvest();
+    }
+);
 
 const loginModal = new LoginModal(authManager, {
     onLoginSuccess: async (user) => {
@@ -1274,7 +1336,10 @@ objectives.setRewardCallback((reward) => {
     hud.showToast(t('trials.reward_claimed'));
     hud.updateCodexTrials();
 });
-hud.setTrialsProvider(() => objectives.renderTrialsListHtml(), (id) => objectives.claimReward(id));
+hud.setTrialsProvider(
+    () => objectives.renderTrialsListHtml(),
+    (id) => objectives.claimReward(id)
+);
 
 // Virtual Joystick para Mobile (Ergonomia Mobile-First: Polegar Esquerdo = Direção/Auto-Sprint, Polegar Direito = Ação Contextual + Cluster de Jutsus)
 const joystick = new VirtualJoystick({
@@ -1295,7 +1360,8 @@ const joystick = new VirtualJoystick({
     },
     onSelectCrop: (crop) => {
         currentSelectedCrop = crop;
-        const name = crop === 'lotus' ? 'Flor de Lótus 🪷' : crop === 'vegetable' ? 'Cenoura Ninja 🥕' : 'Arroz Tradicional 🌾';
+        const name =
+            crop === 'lotus' ? 'Flor de Lótus 🪷' : crop === 'vegetable' ? 'Cenoura Ninja 🥕' : 'Arroz Tradicional 🌾';
         hud.showToast(`Semente selecionada: ${name}`);
     }
 });
@@ -1591,7 +1657,12 @@ function handleTap(clientX: number, clientY: number): void {
                             id: anim.id || `anim_${anim.type}`,
                             type: 'animal',
                             animalType: anim.type,
-                            name: anim.type === 'chicken' ? 'Galinha Caipira' : anim.type === 'cow' ? 'Vaca Leiteira' : 'Raposa Guardiã',
+                            name:
+                                anim.type === 'chicken'
+                                    ? 'Galinha Caipira'
+                                    : anim.type === 'cow'
+                                      ? 'Vaca Leiteira'
+                                      : 'Raposa Guardiã',
                             hunger: anim.hunger ?? 20,
                             readyToCollect: anim.readyToCollect ?? false,
                             gridX: Math.floor(anim.position.x),
@@ -1614,8 +1685,10 @@ function handleTap(clientX: number, clientY: number): void {
                             let soilStatus: SoilStatus = (b.customData?.soilStatus as SoilStatus) || 'raw';
                             if (crop) {
                                 if (crop.stage === 'ready') soilStatus = 'ready';
-                                else if (crop.stage === 'growing') soilStatus = crop.waterSupplied ? 'growing' : 'thirsty';
-                                else if (crop.stage === 'planted') soilStatus = crop.waterSupplied ? 'planted' : 'thirsty';
+                                else if (crop.stage === 'growing')
+                                    soilStatus = crop.waterSupplied ? 'growing' : 'thirsty';
+                                else if (crop.stage === 'planted')
+                                    soilStatus = crop.waterSupplied ? 'planted' : 'thirsty';
                                 else if (crop.stage === 'harvested' || crop.stage === 'empty') soilStatus = 'tilled';
                             }
                             selectTarget({
@@ -1667,10 +1740,14 @@ function handleTap(clientX: number, clientY: number): void {
     }
 }
 
-canvas.addEventListener('wheel', (e) => {
-    e.preventDefault();
-    cameraCtrl.zoom(e.deltaY * 0.03);
-}, { passive: false });
+canvas.addEventListener(
+    'wheel',
+    (e) => {
+        e.preventDefault();
+        cameraCtrl.zoom(e.deltaY * 0.03);
+    },
+    { passive: false }
+);
 
 // ==========================================
 // 8. GAME LOOP & SIMULATION UPDATE
@@ -1745,7 +1822,7 @@ app.on('update', () => {
         if (isNight) {
             // Noite iluminada por luar suave azulado para que a fazenda permaneça visível
             ambientLight.light.intensity = 0.45;
-            ambientLight.light.color = new Color(0.20, 0.28, 0.45);
+            ambientLight.light.color = new Color(0.2, 0.28, 0.45);
         } else {
             // Dia claro e radiante com preenchimento natural do céu
             ambientLight.light.intensity = 0.85;
@@ -1925,7 +2002,13 @@ app.on('update', () => {
 
     // 8. Atualização do HUD & Progressão Ninja
     const prog = progression.getXpProgress();
-    hud.updateProgression(progression.getLevel(), progression.getCurrentRank().title, prog.current, prog.max, prog.percentage);
+    hud.updateProgression(
+        progression.getLevel(),
+        progression.getCurrentRank().title,
+        prog.current,
+        prog.max,
+        prog.percentage
+    );
     hud.updateClock(clock.getFormattedTime(), clock.getTotalDays(), fpsCounter);
     hud.updateResources(inventory.getAll());
     hud.updateEnergy(energyMetrics);

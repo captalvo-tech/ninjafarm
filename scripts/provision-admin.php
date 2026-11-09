@@ -76,3 +76,4 @@ if (file_put_contents($credentialsFile, json_encode($credentials, JSON_PRETTY_PR
     echo "❌ Falha ao gravar arquivo de credenciais.\n";
     exit(1);
 }
+

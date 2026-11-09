@@ -49,13 +49,14 @@ export interface FarmAIContext {
 }
 
 export class GeminiService {
-    private apiKey: string = '';
+    private apiKey = '';
     private mode: 'smart' | 'limited' = 'limited';
-    private lockoutUntil: number = 0;
+    private lockoutUntil = 0;
 
     constructor() {
         if (typeof localStorage !== 'undefined') {
-            this.apiKey = localStorage.getItem('ninja_gemini_key') || '';
+            this.apiKey =
+                localStorage.getItem('ninja_gemini_api_key') || localStorage.getItem('ninja_gemini_key') || '';
             this.mode = this.apiKey ? 'smart' : 'limited';
         }
     }
@@ -76,9 +77,11 @@ export class GeminiService {
         this.apiKey = key.trim();
         if (typeof localStorage !== 'undefined') {
             if (this.apiKey) {
+                localStorage.setItem('ninja_gemini_api_key', this.apiKey);
                 localStorage.setItem('ninja_gemini_key', this.apiKey);
                 this.mode = 'smart';
             } else {
+                localStorage.removeItem('ninja_gemini_api_key');
                 localStorage.removeItem('ninja_gemini_key');
                 this.mode = 'limited';
             }
@@ -146,7 +149,7 @@ export class GeminiService {
                 success: true,
                 reply: data.reply
             };
-        } catch (err: any) {
+        } catch (_err: unknown) {
             // Penalidade de 30 segundos por falha de rede
             this.lockoutUntil = Date.now() + 30000;
             return {
@@ -163,25 +166,34 @@ export class GeminiService {
     // ==========================================
 
     public generateProductionReport(resources: ResourceInventory, crops: CropState[]): string {
-        const readyCount = crops.filter(c => c.stage === 'ready').length;
-        const growingCount = crops.filter(c => c.stage === 'growing' || c.stage === 'planted').length;
+        const readyCount = crops.filter((c) => c.stage === 'ready').length;
+        const growingCount = crops.filter((c) => c.stage === 'growing' || c.stage === 'planted').length;
 
-        return `📊 **Relatório de Produção e Estoque**\n\n` +
+        return (
+            `📊 **Relatório de Produção e Estoque**\n\n` +
             `• 🪵 Madeira: ${Math.floor(resources.wood)} unidades\n` +
             `• ⚙️ Metal: ${Math.floor(resources.metal)} unidades\n` +
             `• 🔩 Peças: ${Math.floor(resources.parts)} componentes\n` +
             `• 🍙 Alimento: ${Math.floor(resources.food)} rações\n` +
             `• 💧 Água: ${Math.floor(resources.water)} L\n` +
             `• ⚡ Energia: ${Math.floor(resources.energy)} W\n\n` +
-            `🌾 **Lavoura Shinobi:** ${crops.length} canteiros ativos (${readyCount} maduros, ${growingCount} em crescimento).`;
+            `🌾 **Lavoura Shinobi:** ${crops.length} canteiros ativos (${readyCount} maduros, ${growingCount} em crescimento).`
+        );
     }
 
-    public generateEnergyReport(solarGen: number, storedEnergy: number, droidBattery: number, droidState: string): string {
-        return `⚡ **Diagnóstico de Energia & Bateria**\n\n` +
+    public generateEnergyReport(
+        solarGen: number,
+        storedEnergy: number,
+        droidBattery: number,
+        droidState: string
+    ): string {
+        return (
+            `⚡ **Diagnóstico de Energia & Bateria**\n\n` +
             `• ☀️ Geração Solar Atual: +${solarGen.toFixed(1)} W\n` +
             `• 🔋 Armazenamento na Base: ${Math.floor(storedEnergy)} W disponíveis\n` +
             `• 🤖 Bateria do Droid: ${Math.round(droidBattery)}% (Estado: ${droidState})\n\n` +
-            `*Dica:* Quando a bateria do Droid atinge < 15%, ele retorna automaticamente à estação de recarga próxima ao painel solar.`;
+            `*Dica:* Quando a bateria do Droid atinge < 15%, ele retorna automaticamente à estação de recarga próxima ao painel solar.`
+        );
     }
 
     public generateAdviceReport(
@@ -196,40 +208,53 @@ export class GeminiService {
             suggestions.push('💧 **Nível Hídrico Baixo:** Instale bombas de água ou proteja os reservatórios.');
         }
 
-        const thirstyCrops = crops.filter(c => !c.waterSupplied && c.stage !== 'ready');
+        const thirstyCrops = crops.filter((c) => !c.waterSupplied && c.stage !== 'ready');
         if (thirstyCrops.length > 0) {
-            suggestions.push(`🌾 **Canteiros Sedentos:** Há ${thirstyCrops.length} canteiro(s) sem irrigação. Agende a rega para acelerar o crescimento.`);
+            suggestions.push(
+                `🌾 **Canteiros Sedentos:** Há ${thirstyCrops.length} canteiro(s) sem irrigação. Agende a rega para acelerar o crescimento.`
+            );
         }
 
-        const readyCrops = crops.filter(c => c.stage === 'ready');
+        const readyCrops = crops.filter((c) => c.stage === 'ready');
         if (readyCrops.length > 0) {
-            suggestions.push(`🧺 **Safra Pronta:** ${readyCrops.length} canteiro(s) maduro(s). Agende a colheita para alimentar a base.`);
+            suggestions.push(
+                `🧺 **Safra Pronta:** ${readyCrops.length} canteiro(s) maduro(s). Agende a colheita para alimentar a base.`
+            );
         }
 
         if (droidBattery < 20) {
-            suggestions.push('🪫 **Droid em Baixa Potência:** O Droid precisa de recarga solar antes de assumir construções pesadas.');
+            suggestions.push(
+                '🪫 **Droid em Baixa Potência:** O Droid precisa de recarga solar antes de assumir construções pesadas.'
+            );
         }
 
         if (tasksCount === 0) {
-            suggestions.push('📋 **Agenda Vazia:** Posicione novos blueprints na grade ou prepare o solo para semeadura.');
+            suggestions.push(
+                '📋 **Agenda Vazia:** Posicione novos blueprints na grade ou prepare o solo para semeadura.'
+            );
         }
 
         if (suggestions.length === 0) {
-            suggestions.push('✨ **Propriedade Equilibrada:** A fazenda opera em harmonia. Continue explorando e cumprindo provas shinobi!');
+            suggestions.push(
+                '✨ **Propriedade Equilibrada:** A fazenda opera em harmonia. Continue explorando e cumprindo provas shinobi!'
+            );
         }
 
         return `💡 **Sugestões Estratégicas Shinobi**\n\n` + suggestions.join('\n\n');
     }
 
-    public generateEventsReport(events: Array<{ timestamp: number; title: string; description: string }>): string {
+    public generateEventsReport(events: { timestamp: number; title: string; description: string }[]): string {
         if (!events || events.length === 0) {
             return `📜 **Diário de Eventos Recentes**\n\nNenhum evento registrado ainda nesta fazenda.`;
         }
 
-        const lines = events.slice(-5).reverse().map(e => {
-            const timeStr = new Date(e.timestamp).toLocaleTimeString();
-            return `• [${timeStr}] **${e.title}:** ${e.description}`;
-        });
+        const lines = events
+            .slice(-5)
+            .reverse()
+            .map((e) => {
+                const timeStr = new Date(e.timestamp).toLocaleTimeString();
+                return `• [${timeStr}] **${e.title}:** ${e.description}`;
+            });
 
         return `📜 **Diário de Eventos Recentes**\n\n` + lines.join('\n');
     }

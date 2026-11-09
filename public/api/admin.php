@@ -595,3 +595,4 @@ if ($action === 'audit_logs') {
 
 http_response_code(400);
 echo json_encode(['success' => false, 'error' => 'Ação administrativa desconhecida: ' . htmlspecialchars($action)]);
+

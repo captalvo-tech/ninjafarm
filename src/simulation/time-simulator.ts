@@ -33,15 +33,16 @@
  */
 
 import { FarmGrid } from '../core/grid';
-import { InventorySystem } from './inventory';
-import { SimulationClock } from './clock';
-import { EnergySystem } from './energy';
-import { WaterSystem } from './water';
-import { CropSystem } from './crops';
-import { TaskScheduler } from './task-scheduler';
-import { FarmDroid } from '../rendering/droid';
-import { NavigationSystem } from './navigation';
 import type { ResourceInventory } from '../core/types';
+import { FarmDroid } from '../rendering/droid';
+
+import { SimulationClock } from './clock';
+import { CropSystem } from './crops';
+import { EnergySystem } from './energy';
+import { InventorySystem } from './inventory';
+import { NavigationSystem } from './navigation';
+import { TaskScheduler } from './task-scheduler';
+import { WaterSystem } from './water';
 
 export type SimulationProfile = 'casual' | 'regular' | 'intensive';
 
@@ -133,15 +134,17 @@ export class TimeSimulator {
 
         // Enfileira tarefas de teste
         for (let i = 0; i < scheduledTasksCount; i++) {
-            scheduler.enqueueTask(TaskScheduler.createStandardTask({
-                category: 'agriculture',
-                type: 'prepare_soil',
-                title: `Preparar Canteiro #${i + 1}`,
-                targetId: `plot_sim_${i + 1}`,
-                targetPosition: { x: 10 + (i % 5) * 2, y: 0, z: 10 + Math.floor(i / 5) * 2 },
-                totalDurationSeconds: 15,
-                energyCostTotal: 4
-            }));
+            scheduler.enqueueTask(
+                TaskScheduler.createStandardTask({
+                    category: 'agriculture',
+                    type: 'prepare_soil',
+                    title: `Preparar Canteiro #${i + 1}`,
+                    targetId: `plot_sim_${i + 1}`,
+                    targetPosition: { x: 10 + (i % 5) * 2, y: 0, z: 10 + Math.floor(i / 5) * 2 },
+                    totalDurationSeconds: 15,
+                    energyCostTotal: 4
+                })
+            );
         }
 
         // Variáveis de auditoria

@@ -199,7 +199,7 @@ export function saveVisualConfig(partialConfig: Partial<VisualConfig>): VisualCo
 }
 
 export function onVisualConfigChange(callback: (config: VisualConfig) => void): () => void {
-    if (typeof window === 'undefined') return () => {};
+    if (typeof window === 'undefined') return () => undefined;
     const handler = (e: Event) => {
         const customEvent = e as CustomEvent<VisualConfig>;
         if (customEvent.detail) {

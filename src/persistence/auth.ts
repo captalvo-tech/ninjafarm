@@ -44,7 +44,7 @@ export class AuthManager {
     private events: AuthEvents;
     private baseUrl: string;
 
-    constructor(events: AuthEvents = {}, baseUrl: string = './api/auth.php') {
+    constructor(events: AuthEvents = {}, baseUrl = './api/auth.php') {
         this.events = events;
         this.baseUrl = baseUrl;
         this.sessionToken = typeof localStorage !== 'undefined' ? localStorage.getItem('ninja_session_token') : null;
@@ -114,7 +114,7 @@ export class AuthManager {
     /**
      * Login em modo desenvolvedor / teste local
      */
-    public async loginDevMock(name: string = 'Ninja Desenvolvedor', email: string = 'ninja.dev@pinut.shop'): Promise<boolean> {
+    public async loginDevMock(name = 'Ninja Desenvolvedor', email = 'ninja.dev@pinut.shop'): Promise<boolean> {
         try {
             const res = await fetch(`${this.baseUrl}?action=login`, {
                 method: 'POST',

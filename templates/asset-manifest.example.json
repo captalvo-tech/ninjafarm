@@ -1,23 +1,23 @@
 {
-  "manifestVersion": 1,
-  "notice": "Exemplo de metadados. Nenhum dos assets listados está incluído no pacote.",
-  "assets": [
-    {
-      "assetId": "ninja_modern_v01",
-      "category": "character",
-      "runtimePath": "public/assets/characters/ninja_modern_v01.glb",
-      "sourceUrl": "URL_A_PREENCHER_APOS_ESCOLHA_DO_MODELO",
-      "creator": "AUTOR_A_VERIFICAR",
-      "license": "PENDENTE_DE_VERIFICACAO",
-      "commercialUseVerified": false,
-      "redistributionInGameVerified": false,
-      "downloadDate": null,
-      "licenseEvidenceUrl": null,
-      "animations": ["Idle", "Walk", "Run"],
-      "fileBytesMeasured": null,
-      "trianglesMeasured": null,
-      "testedInBrowser": false,
-      "notes": "NÃO importar/publicar até validar a origem e a licença."
-    }
-  ]
+    "manifestVersion": 1,
+    "notice": "Exemplo de metadados. Nenhum dos assets listados está incluído no pacote.",
+    "assets": [
+        {
+            "assetId": "ninja_modern_v01",
+            "category": "character",
+            "runtimePath": "public/assets/characters/ninja_modern_v01.glb",
+            "sourceUrl": "URL_A_PREENCHER_APOS_ESCOLHA_DO_MODELO",
+            "creator": "AUTOR_A_VERIFICAR",
+            "license": "PENDENTE_DE_VERIFICACAO",
+            "commercialUseVerified": false,
+            "redistributionInGameVerified": false,
+            "downloadDate": null,
+            "licenseEvidenceUrl": null,
+            "animations": ["Idle", "Walk", "Run"],
+            "fileBytesMeasured": null,
+            "trianglesMeasured": null,
+            "testedInBrowser": false,
+            "notes": "NÃO importar/publicar até validar a origem e a licença."
+        }
+    ]
 }

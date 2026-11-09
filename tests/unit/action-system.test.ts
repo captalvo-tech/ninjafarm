@@ -1,12 +1,13 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+
 import { FarmGrid } from '../../src/core/grid';
-import { InventorySystem } from '../../src/simulation/inventory';
-import { WaterSystem } from '../../src/simulation/water';
-import { CropSystem } from '../../src/simulation/crops';
-import { NavigationSystem } from '../../src/simulation/navigation';
-import { ActionResolver } from '../../src/gameplay/actions/action-resolver';
 import { ActionExecutor } from '../../src/gameplay/actions/action-executor';
+import { ActionResolver } from '../../src/gameplay/actions/action-resolver';
 import type { SelectedTarget } from '../../src/gameplay/actions/action-types';
+import { CropSystem } from '../../src/simulation/crops';
+import { InventorySystem } from '../../src/simulation/inventory';
+import { NavigationSystem } from '../../src/simulation/navigation';
+import { WaterSystem } from '../../src/simulation/water';
 
 describe('Universal Context Action System (Marco A)', () => {
     let grid: FarmGrid;

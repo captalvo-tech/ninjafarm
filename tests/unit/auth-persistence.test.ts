@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+
+import type { FarmSaveState } from '../../src/core/types';
 import { AuthManager } from '../../src/persistence/auth';
 import { CloudSaveManager } from '../../src/persistence/cloud-save';
-import type { FarmSaveState } from '../../src/core/types';
 
 describe('Fase A: Autenticação Google & Persistência em Nuvem', () => {
     let authManager: AuthManager;
@@ -124,7 +125,7 @@ describe('Fase A: Autenticação Google & Persistência em Nuvem', () => {
                 }
 
                 if (urlStr.includes('action=save')) {
-                    const body = JSON.parse(init?.body as string || '{}');
+                    const body = JSON.parse((init?.body as string) || '{}');
                     const clientRevision = body.clientRevision || 0;
                     const existing = serverStorage.get('current_save');
                     const serverRevision = existing?.revision || 1;

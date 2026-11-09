@@ -27,9 +27,11 @@
  */
 
 import { Application, Color, Entity, StandardMaterial, Vec3 } from 'playcanvas';
-import { FarmGrid } from '../core/grid';
-import type { GlbAssetLoader } from './asset-loader';
+
+import type { FarmGrid } from '../core/grid';
 import type { AnimalData, AnimalState, AnimalType } from '../core/types';
+
+import type { GlbAssetLoader } from './asset-loader';
 
 export interface AnimalInstance {
     id: string;
@@ -210,7 +212,7 @@ export class FaunaManager {
         }
     }
 
-    private spawnChicken(id: string, gx: number, gy: number, initialHunger: number = 20): void {
+    private spawnChicken(id: string, gx: number, gy: number, initialHunger = 20): void {
         const worldPos = this.grid.gridToWorld(gx, gy);
         const root = new Entity('farm_chicken_' + id);
         root.setPosition(worldPos.x, worldPos.y, worldPos.z);
@@ -286,7 +288,7 @@ export class FaunaManager {
     }
 
     public feedAnimal(animalId: string): boolean {
-        const a = this.animals.find(an => an.id === animalId || an.type === animalId);
+        const a = this.animals.find((an) => an.id === animalId || an.type === animalId);
         if (!a) return false;
 
         a.hunger = 0;
@@ -341,7 +343,7 @@ export class FaunaManager {
     }
 
     getAnimalById(id: string): AnimalInstance | undefined {
-        return this.animals.find(a => a.id === id);
+        return this.animals.find((a) => a.id === id);
     }
 
     triggerAnimalReaction(type: string): void {
@@ -366,7 +368,7 @@ export class FaunaManager {
             // Ciclo de produção de ovos para galinhas (se fome < 60)
             if (a.type === 'chicken') {
                 if (a.hunger < 60 && !a.readyToCollect) {
-                    a.productionProgress += (dt / 120.0); // 1 ciclo a cada 2 minutos
+                    a.productionProgress += dt / 120.0; // 1 ciclo a cada 2 minutos
                     if (a.productionProgress >= 1.0) {
                         a.productionProgress = 1.0;
                         a.readyToCollect = true;
@@ -456,7 +458,7 @@ export class FaunaManager {
     }
 
     public serialize(): AnimalData[] {
-        return this.animals.map(a => {
+        return this.animals.map((a) => {
             const coords = this.grid.worldToGrid(a.position.x, a.position.z);
             return {
                 id: a.id,
@@ -476,7 +478,7 @@ export class FaunaManager {
         if (!savedAnimals || savedAnimals.length === 0) return;
 
         for (const saved of savedAnimals) {
-            const a = this.animals.find(an => an.id === saved.id);
+            const a = this.animals.find((an) => an.id === saved.id);
             if (a) {
                 a.hunger = saved.hunger;
                 a.lastFedAt = saved.lastFedAt;

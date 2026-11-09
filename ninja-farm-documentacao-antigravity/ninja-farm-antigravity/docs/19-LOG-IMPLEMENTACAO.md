@@ -6,6 +6,7 @@
 
 ```markdown
 ### AAAA-MM-DD — Marco NF-XXX
+
 - Ambiente / sistema / Node:
 - Versão de PlayCanvas e dependências:
 - Mudanças e arquivos:

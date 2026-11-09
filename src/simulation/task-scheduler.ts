@@ -31,12 +31,13 @@
  * Central AFK scheduler managing the single Droid's persistent task queue.
  */
 
+import { domainEvents } from '../core/events';
+import type { FarmGrid } from '../core/grid';
 import type { FarmTask, TaskSchedulerSaveState } from '../core/types';
 import type { FarmDroid } from '../rendering/droid';
-import type { NavigationSystem } from './navigation';
-import type { FarmGrid } from '../core/grid';
+
 import type { InventorySystem } from './inventory';
-import { domainEvents } from '../core/events';
+import type { NavigationSystem } from './navigation';
 
 export interface SchedulerCallbacks {
     onTaskStarted?: (task: FarmTask) => void;
@@ -68,7 +69,7 @@ export class TaskScheduler {
 
     public enqueueTask(task: FarmTask): void {
         // Insere respeitando a prioridade (maior prioridade na frente)
-        const insertIdx = this.tasks.findIndex(t => t.priority < task.priority && t.status === 'SCHEDULED');
+        const insertIdx = this.tasks.findIndex((t) => t.priority < task.priority && t.status === 'SCHEDULED');
         if (insertIdx !== -1) {
             this.tasks.splice(insertIdx, 0, task);
         } else {
@@ -86,7 +87,7 @@ export class TaskScheduler {
     }
 
     public cancelTask(taskId: string): boolean {
-        const idx = this.tasks.findIndex(t => t.id === taskId);
+        const idx = this.tasks.findIndex((t) => t.id === taskId);
         if (idx === -1) return false;
 
         const task = this.tasks[idx];
@@ -105,7 +106,7 @@ export class TaskScheduler {
     }
 
     public pauseTask(taskId: string): void {
-        const task = this.tasks.find(t => t.id === taskId);
+        const task = this.tasks.find((t) => t.id === taskId);
         if (task && task.status === 'IN_PROGRESS') {
             task.status = 'PAUSED';
             if (this.activeTask?.id === taskId) {
@@ -115,7 +116,7 @@ export class TaskScheduler {
     }
 
     public resumeTask(taskId: string): void {
-        const task = this.tasks.find(t => t.id === taskId);
+        const task = this.tasks.find((t) => t.id === taskId);
         if (task && task.status === 'PAUSED') {
             task.status = 'SCHEDULED';
         }
@@ -180,7 +181,11 @@ export class TaskScheduler {
 
     private findNextEligibleTask(droid: FarmDroid): FarmTask | null {
         for (const task of this.tasks) {
-            if (task.status !== 'SCHEDULED' && task.status !== 'WAITING_RESOURCES' && task.status !== 'WAITING_ENERGY') {
+            if (
+                task.status !== 'SCHEDULED' &&
+                task.status !== 'WAITING_RESOURCES' &&
+                task.status !== 'WAITING_ENERGY'
+            ) {
                 continue;
             }
 
@@ -240,7 +245,7 @@ export class TaskScheduler {
         droid.setCurrentTask(null);
 
         // Remove da fila ativa
-        const idx = this.tasks.findIndex(t => t.id === task.id);
+        const idx = this.tasks.findIndex((t) => t.id === task.id);
         if (idx !== -1) {
             this.tasks.splice(idx, 1);
         }
@@ -268,7 +273,7 @@ export class TaskScheduler {
             }
 
             const neededSeconds = task.totalDurationSeconds - task.progressSeconds;
-            const availableBatterySeconds = (droid.getBattery() / 0.15); // segundos de trabalho restantes na bateria
+            const availableBatterySeconds = droid.getBattery() / 0.15; // segundos de trabalho restantes na bateria
 
             const effectiveWorkSeconds = Math.min(neededSeconds, availableBatterySeconds, remainingSeconds);
             task.progressSeconds += effectiveWorkSeconds;
@@ -292,7 +297,7 @@ export class TaskScheduler {
         return completedCount;
     }
 
-    public getTasks(): ReadonlyArray<FarmTask> {
+    public getTasks(): readonly FarmTask[] {
         return this.tasks;
     }
 
@@ -338,16 +343,16 @@ export class TaskScheduler {
 
     public serialize(): TaskSchedulerSaveState {
         return {
-            tasks: this.tasks.map(t => ({ ...t })),
+            tasks: this.tasks.map((t) => ({ ...t })),
             activeTaskId: this.activeTask?.id || null,
             lastProcessedTimestamp: Math.floor(Date.now() / 1000)
         };
     }
 
     public load(saved: TaskSchedulerSaveState): void {
-        this.tasks = saved.tasks ? saved.tasks.map(t => ({ ...t })) : [];
+        this.tasks = saved.tasks ? saved.tasks.map((t) => ({ ...t })) : [];
         if (saved.activeTaskId) {
-            this.activeTask = this.tasks.find(t => t.id === saved.activeTaskId) || null;
+            this.activeTask = this.tasks.find((t) => t.id === saved.activeTaskId) || null;
         } else {
             this.activeTask = null;
         }

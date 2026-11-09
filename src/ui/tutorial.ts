@@ -43,11 +43,12 @@ export interface TutorialStep {
 }
 
 export class InteractiveTutorial {
-    private container: HTMLElement;
-    private currentStepIndex: number = 0;
-    private isVisible: boolean = false;
-    private completed: boolean = false;
+    private container: HTMLElement | null = null;
+    private currentStepIndex = 0;
+    private isVisible = false;
+    private completed = false;
     private onStepChange?: (step: TutorialStep) => void;
+    private onComplete?: () => void;
 
     private readonly steps: TutorialStep[] = [
         {
@@ -55,7 +56,8 @@ export class InteractiveTutorial {
             stepNumber: 1,
             totalSteps: 8,
             title: '🤖 Conheça seu Droid Operacional',
-            instruction: 'Bem-vindo à Fazenda Ninja! Sou seu único funcionário robótico. Eu cuido de todo o trabalho físico enquanto você planeja a propriedade.',
+            instruction:
+                'Bem-vindo à Fazenda Ninja! Sou seu único funcionário robótico. Eu cuido de todo o trabalho físico enquanto você planeja a propriedade.',
             actionLabel: 'Entendido, vamos lá!'
         },
         {
@@ -72,7 +74,8 @@ export class InteractiveTutorial {
             stepNumber: 3,
             totalSteps: 8,
             title: '🔘 Botão Contextual Único',
-            instruction: 'Você não precisa trocar de ferramentas. O botão principal inteligente identifica se a terra precisa ser arada, semeada, regada ou colhida.',
+            instruction:
+                'Você não precisa trocar de ferramentas. O botão principal inteligente identifica se a terra precisa ser arada, semeada, regada ou colhida.',
             actionLabel: 'Próximo'
         },
         {
@@ -80,7 +83,8 @@ export class InteractiveTutorial {
             stepNumber: 4,
             totalSteps: 8,
             title: '📋 Agendamento de Tarefas',
-            instruction: 'Ao acionar uma ação física, ela é agendada para mim. Eu calculo a rota, caminho até o local e realizo o serviço.',
+            instruction:
+                'Ao acionar uma ação física, ela é agendada para mim. Eu calculo a rota, caminho até o local e realizo o serviço.',
             actionLabel: 'Próximo'
         },
         {
@@ -88,7 +92,8 @@ export class InteractiveTutorial {
             stepNumber: 5,
             totalSteps: 8,
             title: '📑 Gaveta da Agenda',
-            instruction: 'Abra a Agenda no topo da tela para acompanhar o tempo restante, reordenar prioridades ou cancelar tarefas da fila.',
+            instruction:
+                'Abra a Agenda no topo da tela para acompanhar o tempo restante, reordenar prioridades ou cancelar tarefas da fila.',
             actionLabel: 'Próximo'
         },
         {
@@ -96,7 +101,8 @@ export class InteractiveTutorial {
             stepNumber: 6,
             totalSteps: 8,
             title: '⚡ Bateria e Energia Solar',
-            instruction: 'Observe a barra sobre minha cabeça. Se a bateria baixar de 15%, irei automaticamente à estação solar recarregar.',
+            instruction:
+                'Observe a barra sobre minha cabeça. Se a bateria baixar de 15%, irei automaticamente à estação solar recarregar.',
             actionLabel: 'Próximo'
         },
         {
@@ -104,7 +110,8 @@ export class InteractiveTutorial {
             stepNumber: 7,
             totalSteps: 8,
             title: '📐 Construção por Blueprints',
-            instruction: 'Posicione novos prédios como hologramas translúcidos. Eu reunirei os materiais e construirei a versão física sólida.',
+            instruction:
+                'Posicione novos prédios como hologramas translúcidos. Eu reunirei os materiais e construirei a versão física sólida.',
             actionLabel: 'Próximo'
         },
         {
@@ -112,24 +119,38 @@ export class InteractiveTutorial {
             stepNumber: 8,
             totalSteps: 8,
             title: '🌙 Trabalho AFK e Diário',
-            instruction: 'A fazenda continua operando quando você sai! Ao retornar, pergunte-me o que aconteceu ou veja os relatórios estruturados.',
+            instruction:
+                'A fazenda continua operando quando você sai! Ao retornar, pergunte-me o que aconteceu ou veja os relatórios estruturados.',
             actionLabel: 'Concluir Tutorial'
         }
     ];
 
-    constructor(onStepChange?: (step: TutorialStep) => void) {
-        this.onStepChange = onStepChange;
-        this.completed = localStorage.getItem('ninja_tutorial_completed') === 'true';
+    constructor(
+        options?:
+            ((step: TutorialStep) => void) | { onStepChange?: (step: TutorialStep) => void; onComplete?: () => void }
+    ) {
+        if (typeof options === 'function') {
+            this.onStepChange = options;
+        } else if (options) {
+            this.onStepChange = options.onStepChange;
+            this.onComplete = options.onComplete;
+        }
 
-        this.container = document.createElement('div');
-        this.container.id = 'ninja-tutorial-container';
-        this.container.className = 'tutorial-hud-card';
-        document.body.appendChild(this.container);
+        if (typeof localStorage !== 'undefined') {
+            this.completed = localStorage.getItem('ninja_tutorial_completed') === 'true';
+        }
 
-        this.injectStyles();
+        if (typeof document !== 'undefined') {
+            this.container = document.createElement('div');
+            this.container.id = 'ninja-tutorial-container';
+            this.container.className = 'tutorial-hud-card';
+            document.body?.appendChild(this.container);
+            this.injectStyles();
+        }
     }
 
     private injectStyles(): void {
+        if (typeof document === 'undefined') return;
         const style = document.createElement('style');
         style.textContent = `
             .tutorial-hud-card {
@@ -241,15 +262,26 @@ export class InteractiveTutorial {
         return this.completed;
     }
 
-    public start(force: boolean = false): void {
+    public getCurrentStep(): TutorialStep {
+        return this.steps[this.currentStepIndex];
+    }
+
+    public getCurrentStepIndex(): number {
+        return this.currentStepIndex;
+    }
+
+    public start(force = false): void {
         if (this.completed && !force) return;
         this.currentStepIndex = 0;
         this.isVisible = true;
         this.render();
     }
 
+    public nextStep(): void {
+        this.advanceStep();
+    }
+
     public advanceStep(): void {
-        if (!this.isVisible) return;
         if (this.currentStepIndex < this.steps.length - 1) {
             this.currentStepIndex++;
             this.render();
@@ -271,49 +303,72 @@ export class InteractiveTutorial {
         }
     }
 
+    public completeTutorial(): void {
+        this.finish();
+    }
+
+    public resetTutorial(): void {
+        this.completed = false;
+        this.currentStepIndex = 0;
+        this.isVisible = false;
+        if (typeof localStorage !== 'undefined') {
+            localStorage.removeItem('ninja_tutorial_completed');
+            localStorage.removeItem('ninja_farm_tutorial_completed');
+        }
+    }
+
     public finish(): void {
         this.completed = true;
         this.isVisible = false;
-        this.container.style.display = 'none';
-        localStorage.setItem('ninja_tutorial_completed', 'true');
+        if (this.container) {
+            this.container.style.display = 'none';
+        }
+        if (typeof localStorage !== 'undefined') {
+            localStorage.setItem('ninja_tutorial_completed', 'true');
+            localStorage.setItem('ninja_farm_tutorial_completed', 'true');
+        }
+        this.onComplete?.();
     }
 
     public dismiss(): void {
         this.isVisible = false;
-        this.container.style.display = 'none';
+        if (this.container) {
+            this.container.style.display = 'none';
+        }
     }
 
     private render(): void {
-        if (!this.isVisible) {
-            this.container.style.display = 'none';
-            return;
-        }
-
         const step = this.steps[this.currentStepIndex];
-        this.container.style.display = 'block';
 
-        this.container.innerHTML = `
-            <div class="tutorial-header">
-                <div class="tutorial-title">${step.title}</div>
-                <div class="tutorial-badge">${step.stepNumber} de ${step.totalSteps}</div>
-            </div>
-            <div class="tutorial-instruction">${step.instruction}</div>
-            ${step.hint ? `<div class="tutorial-hint">${step.hint}</div>` : ''}
-            <div class="tutorial-actions">
-                <button class="tutorial-btn-dismiss" id="btn-tutorial-dismiss">Dispensar</button>
-                <button class="tutorial-btn-primary" id="btn-tutorial-next">${step.actionLabel || 'Avançar'}</button>
-            </div>
-        `;
+        if (this.container) {
+            if (!this.isVisible) {
+                this.container.style.display = 'none';
+                return;
+            }
 
-        this.container.querySelector('#btn-tutorial-next')?.addEventListener('click', () => {
-            this.advanceStep();
-        });
+            this.container.style.display = 'block';
+            this.container.innerHTML = `
+                <div class="tutorial-header">
+                    <div class="tutorial-title">${step.title}</div>
+                    <div class="tutorial-badge">${step.stepNumber} de ${step.totalSteps}</div>
+                </div>
+                <div class="tutorial-instruction">${step.instruction}</div>
+                ${step.hint ? `<div class="tutorial-hint">${step.hint}</div>` : ''}
+                <div class="tutorial-actions">
+                    <button class="tutorial-btn-dismiss" id="btn-tutorial-dismiss">Dispensar</button>
+                    <button class="tutorial-btn-primary" id="btn-tutorial-next">${step.actionLabel || 'Avançar'}</button>
+                </div>
+            `;
 
-        this.container.querySelector('#btn-tutorial-dismiss')?.addEventListener('click', () => {
-            this.dismiss();
-        });
+            this.container.querySelector('#btn-tutorial-next')?.addEventListener('click', () => {
+                this.advanceStep();
+            });
+
+            this.container.querySelector('#btn-tutorial-dismiss')?.addEventListener('click', () => {
+                this.dismiss();
+            });
+        }
 
         this.onStepChange?.(step);
     }
 }
-

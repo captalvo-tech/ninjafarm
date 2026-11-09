@@ -32,6 +32,7 @@
  */
 
 import type { FarmSaveState } from '../core/types';
+
 import { PersistenceManager } from './indexeddb';
 
 export interface CloudSaveResult {
@@ -46,10 +47,10 @@ export interface CloudSaveResult {
 export class CloudSaveManager {
     private localCache: PersistenceManager;
     private baseUrl: string;
-    private currentRevision: number = 0;
+    private currentRevision = 0;
     private getSessionToken: () => string | null;
 
-    constructor(getSessionToken: () => string | null, baseUrl: string = './api/save.php') {
+    constructor(getSessionToken: () => string | null, baseUrl = './api/save.php') {
         this.getSessionToken = getSessionToken;
         this.baseUrl = baseUrl;
         this.localCache = new PersistenceManager();
@@ -202,4 +203,3 @@ export class CloudSaveManager {
         return this.currentRevision;
     }
 }
-

@@ -12,18 +12,18 @@ Este documento descreve uma base de implementação **parametrizável**; valores
 
 ## Recursos candidatos (propostos)
 
-| ID | Unidade de sistema | Uso |
-| --- | --- | --- |
-| `wood` | unidade | construir |
-| `metal` | unidade | fabricar/infraestrutura |
-| `parts` | unidade | baterias e eletrônica |
-| `rice` | unidade de alimento | alimento e futura carga |
-| `vegetables` | unidade de alimento | consumo/venda futura |
-| `eggs` | unidade | produto da galinha |
-| `fish` | unidade | produto do tanque |
-| `feed` | unidade | alimentar animais |
-| `water_l` | litro | irrigação/animais |
-| `energy_wh` | Wh | armazenamento elétrico |
+| ID           | Unidade de sistema  | Uso                     |
+| ------------ | ------------------- | ----------------------- |
+| `wood`       | unidade             | construir               |
+| `metal`      | unidade             | fabricar/infraestrutura |
+| `parts`      | unidade             | baterias e eletrônica   |
+| `rice`       | unidade de alimento | alimento e futura carga |
+| `vegetables` | unidade de alimento | consumo/venda futura    |
+| `eggs`       | unidade             | produto da galinha      |
+| `fish`       | unidade             | produto do tanque       |
+| `feed`       | unidade             | alimentar animais       |
+| `water_l`    | litro               | irrigação/animais       |
+| `energy_wh`  | Wh                  | armazenamento elétrico  |
 
 Valores iniciais para jogabilidade são **fixtures do protótipo**, centralizados em `data/balance/*.json` ou `src/core/config.ts`. Não codificar números diretamente em animação/UI.
 

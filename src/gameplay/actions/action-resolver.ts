@@ -4,6 +4,7 @@
  */
 
 import type { CropType, ResourceInventory } from '../../core/types';
+
 import { ACTION_PRIORITIES } from './action-priorities';
 import type { ContextAction, SelectedTarget, SoilStatus } from './action-types';
 
@@ -128,13 +129,15 @@ export class ActionResolver {
                         enabled: hasWater,
                         blockedReason: hasWater ? undefined : 'Água insuficiente. Ligue a Bomba de Captação!',
                         cost: { water: 1.0 },
-                        missingResource: hasWater ? undefined : {
-                            type: 'water',
-                            name: 'Água',
-                            required: 1.0,
-                            available: context.inventory.water,
-                            howToGet: 'Abasteça a cisterna ou ligue a bomba de água.'
-                        },
+                        missingResource: hasWater
+                            ? undefined
+                            : {
+                                  type: 'water',
+                                  name: 'Água',
+                                  required: 1.0,
+                                  available: context.inventory.water,
+                                  howToGet: 'Abasteça a cisterna ou ligue a bomba de água.'
+                              },
                         durationSeconds: 1.2,
                         animState: 'interact',
                         interactionDistance: 3.2,
@@ -274,7 +277,11 @@ export class ActionResolver {
      */
     private static resolveBuildingAction(target: SelectedTarget, context: ResolverContext): ContextAction {
         // 1. Necessidade de reparo
-        if (target.buildingHealth !== undefined && target.maxHealth !== undefined && target.buildingHealth < target.maxHealth) {
+        if (
+            target.buildingHealth !== undefined &&
+            target.maxHealth !== undefined &&
+            target.buildingHealth < target.maxHealth
+        ) {
             const hasWood = context.inventory.wood >= 2;
             const hasMetal = context.inventory.metal >= 1;
             const canRepair = hasWood && hasMetal;
@@ -330,7 +337,11 @@ export class ActionResolver {
             };
         }
 
-        return this.createIdleAction(target, target.name || 'Instalação', 'Estrutura operacional funcionando normalmente.');
+        return this.createIdleAction(
+            target,
+            target.name || 'Instalação',
+            'Estrutura operacional funcionando normalmente.'
+        );
     }
 
     private static resolveMerchantAction(target: SelectedTarget): ContextAction {

@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest';
+
 import { FarmGrid } from '../../src/core/grid';
-import { InventorySystem } from '../../src/simulation/inventory';
-import { CropSystem } from '../../src/simulation/crops';
-import { WaterSystem } from '../../src/simulation/water';
-import { EnergySystem } from '../../src/simulation/energy';
-import { SimulationClock } from '../../src/simulation/clock';
-import { TaskScheduler } from '../../src/simulation/task-scheduler';
-import { NavigationSystem } from '../../src/simulation/navigation';
 import { FarmDroid } from '../../src/rendering/droid';
+import { SimulationClock } from '../../src/simulation/clock';
+import { CropSystem } from '../../src/simulation/crops';
+import { EnergySystem } from '../../src/simulation/energy';
+import { InventorySystem } from '../../src/simulation/inventory';
+import { NavigationSystem } from '../../src/simulation/navigation';
+import { TaskScheduler } from '../../src/simulation/task-scheduler';
+import { WaterSystem } from '../../src/simulation/water';
 
 describe('Seção 24: Testes de Integridade Não-Negociáveis da Alpha 0.1', () => {
     describe('1. Proteção contra Duplicação de Recursos', () => {
@@ -86,7 +87,7 @@ describe('Seção 24: Testes de Integridade Não-Negociáveis da Alpha 0.1', () 
             expect(scheduler.getActiveTask()?.id).not.toBe(t2.id);
 
             // Tarefa 2 deve permanecer em SCHEDULED
-            const pending = scheduler.getTasks().find(t => t.id === t2.id);
+            const pending = scheduler.getTasks().find((t) => t.id === t2.id);
             expect(pending?.status).toBe('SCHEDULED');
         });
 
@@ -155,4 +156,3 @@ describe('Seção 24: Testes de Integridade Não-Negociáveis da Alpha 0.1', () 
         });
     });
 });
-

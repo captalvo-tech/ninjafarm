@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+
 import { ObjectiveManager } from '../../src/ui/objectives';
 
 describe('ObjectiveManager (Farm Expansion & Building Trials)', () => {
@@ -23,40 +24,40 @@ describe('ObjectiveManager (Farm Expansion & Building Trials)', () => {
         // harvest target is 3
         mgr.recordProgress('harvest', 1);
         expect(mgr.getCompletedCount()).toBe(0);
-        expect(mgr.getTrials().find(t => t.id === 'harvest')?.currentCount).toBe(1);
+        expect(mgr.getTrials().find((t) => t.id === 'harvest')?.currentCount).toBe(1);
 
         mgr.recordProgress('harvest', 2);
         expect(mgr.getCompletedCount()).toBeGreaterThanOrEqual(1);
         expect(mgr.getUnclaimedCount()).toBeGreaterThanOrEqual(1);
-        expect(mgr.getTrials().find(t => t.id === 'harvest')?.completed).toBe(true);
-        expect(mgr.getTrials().find(t => t.id === 'harvest')?.claimed).toBe(false);
+        expect(mgr.getTrials().find((t) => t.id === 'harvest')?.completed).toBe(true);
+        expect(mgr.getTrials().find((t) => t.id === 'harvest')?.claimed).toBe(false);
     });
 
     it('records building construction specifically', () => {
         const mgr = new ObjectiveManager();
         mgr.recordBuildingPlaced('solar_panel');
-        expect(mgr.getTrials().find(t => t.id === 'build_solar')?.completed).toBe(true);
-        expect(mgr.getTrials().find(t => t.id === 'build')?.completed).toBe(true);
+        expect(mgr.getTrials().find((t) => t.id === 'build_solar')?.completed).toBe(true);
+        expect(mgr.getTrials().find((t) => t.id === 'build')?.completed).toBe(true);
 
         mgr.recordBuildingPlaced('water_pump');
-        expect(mgr.getTrials().find(t => t.id === 'build_pump')?.completed).toBe(true);
+        expect(mgr.getTrials().find((t) => t.id === 'build_pump')?.completed).toBe(true);
     });
 
     it('records crop planting and harvesting specifically', () => {
         const mgr = new ObjectiveManager();
         mgr.recordCropPlanted('rice');
-        expect(mgr.getTrials().find(t => t.id === 'plant')?.currentCount).toBe(1);
-        expect(mgr.getTrials().find(t => t.id === 'plant_rice')?.currentCount).toBe(1);
+        expect(mgr.getTrials().find((t) => t.id === 'plant')?.currentCount).toBe(1);
+        expect(mgr.getTrials().find((t) => t.id === 'plant_rice')?.currentCount).toBe(1);
 
         mgr.recordCropHarvested('rice');
-        expect(mgr.getTrials().find(t => t.id === 'harvest')?.currentCount).toBe(1);
-        expect(mgr.getTrials().find(t => t.id === 'harvest_first')?.currentCount).toBe(1);
+        expect(mgr.getTrials().find((t) => t.id === 'harvest')?.currentCount).toBe(1);
+        expect(mgr.getTrials().find((t) => t.id === 'harvest_first')?.currentCount).toBe(1);
     });
 
     it('immediately completes trial when completeObjective is called', () => {
         const mgr = new ObjectiveManager();
         mgr.completeObjective('fish');
-        const trial = mgr.getTrials().find(t => t.id === 'fish');
+        const trial = mgr.getTrials().find((t) => t.id === 'fish');
         expect(trial?.completed).toBe(true);
         expect(trial?.currentCount).toBe(trial?.targetCount);
         expect(mgr.getUnclaimedCount()).toBeGreaterThanOrEqual(1);
@@ -71,7 +72,7 @@ describe('ObjectiveManager (Farm Expansion & Building Trials)', () => {
         expect(initialUnclaimed).toBeGreaterThanOrEqual(1);
 
         mgr.claimReward('bonfire');
-        const trial = mgr.getTrials().find(t => t.id === 'bonfire');
+        const trial = mgr.getTrials().find((t) => t.id === 'bonfire');
         expect(trial?.claimed).toBe(true);
         expect(mgr.getUnclaimedCount()).toBe(initialUnclaimed - 1);
         expect(onClaim).toHaveBeenCalledWith(

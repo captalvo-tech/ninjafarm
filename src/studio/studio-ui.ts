@@ -1,12 +1,13 @@
-import { StudioApp, type StudioModelStats } from './studio-app';
 import {
     exportVisualConfigJson,
     getVisualConfig,
     importVisualConfigJson,
     resetVisualConfig,
-    saveVisualConfig,
-    type VisualConfig
+    saveVisualConfig
 } from '../core/visual-config';
+import type { VisualConfig } from '../core/visual-config';
+
+import type { StudioApp, StudioModelStats } from './studio-app';
 
 interface ManifestAsset {
     assetId: string;
@@ -23,9 +24,9 @@ export class StudioUI {
     private app: StudioApp;
     private config: VisualConfig;
     private manifestAssets: ManifestAsset[] = [];
-    private activeCategory: string = 'all';
-    private searchQuery: string = '';
-    private activeAssetId: string = '';
+    private activeCategory = 'all';
+    private searchQuery = '';
+    private activeAssetId = '';
 
     constructor(app: StudioApp) {
         this.app = app;
@@ -61,7 +62,8 @@ export class StudioUI {
     }
 
     private checkAuthGate(): void {
-        const isDev = (import.meta as any).env?.DEV ||
+        const isDev =
+            (import.meta as any).env?.DEV ||
             window.location.hostname === 'localhost' ||
             window.location.hostname === '127.0.0.1' ||
             window.location.protocol === 'file:';
@@ -475,7 +477,8 @@ export class StudioUI {
 
         const filtered = this.manifestAssets.filter((asset) => {
             const matchesCat = this.activeCategory === 'all' || asset.category === this.activeCategory;
-            const matchesSearch = !this.searchQuery ||
+            const matchesSearch =
+                !this.searchQuery ||
                 asset.assetId.toLowerCase().includes(this.searchQuery) ||
                 asset.runtimePath.toLowerCase().includes(this.searchQuery);
             return matchesCat && matchesSearch;
@@ -521,7 +524,7 @@ export class StudioUI {
 
             // Apply scale if character
             const isCharacter = url.includes('character');
-            const currentScale = isCharacter ? (this.config.character.scale || 1.0) : 1.0;
+            const currentScale = isCharacter ? this.config.character.scale || 1.0 : 1.0;
             this.app.setScale(currentScale);
             this.app.setMaterialTints(this.config.character.tintMain, this.config.character.tintJoints);
 
@@ -614,9 +617,12 @@ export class StudioUI {
 
         if (diagSize) {
             const asset = this.manifestAssets.find((a) => a.runtimePath === this.app.getActiveModelUrl());
-            diagSize.textContent = asset?.fileBytesMeasured ? `${Math.round(asset.fileBytesMeasured / 1024)} KB` : 'Dynamic GLB';
+            diagSize.textContent = asset?.fileBytesMeasured
+                ? `${Math.round(asset.fileBytesMeasured / 1024)} KB`
+                : 'Dynamic GLB';
         }
-        if (diagDims) diagDims.textContent = `${stats.boundingBox.width}m × ${stats.boundingBox.height}m × ${stats.boundingBox.depth}m`;
+        if (diagDims)
+            diagDims.textContent = `${stats.boundingBox.width}m × ${stats.boundingBox.height}m × ${stats.boundingBox.depth}m`;
         if (diagMeshes) diagMeshes.textContent = String(stats.meshes);
         if (diagJoints) diagJoints.textContent = String(stats.joints);
         if (diagAnims) diagAnims.textContent = String(stats.animations.length);

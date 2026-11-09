@@ -6,18 +6,18 @@ Começar com **R$ 0 em contratações novas**, usando software livre/gratuito, p
 
 ## Matriz de serviços
 
-| Recurso | Estratégia inicial | Atenção |
-| --- | --- | --- |
-| PlayCanvas Engine standalone | MIT, gratuito para uso comercial | Editor hospedado é produto diferente; não exigir assinatura |
-| TypeScript / Vite | npm local, open source | Versionar lockfile e auditar dependências |
-| Blender | gratuito | Exportações precisam QA |
-| Mixamo | gratuito com Adobe ID; FAQ permite vídeos/jogos comerciais | Humanoides bípedes; distribuição de assets em jogo deve respeitar termos |
-| Poly Haven | CC0 | Guardar evidência e origem |
-| Quaternius | packs com condições específicas, verificar cada um | Não assumir catálogo inteiro igual nem qualidade AAA |
-| Tripo / Meshy / DeepMotion | Não necessários agora | Créditos, limites, uso comercial e automação sujeitos a plano |
-| Open-Meteo | Avaliação/dev **não comercial** quando permitido | API grátis **não permite uso comercial**; contratar licença ou trocar provider antes do lançamento comercial |
-| MapLibre GL JS | biblioteca open source | Tiles e geocoding/routing não ficam gratuitos automaticamente |
-| Hostinger já contratada | build estático local ou ambiente isolado quando aprovado | Multiplayer e workers persistentes podem exigir infraestrutura adicional |
+| Recurso                      | Estratégia inicial                                         | Atenção                                                                                                      |
+| ---------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| PlayCanvas Engine standalone | MIT, gratuito para uso comercial                           | Editor hospedado é produto diferente; não exigir assinatura                                                  |
+| TypeScript / Vite            | npm local, open source                                     | Versionar lockfile e auditar dependências                                                                    |
+| Blender                      | gratuito                                                   | Exportações precisam QA                                                                                      |
+| Mixamo                       | gratuito com Adobe ID; FAQ permite vídeos/jogos comerciais | Humanoides bípedes; distribuição de assets em jogo deve respeitar termos                                     |
+| Poly Haven                   | CC0                                                        | Guardar evidência e origem                                                                                   |
+| Quaternius                   | packs com condições específicas, verificar cada um         | Não assumir catálogo inteiro igual nem qualidade AAA                                                         |
+| Tripo / Meshy / DeepMotion   | Não necessários agora                                      | Créditos, limites, uso comercial e automação sujeitos a plano                                                |
+| Open-Meteo                   | Avaliação/dev **não comercial** quando permitido           | API grátis **não permite uso comercial**; contratar licença ou trocar provider antes do lançamento comercial |
+| MapLibre GL JS               | biblioteca open source                                     | Tiles e geocoding/routing não ficam gratuitos automaticamente                                                |
+| Hostinger já contratada      | build estático local ou ambiente isolado quando aprovado   | Multiplayer e workers persistentes podem exigir infraestrutura adicional                                     |
 
 ## Política de assets
 

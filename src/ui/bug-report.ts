@@ -41,7 +41,7 @@ export interface BugReportContext {
 
 export class BugReportModal {
     private overlay: HTMLElement;
-    private isOpenState: boolean = false;
+    private isOpenState = false;
     private getContext: () => BugReportContext;
     private onReportSent?: (reportId: string) => void;
 

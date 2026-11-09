@@ -32,11 +32,13 @@
  */
 
 import { Application, Color, Entity, StandardMaterial } from 'playcanvas';
-import type { FarmMaterials } from './materials';
-import type { GlbAssetLoader } from './asset-loader';
+
+import type { FarmGrid } from '../core/grid';
 import type { DroidSaveState, FarmTask } from '../core/types';
 import type { PathNode } from '../simulation/navigation';
-import type { FarmGrid } from '../core/grid';
+
+import type { GlbAssetLoader } from './asset-loader';
+import type { FarmMaterials } from './materials';
 
 export type DroidVisualState = 'idle' | 'walking' | 'working' | 'recharging' | 'paused' | 'depleted';
 
@@ -46,13 +48,13 @@ export class FarmDroid {
     private batteryHudContainer: Entity;
     private batteryFillBar!: Entity;
 
-    private battery: number = 100;
-    private maxBattery: number = 100;
+    private battery = 100;
+    private maxBattery = 100;
     private state: DroidVisualState = 'idle';
     private currentTask: FarmTask | null = null;
-    private workSpeedMultiplier: number = 1.0;
+    private workSpeedMultiplier = 1.0;
 
-    private facingAngle: number = 0;
+    private facingAngle = 0;
     private waypoints: PathNode[] = [];
     private grid: FarmGrid;
     private materials: FarmMaterials;
@@ -64,12 +66,7 @@ export class FarmDroid {
     private batteryBgMat?: StandardMaterial;
     private batteryFillMat?: StandardMaterial;
 
-    constructor(
-        grid: FarmGrid,
-        materials: FarmMaterials,
-        assetLoader?: GlbAssetLoader,
-        initialState?: DroidSaveState
-    ) {
+    constructor(grid: FarmGrid, materials: FarmMaterials, assetLoader?: GlbAssetLoader, initialState?: DroidSaveState) {
         this.grid = grid;
         this.materials = materials;
         this.assetLoader = assetLoader;

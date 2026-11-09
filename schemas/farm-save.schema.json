@@ -1,51 +1,70 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.invalid/schemas/farm-save-v1.schema.json",
-  "title": "Fazenda Ninja save local v1 (contrato mínimo)",
-  "description": "Base extensível da Fase 1. Substituir o ID provisório quando o produto tiver domínio; versionar alterações.",
-  "type": "object",
-  "required": ["schemaVersion", "saveId", "createdAt", "lastSimulatedAt", "seed", "farm", "inventory", "resources", "clock"],
-  "properties": {
-    "schemaVersion": {"const": 1},
-    "saveId": {"type": "string", "minLength": 1},
-    "createdAt": {"type": "string", "format": "date-time"},
-    "lastSimulatedAt": {"type": "string", "format": "date-time"},
-    "seed": {"type": "integer", "minimum": 0},
-    "farm": {
-      "type": "object",
-      "required": ["width", "height", "buildings"],
-      "properties": {
-        "width": {"const": 64},
-        "height": {"const": 36},
-        "buildings": {"type": "array", "items": {"$ref": "#/$defs/building"}}
-      },
-      "additionalProperties": true
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://example.invalid/schemas/farm-save-v1.schema.json",
+    "title": "Fazenda Ninja save local v1 (contrato mínimo)",
+    "description": "Base extensível da Fase 1. Substituir o ID provisório quando o produto tiver domínio; versionar alterações.",
+    "type": "object",
+    "required": [
+        "schemaVersion",
+        "saveId",
+        "createdAt",
+        "lastSimulatedAt",
+        "seed",
+        "farm",
+        "inventory",
+        "resources",
+        "clock"
+    ],
+    "properties": {
+        "schemaVersion": { "const": 1 },
+        "saveId": { "type": "string", "minLength": 1 },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "lastSimulatedAt": { "type": "string", "format": "date-time" },
+        "seed": { "type": "integer", "minimum": 0 },
+        "farm": {
+            "type": "object",
+            "required": ["width", "height", "buildings"],
+            "properties": {
+                "width": { "const": 64 },
+                "height": { "const": 36 },
+                "buildings": { "type": "array", "items": { "$ref": "#/$defs/building" } }
+            },
+            "additionalProperties": true
+        },
+        "inventory": {
+            "type": "object",
+            "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+            "additionalProperties": { "type": "number", "minimum": 0 }
+        },
+        "resources": {
+            "type": "object",
+            "required": ["waterLiters", "storedEnergyWh"],
+            "properties": {
+                "waterLiters": { "type": "number", "minimum": 0 },
+                "storedEnergyWh": { "type": "number", "minimum": 0 }
+            },
+            "additionalProperties": true
+        },
+        "clock": {
+            "type": "object",
+            "required": ["elapsedGameSeconds"],
+            "properties": { "elapsedGameSeconds": { "type": "number", "minimum": 0 } },
+            "additionalProperties": true
+        }
     },
-    "inventory": {"type": "object", "propertyNames": {"pattern": "^[a-z][a-z0-9_]*$"}, "additionalProperties": {"type": "number", "minimum": 0}},
-    "resources": {
-      "type": "object",
-      "required": ["waterLiters", "storedEnergyWh"],
-      "properties": {
-        "waterLiters": {"type": "number", "minimum": 0},
-        "storedEnergyWh": {"type": "number", "minimum": 0}
-      },
-      "additionalProperties": true
+    "$defs": {
+        "building": {
+            "type": "object",
+            "required": ["id", "catalogId", "x", "z", "rotation"],
+            "properties": {
+                "id": { "type": "string", "minLength": 1 },
+                "catalogId": { "type": "string", "minLength": 1 },
+                "x": { "type": "integer", "minimum": 0, "maximum": 63 },
+                "z": { "type": "integer", "minimum": 0, "maximum": 35 },
+                "rotation": { "enum": [0, 90, 180, 270] }
+            },
+            "additionalProperties": true
+        }
     },
-    "clock": {"type": "object", "required": ["elapsedGameSeconds"], "properties": {"elapsedGameSeconds": {"type": "number", "minimum": 0}}, "additionalProperties": true}
-  },
-  "$defs": {
-    "building": {
-      "type": "object",
-      "required": ["id", "catalogId", "x", "z", "rotation"],
-      "properties": {
-        "id": {"type": "string", "minLength": 1},
-        "catalogId": {"type": "string", "minLength": 1},
-        "x": {"type": "integer", "minimum": 0, "maximum": 63},
-        "z": {"type": "integer", "minimum": 0, "maximum": 35},
-        "rotation": {"enum": [0, 90, 180, 270]}
-      },
-      "additionalProperties": true
-    }
-  },
-  "additionalProperties": false
+    "additionalProperties": false
 }

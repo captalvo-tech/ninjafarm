@@ -15,16 +15,16 @@ Criar um catálogo **jogável e legalmente utilizável** de personagens, animais
 
 ## Categorias
 
-| Categoria | Estratégia | Animação mínima |
-| --- | --- | --- |
-| Ninja | humanoide rigado + retarget Mixamo | idle, walk, run; agachar depois |
-| Galinha | modelo rigado legal ou rig manual simples | idle, walk, eat |
-| Peixe | modelo rigado ou animação procedural da cauda | swim, turn |
-| Vaca, ovelha, alpaca | adicionar após validar slice | idle, walk, eat |
-| Árvore, capim, arroz | 2–4 variações reutilizáveis e instancing | sway leve, estágios de crescimento |
-| Casa, galpão, estufa | estruturas modulares 3D GLB | portas opcionais |
-| Painel solar, bateria | modelos estáticos 3D | feedback luminoso, orientação opcional |
-| Terreno | geometria procedural, mapas de altura e materiais | água e vegetação reativas |
+| Categoria             | Estratégia                                        | Animação mínima                        |
+| --------------------- | ------------------------------------------------- | -------------------------------------- |
+| Ninja                 | humanoide rigado + retarget Mixamo                | idle, walk, run; agachar depois        |
+| Galinha               | modelo rigado legal ou rig manual simples         | idle, walk, eat                        |
+| Peixe                 | modelo rigado ou animação procedural da cauda     | swim, turn                             |
+| Vaca, ovelha, alpaca  | adicionar após validar slice                      | idle, walk, eat                        |
+| Árvore, capim, arroz  | 2–4 variações reutilizáveis e instancing          | sway leve, estágios de crescimento     |
+| Casa, galpão, estufa  | estruturas modulares 3D GLB                       | portas opcionais                       |
+| Painel solar, bateria | modelos estáticos 3D                              | feedback luminoso, orientação opcional |
+| Terreno               | geometria procedural, mapas de altura e materiais | água e vegetação reativas              |
 
 ## Fluxo de cada asset
 

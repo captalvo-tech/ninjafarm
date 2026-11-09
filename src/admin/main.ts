@@ -7,14 +7,14 @@
  */
 
 import { adminAuth } from './auth';
-import { renderDashboardView } from './views/dashboard-view';
 import { renderAlertsView } from './views/alerts-view';
-import { renderEconomyView } from './views/economy-view';
-import { renderRoadmapView } from './views/roadmap-view';
+import { renderConfigView } from './views/config-view';
+import { renderDashboardView } from './views/dashboard-view';
 import { renderDroidView } from './views/droid-view';
+import { renderEconomyView } from './views/economy-view';
 import { renderGeminiView } from './views/gemini-view';
 import { renderQualityView } from './views/quality-view';
-import { renderConfigView } from './views/config-view';
+import { renderRoadmapView } from './views/roadmap-view';
 
 class AdminApp {
     private appRoot: HTMLElement;
@@ -193,7 +193,7 @@ class AdminApp {
         const route = rawHash.split('?')[0] || '';
 
         // Atualiza item ativo na sidebar
-        this.appRoot.querySelectorAll('.nav-item').forEach(el => {
+        this.appRoot.querySelectorAll('.nav-item').forEach((el) => {
             const itemRoute = el.getAttribute('data-route') || '';
             if (itemRoute === route) {
                 el.classList.add('active');
@@ -248,10 +248,7 @@ class AdminApp {
 }
 
 function escapeHtml(str: string): string {
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { FarmGrid } from '../../src/core/grid';
+
 import { FARM_CONFIG } from '../../src/core/config';
+import { FarmGrid } from '../../src/core/grid';
 
 describe('FarmGrid (64x36)', () => {
     it('deve inicializar com 64 colunas e 36 linhas (2.304 células)', () => {
@@ -77,4 +78,3 @@ describe('FarmGrid (64x36)', () => {
         expect(grid.getCell(20, 20)?.occupiedBy).toBe(null);
     });
 });
-

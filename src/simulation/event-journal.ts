@@ -39,7 +39,7 @@ export class EventJournal {
     private entries: FarmEventEntry[] = [];
     private readonly maxEntries: number;
 
-    constructor(maxEntries: number = 100) {
+    constructor(maxEntries = 100) {
         this.maxEntries = maxEntries;
     }
 
@@ -72,23 +72,26 @@ export class EventJournal {
         return fullEntry;
     }
 
-    public getRecentEvents(limit: number = 10): FarmEventEntry[] {
+    public getRecentEvents(limit = 10): FarmEventEntry[] {
         return this.entries.slice(0, limit);
     }
 
     public getEventsSince(sinceTimestamp: number): FarmEventEntry[] {
-        return this.entries.filter(e => e.timestamp >= sinceTimestamp);
+        return this.entries.filter((e) => e.timestamp >= sinceTimestamp);
     }
 
-    public formatSummaryForDroid(limit: number = 6): string {
+    public formatSummaryForDroid(limit = 6): string {
         if (this.entries.length === 0) {
             return 'Nenhum acontecimento recente registrado.';
         }
 
         const recent = this.entries.slice(0, limit);
         return recent
-            .map(e => {
-                const timeStr = new Date(e.timestamp).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+            .map((e) => {
+                const timeStr = new Date(e.timestamp).toLocaleTimeString('pt-BR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
                 return `[${timeStr}] ${e.title}: ${e.description}`;
             })
             .join('\n');
@@ -103,4 +106,3 @@ export class EventJournal {
         this.entries = savedEntries.slice(0, this.maxEntries);
     }
 }
-
