@@ -466,3 +466,33 @@
     - `npm run fmt`: 100% formatado conforme Prettier.
     - `npm run test`: **84/84 testes aprovados no Vitest** (14 suítes).
     - `npm run build`: bundle de produção gerado com sucesso em 413ms.
+
+### 2026-11-09 — Deploy de Produção no Servidor Hostinger (pinut.shop)
+
+- **Status:** Publicado em produção, configurado e verificado online.
+- **Ambiente de Hospedagem:**
+    - Host: Hostinger Produção (`186.244.144.164:65002` / `hostinger-prod`).
+    - Domínio: `https://pinut.shop/`.
+    - Web Root: `/home/u415074840/domains/pinut.shop/public_html`.
+- **Ações Realizadas no Deploy:**
+    1. **Backup Preventivo:**
+        - Criado backup completo da versão anterior em `/domains/_backups_todos_sites/pinut.shop/backup_pre_alpha01_20261109_145917.tar.gz`.
+    2. **Remoção de Arquivos Legados:**
+        - Removido `default.php` que interceptava as requisições antes do `index.html`.
+    3. **Atualização do .htaccess de Produção:**
+        - Configurado `DirectoryIndex index.html index.php`.
+        - Adicionadas regras amigáveis de roteamento: `^admin/?$` para `admin.html` e `^studio/?$` para `studio.html`.
+    4. **Sincronização de Bundles de Produção e Modelos 3D:**
+        - Enviados os bundles compilados (`index.html`, `studio.html`, `admin.html`, `assets/main-*.js`, `assets/studio-*.js`, `assets/admin-*.js`, `assets/water-*.js`, `assets/texture-*.js`).
+        - Publicados todos os 38 modelos GLB (`character.glb`, animais, árvores, construções, etc.) e texturas em `assets/models/` e `assets/textures/`.
+    5. **Infraestrutura Backend e Governança:**
+        - Publicados scripts PHP da API (`admin.php`, `auth.php`, `save.php`, `ai.php`, `report.php`).
+        - Configurados diretórios de dados com permissão de escrita e restrição de acesso web (`api/data/.htaccess` com `Require all denied`).
+        - Publicados arquivos do Roadmap Vivo (`project/roadmap/features.json` e `history.jsonl`).
+- **Verificações Online Realizadas:**
+    - `https://pinut.shop/` -> HTTP 200 OK (Jogo principal carregando bundles atualizados).
+    - `https://pinut.shop/admin` -> HTTP 200 OK (Painel Administrativo online, pronto para setup do administrador).
+    - `https://pinut.shop/studio` -> HTTP 200 OK (Ninja Farm Studio 3D online).
+    - `https://pinut.shop/api/auth.php?action=check` -> `{"authenticated":false}` (API de sessão ativa).
+    - `https://pinut.shop/api/admin.php?action=check` -> `{"authenticated":false,"need_setup":true}` (Pronto para primeiro acesso seguro).
+    - `https://pinut.shop/assets/models/character.glb` -> HTTP 200 OK (Assets 3D servidos corretamente).
