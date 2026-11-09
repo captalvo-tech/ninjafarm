@@ -1,0 +1,42 @@
+{
+  "manifestVersion": 1,
+  "projectName": "Ninja Farm",
+  "phase": 1,
+  "assets": [
+    {
+      "assetId": "cesium_man_humanoid",
+      "category": "character",
+      "runtimePath": "assets/models/cesium_man.glb",
+      "sourceUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/CesiumMan/glTF-Binary/CesiumMan.glb",
+      "creator": "Cesium / Khronos Group",
+      "license": "CC-BY 4.0",
+      "commercialUseVerified": true,
+      "redistributionInGameVerified": true,
+      "downloadDate": "2026-11-08",
+      "licenseEvidenceUrl": "https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/CesiumMan",
+      "animations": ["Walk"],
+      "fileBytesMeasured": 490956,
+      "trianglesMeasured": 2048,
+      "testedInBrowser": true,
+      "notes": "Humanóide bípedo rigado com animação de caminhada para validação M1."
+    },
+    {
+      "assetId": "fox_animal",
+      "category": "animal",
+      "runtimePath": "assets/models/fox.glb",
+      "sourceUrl": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/main/2.0/Fox/glTF-Binary/Fox.glb",
+      "creator": "punchesbears / Khronos Group",
+      "license": "CC0 1.0 Universal (Public Domain)",
+      "commercialUseVerified": true,
+      "redistributionInGameVerified": true,
+      "downloadDate": "2026-11-08",
+      "licenseEvidenceUrl": "https://github.com/KhronosGroup/glTF-Sample-Models/tree/main/2.0/Fox",
+      "animations": ["Survey", "Walk", "Run"],
+      "fileBytesMeasured": 162852,
+      "trianglesMeasured": 1100,
+      "testedInBrowser": true,
+      "notes": "Animal animado CC0 para validar pipeline de fauna M1."
+    }
+  ]
+}
+

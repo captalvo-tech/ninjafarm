@@ -1,0 +1,5 @@
+DirectoryIndex default.php index.php index.html
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+</IfModule>
